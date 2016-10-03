@@ -14,7 +14,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.oracle.ofsc;
+package com.oracle.ofsc.routes;
 
 import org.apache.camel.builder.RouteBuilder;
 import org.apache.camel.spring.Main;
@@ -22,9 +22,9 @@ import org.apache.camel.spring.Main;
 import static org.apache.camel.builder.xml.XPathBuilder.xpath;
 
 /**
- * A Camel Router
+ * A Camel Router For Web Integration End-Points
  */
-public class MyRouteBuilder extends RouteBuilder {
+public class WebRoutes extends RouteBuilder {
 
     /**
      * A main() so we can easily run these routing rules in our IDE
