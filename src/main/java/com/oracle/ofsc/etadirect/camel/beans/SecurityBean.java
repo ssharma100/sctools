@@ -1,4 +1,4 @@
-package com.oracle.ofsc.etadirect;
+package com.oracle.ofsc.etadirect.camel.beans;
 
 /**
  * Camel Bean

@@ -25,7 +25,7 @@ import static org.apache.camel.builder.xml.XPathBuilder.xpath;
  * A Camel Router For Web Integration End-Points
  */
 public class WebRoutes extends RouteBuilder {
-
+    private static final String LOG_CLASS = "com.oracle.ofsc.routes.WebRoutes";
     /**
      * A main() so we can easily run these routing rules in our IDE
      */
@@ -37,17 +37,9 @@ public class WebRoutes extends RouteBuilder {
      * Let's configure the Camel routing rules using Java code...
      */
     public void configure() {
-
-        // TODO create Camel routes here.
-
-        // here is a sample which processes the input files
-        // (leaving them in place - see the 'noop' flag)
-        // then performs content based routing on the message
-        // using XPath
-        from("file:src/data?noop=true").
-            choice().
-                when(xpath("/person/city = 'London'")).to("file:target/messages/uk").
-                otherwise().to("file:target/messages/others");
-
+        // RESTful End Point For Resource Management - Get Activity
+        from("restlet:http://localhost:8085/sctool/v1/activity/list/{resource}?restletMethod=get")
+                .to("log:" + LOG_CLASS + "?showAll=true&multiline=true&level=INFO")
+                .to("direct://activity/get/list");
     }
 }

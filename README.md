@@ -1,6 +1,8 @@
 # OFSC (TOA) Integration Tools (OFSC Tools)
 Solution Consultant Application Tooling
 
+The application is built using Apache Camel (OSS) that provides an integration and
+tooling framework that 
 To run this router either embed the jar inside Spring
 or to run the route from within maven try
 
