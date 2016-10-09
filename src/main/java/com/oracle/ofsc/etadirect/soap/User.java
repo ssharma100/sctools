@@ -2,9 +2,12 @@ package com.oracle.ofsc.etadirect.soap;
 
 import org.joda.time.DateTime;
 
+import javax.xml.bind.annotation.XmlType;
+
 /**
  * Soap Serializable Class uses for the <user></user>
  * block of the authentication part of the SOAP API request.
+ * Can be in any order of fields.
  */
 public class User {
     private String now;

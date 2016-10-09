@@ -21,7 +21,8 @@ public class ResourceRoutes extends RouteBuilder {
                     .to("log:" + LOG_CLASS + "?showAll=true&multiline=true&level=ERROR")
                 .handled(true)
                 .end()
-                .to("spring-ws:https://api.etadirect.com/soap/resource-management/v2")
+                // Send actual request to endpoint of Web Service.
+                .to("spring-ws:https://api.etadirect.com/soap/resource-management/v3")
                 .to("log:" + LOG_CLASS + "?level=INFO");
     }
 }
