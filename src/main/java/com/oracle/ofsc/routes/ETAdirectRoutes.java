@@ -1,5 +1,7 @@
 package com.oracle.ofsc.routes;
 
+import com.oracle.ofsc.etadirect.camel.beans.Resource;
+import com.oracle.ofsc.etadirect.soap.GetResource;
 import org.apache.camel.builder.RouteBuilder;
 
 /**
@@ -11,16 +13,11 @@ public class ETAdirectRoutes extends RouteBuilder{
     @Override
     public void configure() throws Exception {
 
-        from("direct://activity/get/list")
-                .routeId("etaDirectActivityList")
-                .to("log:" + LOG_CLASS + "?level=INFO");
-//        .onException(Exception.class)
-//                .handled(true)
-//                .unmarshal(soapDF)
-//                .end()
-//                .marshal(soapDF)
-//                .to(WS_URI)
-//                .unmarshal(soapDF);
-
+        /* Populates The Body With The SOAP Call Needed To Call The Server */
+        from("direct://resource/get")
+                .routeId("etaDirectResourceGet")
+                .to("log:" + LOG_CLASS + "?level=INFO")
+                .bean(Resource.class, "mapToSoapRequest")
+                .to("direct://etadirectsoap/get/resource");
     }
 }

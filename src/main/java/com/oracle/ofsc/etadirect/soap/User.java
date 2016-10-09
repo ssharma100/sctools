@@ -1,4 +1,4 @@
-package com.oracle.ofsc.etadirect.soap.beans;
+package com.oracle.ofsc.etadirect.soap;
 
 import org.joda.time.DateTime;
 

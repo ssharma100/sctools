@@ -19,27 +19,19 @@ package com.oracle.ofsc.routes;
 import org.apache.camel.builder.RouteBuilder;
 import org.apache.camel.spring.Main;
 
-import static org.apache.camel.builder.xml.XPathBuilder.xpath;
-
 /**
  * A Camel Router For Web Integration End-Points
  */
 public class WebRoutes extends RouteBuilder {
     private static final String LOG_CLASS = "com.oracle.ofsc.routes.WebRoutes";
-    /**
-     * A main() so we can easily run these routing rules in our IDE
-     */
-    public static void main(String... args) throws Exception {
-        Main.main(args);
-    }
 
     /**
      * Let's configure the Camel routing rules using Java code...
      */
     public void configure() {
         // RESTful End Point For Resource Management - Get Activity
-        from("restlet:http://localhost:8085/sctool/v1/activity/list/{resource}?restletMethod=get")
+        from("restlet:http://localhost:8085/sctool/v1/resource/{externalId}?restletMethod=get")
                 .to("log:" + LOG_CLASS + "?showAll=true&multiline=true&level=INFO")
-                .to("direct://activity/get/list");
+                .to("direct://resource/get");
     }
 }
