@@ -1,7 +1,6 @@
 package com.oracle.ofsc.etadirect.camel.beans;
 
-import com.oracle.ofsc.etadirect.soap.GetActivity;
-import com.oracle.ofsc.etadirect.soap.GetResource;
+import com.oracle.ofsc.etadirect.soap.activity.GetActivity;
 import com.oracle.ofsc.etadirect.soap.User;
 import org.apache.camel.Exchange;
 import org.slf4j.Logger;
