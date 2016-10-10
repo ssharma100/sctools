@@ -1,5 +1,6 @@
 package com.oracle.ofsc.routes;
 
+import com.oracle.ofsc.etadirect.camel.beans.Activity;
 import com.oracle.ofsc.etadirect.camel.beans.Resource;
 import com.oracle.ofsc.etadirect.soap.GetResource;
 import org.apache.camel.builder.RouteBuilder;
@@ -19,5 +20,11 @@ public class ETAdirectRoutes extends RouteBuilder{
                 .to("log:" + LOG_CLASS + "?level=INFO")
                 .bean(Resource.class, "mapToGetRequest")
                 .to("direct://etadirectsoap/get/resource");
+
+        from("direct://activity/get")
+                .routeId("etaDirectActivityGet")
+                .to("log:" + LOG_CLASS + "?level=INFO")
+                .bean(Activity.class, "mapToGetRequest")
+                .to("direct://etadirectsoap/get/activity");
     }
 }

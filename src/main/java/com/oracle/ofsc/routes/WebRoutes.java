@@ -33,5 +33,9 @@ public class WebRoutes extends RouteBuilder {
         from("restlet:http://localhost:8085/sctool/v1/resource/{externalId}?restletMethod=get")
                 .to("log:" + LOG_CLASS + "?showAll=true&multiline=true&level=INFO")
                 .to("direct://resource/get");
+
+        from("restlet:http://localhost:8085/sctool/v1/activity/{activityId}?restletMethod=get")
+                .to("log:" + LOG_CLASS + "?showAll=true&multiline=true&level=INFO")
+                .to("direct://activity/get");
     }
 }
