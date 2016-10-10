@@ -2,6 +2,7 @@ package com.oracle.ofsc.routes;
 
 
 import org.apache.camel.builder.RouteBuilder;
+import org.apache.camel.processor.interceptor.Tracer;
 
 /**
  * Provides SOAP Models and routes for executing calls to the configured ETAdirect
@@ -15,6 +16,7 @@ public class ResourceRoutes extends RouteBuilder {
 
     @Override
     public void configure() throws Exception {
+
         from("direct://etadirectsoap/get/resource")
                 .to("log:" + LOG_CLASS + "?level=INFO")
                 .onException(Exception.class)

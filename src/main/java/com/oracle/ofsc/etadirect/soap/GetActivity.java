@@ -1,4 +1,4 @@
-package com.oracle.ofsc.etadirect.soap.activity;
+package com.oracle.ofsc.etadirect.soap;
 
 import com.oracle.ofsc.etadirect.soap.User;
 
