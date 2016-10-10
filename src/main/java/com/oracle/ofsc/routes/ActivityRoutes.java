@@ -13,11 +13,11 @@ public class ActivityRoutes extends RouteBuilder {
         from("direct://etadirectsoap/get/activity")
                 .to("log:" + LOG_CLASS + "?level=INFO")
                 .onException(Exception.class)
-                .to("log:" + LOG_CLASS + "?showAll=true&multiline=true&level=ERROR")
-                .handled(true)
+                    .to("log:" + LOG_CLASS + "?showAll=true&multiline=true&level=ERROR")
+                    .handled(true)
                 .end()
                         // Send actual request to endpoint of Web Service.
-                .to("spring-ws:https://api.etadirect.com/soap/activity")
+                .to("spring-ws:https://api.etadirect.com/soap/activity/v3/")
                 .to("log:" + LOG_CLASS + "?level=INFO");
     }
 }

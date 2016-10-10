@@ -1,14 +1,11 @@
 package com.oracle.ofsc.etadirect.soap;
 
-import javax.xml.bind.annotation.XmlElement;
-import javax.xml.bind.annotation.XmlRootElement;
-import javax.xml.bind.annotation.XmlSeeAlso;
-import javax.xml.bind.annotation.XmlType;
+import javax.xml.bind.annotation.*;
 
 /**
  * Created by Samir on 10/9/2016.
  */
-@XmlRootElement(name="urn:get_activity")
+@XmlRootElement(name="get_activity")
 @XmlType(propOrder = { "user", "activity_id" })
 @XmlSeeAlso(User.class)
 public class GetActivity {
