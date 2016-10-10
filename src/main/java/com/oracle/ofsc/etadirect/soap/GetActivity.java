@@ -7,7 +7,7 @@ import javax.xml.bind.annotation.*;
 /**
  * Created by Samir on 10/9/2016.
  */
-@XmlRootElement(name="get_activity", namespace = "urn:toa:activity")
+@XmlRootElement(name="urn:get_activity")
 @XmlType(name="urn", propOrder = { "user", "activity_id" })
 @XmlSeeAlso(User.class)
 public class GetActivity {

@@ -37,7 +37,7 @@ public class Security {
         Preconditions.checkNotNull(password, "Must Provide 'password' For Auth Credentials");
 
         // Get current time in ISO 8601 Format:
-        DateTime currentTime = new DateTime();
+        DateTime currentTime = new DateTime(DateTimeZone.UTC);
         DateTimeFormatter fmt = ISODateTimeFormat.dateTimeNoMillis();
         String now = fmt.print(currentTime);
         LOGGER.info("Using Current Time Stamp Of: {}", now);

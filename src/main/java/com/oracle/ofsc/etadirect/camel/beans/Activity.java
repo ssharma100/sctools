@@ -19,7 +19,7 @@ public class Activity {
     private static final Logger LOGGER = LoggerFactory.getLogger(Activity.class.getName());
 
     private static final String SOAP_WRAPPER_HEADER =
-            "<soapenv:Envelope xmlns:soapenv=\"http://schemas.xmlsoap.org/soap/envelope/\">\n" +
+            "<soapenv:Envelope xmlns:soapenv=\"http://schemas.xmlsoap.org/soap/envelope/\" xmlns:urn=\"urn:toa:activity\">\n" +
                     "   <soapenv:Header/>\n" +
                     "   <soapenv:Body>";
 
@@ -41,7 +41,7 @@ public class Activity {
         String activityId = (String )exchange.getIn().getHeader("activityId");
         LOGGER.info("Generate Body For ResourceID: {}", activityId);
         // TODO: The request should have the information for the request, however, this is hardcoded for now:
-        User userBlock = Security.generateUserAuth(COMPANY, USER, PASSWD, USE_MD5);
+        User userBlock = Security.generateUserAuth(COMPANY, USER, PASSWD, !USE_MD5);
         GetActivity activity = new GetActivity();
         activity.setUser(userBlock);
         activity.setActivity_id(activityId);
