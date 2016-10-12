@@ -11,7 +11,7 @@ import javax.xml.bind.annotation.XmlType;
 /**
  * Created by Samir on 10/6/2016.
  */
-@XmlRootElement(name="get_resource")
+@XmlRootElement(name="urn:get_resource")
 @XmlType(propOrder = { "user", "id" })
 @XmlSeeAlso(User.class)
 public class GetResource {
