@@ -1,6 +1,7 @@
 package com.oracle.ofsc.routes;
 
 
+import org.apache.camel.Exchange;
 import org.apache.camel.builder.RouteBuilder;
 import org.apache.camel.processor.interceptor.Tracer;
 
@@ -24,7 +25,8 @@ public class ResourceRoutes extends RouteBuilder {
                 .handled(true)
                 .end()
                 // Send actual request to endpoint of Web Service.
-                .to("spring-ws:https://api.etadirect.com/soap/resource-management/v3/")
+                .setHeader(Exchange.HTTP_METHOD, constant(org.apache.camel.component.http4.HttpMethods.POST))
+                .to("https4:api.etadirect.com/soap/resource-management/v3/?bridgeEndpoint=true")
                 .to("log:" + LOG_CLASS + "?level=INFO");
     }
 }
