@@ -16,26 +16,34 @@
  */
 package com.oracle.ofsc.routes;
 
+import org.apache.camel.Predicate;
 import org.apache.camel.builder.RouteBuilder;
 import org.apache.camel.spring.Main;
+import org.restlet.data.Method;
 
 /**
  * A Camel Router For Web Integration End-Points
  */
 public class WebRoutes extends RouteBuilder {
     private static final String LOG_CLASS = "com.oracle.ofsc.routes.WebRoutes";
-
+    private Predicate isPost = header("CamelHttpMethod").isEqualTo("POST");
     /**
      * Let's configure the Camel routing rules using Java code...
      */
     public void configure() {
-        // RESTful End Point For Resource Management - Get Activity
-        from("restlet:http://localhost:8085/sctool/v1/resource/{externalId}?restletMethod=get")
+        // RESTful End Point For Resource Management
+        // - Get Resource
+        from("restlet:http://localhost:8085/sctool/v1/resource/{id}?restletMethods=post,get")
                 .to("log:" + LOG_CLASS + "?showAll=true&multiline=true&level=INFO")
-                .to("direct://resource/get");
+                .choice()
+                    .when(isPost)
+                        .to("direct://resource/insert")
+                    .otherwise()
+                        .to("direct://resource/get");
 
-        from("restlet:http://localhost:8085/sctool/v1/activity/{activityId}?restletMethod=get")
+        from("restlet:http://localhost:8085/sctool/v1/activity/{activityId}?restletMethods=post,get")
                 .to("log:" + LOG_CLASS + "?showAll=true&multiline=true&level=INFO")
                 .to("direct://activity/get");
+
     }
 }

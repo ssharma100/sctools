@@ -19,6 +19,7 @@ public class Activity {
     private static final Logger LOGGER = LoggerFactory.getLogger(Activity.class.getName());
 
     private static final String SOAP_WRAPPER_HEADER =
+            "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n" +
             "<soapenv:Envelope xmlns:soapenv=\"http://schemas.xmlsoap.org/soap/envelope/\" xmlns:urn=\"urn:toa:activity\">\n" +
                     "   <soapenv:Header/>\n" +
                     "   <soapenv:Body>";
@@ -46,17 +47,16 @@ public class Activity {
         activity.setUser(userBlock);
         activity.setActivity_id(activityId);
 
-        // Convert To String As The Mapping For sping-ws will not correctly set the headers in the Soap Envelope
+        // Convert To String As The Mapping For spring-ws will not correctly set the headers in the Soap Envelope
         String body = null;
         try {
             JAXBContext context = JAXBContext.newInstance(GetActivity.class);
             Marshaller marshaller = context.createMarshaller();
-            marshaller.setProperty(Marshaller.JAXB_FORMATTED_OUTPUT, true);
+            marshaller.setProperty(Marshaller.JAXB_FORMATTED_OUTPUT, false);
             marshaller.setProperty(Marshaller.JAXB_FRAGMENT, true);
             StringWriter sw = new StringWriter();
             marshaller.marshal(activity, sw);
             body = sw.toString();
-            LOGGER.info("Generated Body: \n {}", body);
         }catch (JAXBException e) {
             LOGGER.error("Failed To Marshal Object: {}", e.getMessage());
         }

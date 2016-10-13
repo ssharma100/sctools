@@ -18,7 +18,7 @@ public class ResourceRoutes extends RouteBuilder {
     @Override
     public void configure() throws Exception {
 
-        from("direct://etadirectsoap/get/resource")
+        from("direct://etadirectsoap/resource")
                 .to("log:" + LOG_CLASS + "?level=INFO")
                 .onException(Exception.class)
                     .to("log:" + LOG_CLASS + "?showAll=true&multiline=true&level=ERROR")
@@ -28,6 +28,8 @@ public class ResourceRoutes extends RouteBuilder {
                 .setHeader(Exchange.HTTP_METHOD, constant(org.apache.camel.component.http4.HttpMethods.POST))
                 .to("https4:api.etadirect.com/soap/resource-management/v3/?bridgeEndpoint=true")
                 .to("log:" + LOG_CLASS + "?level=INFO");
+
+
     }
 }
 

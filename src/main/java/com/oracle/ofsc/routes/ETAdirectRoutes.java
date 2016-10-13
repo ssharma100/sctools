@@ -19,7 +19,13 @@ public class ETAdirectRoutes extends RouteBuilder{
                 .routeId("etaDirectResourceGet")
                 .to("log:" + LOG_CLASS + "?level=INFO")
                 .bean(Resource.class, "mapToGetRequest")
-                .to("direct://etadirectsoap/get/resource");
+                .to("direct://etadirectsoap/resource");
+
+        from("direct://resource/insert")
+                .routeId("etaDirectResourceInsert")
+                .to("log:" + LOG_CLASS + "?level=INFO")
+                .bean(Resource.class, "mapToInsertResource")
+                .to("direct://etadirectsoap/resource");
 
         from("direct://activity/get")
                 .routeId("etaDirectActivityGet")
