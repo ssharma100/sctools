@@ -41,7 +41,7 @@ public class Activity {
         String activityId = (String )exchange.getIn().getHeader("activityId");
         LOGGER.info("Generate Body For ResourceID: {}", activityId);
         // TODO: The request should have the information for the request, however, this is hardcoded for now:
-        User userBlock = Security.generateUserAuth(COMPANY, USER, PASSWD, USE_MD5);
+        User userBlock = Security.generateUserAuth(COMPANY, USER, PASSWD, !USE_MD5);
         GetActivity activity = new GetActivity();
         activity.setUser(userBlock);
         activity.setActivity_id(activityId);
