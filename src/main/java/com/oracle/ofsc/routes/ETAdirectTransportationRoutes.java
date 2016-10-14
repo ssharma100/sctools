@@ -37,6 +37,12 @@ public class ETAdirectTransportationRoutes extends RouteBuilder{
                 .routeId("etaDirectActivityGet")
                 .to("log:" + LOG_CLASS + "?level=INFO")
                 .bean(Activity.class, "mapToGetRequest")
-                .to("direct://etadirectsoap/get/activity");
+                .to("direct://etadirectsoap/activity");
+
+        from("direct://transportation/activity/insert")
+                .routeId("etaDirectActivityInsert")
+                .to("log:" + LOG_CLASS + "?level=INFO")
+                .bean(Activity.class, "mapToInsertRequest")
+                .to("direct://etadirectsoap/activity");
     }
 }

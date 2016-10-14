@@ -28,22 +28,18 @@ public class Activity {
                     "   </soapenv:Body>\n" +
                     "</soapenv:Envelope>";
 
-    // Used for internal testing
-    private static final String USER = "soap";
-    private static final String COMPANY = "sunrise3166.demo";
-    private static final String PASSWD = "R2OGQreIZp";
-
     private static final boolean USE_MD5 = true;
+
     /**
      * Generates body for resource "get" request
      * @param exchange
      */
     public void mapToGetRequest (Exchange exchange) {
-        String activityId = (String )exchange.getIn().getHeader("activityId");
-        LOGGER.info("Generate Body For ResourceID: {}", activityId);
+        String activityId = (String )exchange.getIn().getHeader("id");
+        LOGGER.info("Generate Body For ActivityID: {}", activityId);
         // TODO: The request should have the information for the request, however, this is hardcoded for now:
         User userBlock =
-                Security.generateUserAuth((String )exchange.getIn().getHeader("CamelHttpQUery"), !USE_MD5);
+                Security.generateUserAuth((String )exchange.getIn().getHeader("CamelHttpQuery"), !USE_MD5);
 
         GetActivity activity = new GetActivity();
         activity.setUser(userBlock);
@@ -66,5 +62,11 @@ public class Activity {
         sb.append(SOAP_WRAPPER_HEADER).append(body).append(SOAP_WRAPPER_FOOTER);
         exchange.getIn().setBody(sb.toString());
     }
+
+    public void mapToInsertRequest (Exchange exchange) {
+
+
+    }
+
 }
 

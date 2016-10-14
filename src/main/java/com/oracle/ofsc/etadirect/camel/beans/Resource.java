@@ -33,11 +33,6 @@ public class Resource {
             "   </soapenv:Body>\n" +
                     "</soapenv:Envelope>";
 
-    // Used for internal testing
-    private static final String USER = "soap";
-    private static final String COMPANY = "sunrise3166.demo";
-    private static final String PASSWD = "R2OGQreIZp";
-
     private static final boolean USE_MD5 = true;
     /**
      * Generates body for resource "get" request
@@ -108,7 +103,6 @@ public class Resource {
             workSkills.add(new WorkSkill("LVL2", "100"));
             insertResource.setWorkSkills(workSkills);
         }
-
 
         String soapBody = null;
         try {

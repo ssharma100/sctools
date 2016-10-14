@@ -12,7 +12,7 @@ public class ActivityRoutes extends RouteBuilder {
     @Override
     public void configure() throws Exception {
 
-        from("direct://etadirectsoap/get/activity")
+        from("direct://etadirectsoap/activity")
                 .to("log:" + LOG_CLASS + "?level=INFO")
                 .onException(Exception.class)
                     .to("log:" + LOG_CLASS + "?showAll=true&multiline=true&level=ERROR")
