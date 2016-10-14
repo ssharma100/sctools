@@ -104,7 +104,6 @@ public class Resource {
 
         // Look For Any Work Skills
         if (StringUtils.isNotBlank(td.getLiftGate())) {
-            WorkSkill lifGate = new WorkSkill();
             ArrayList<WorkSkill> workSkills = new ArrayList<>(5);
             workSkills.add(new WorkSkill("LVL2", "100"));
             insertResource.setWorkSkills(workSkills);
@@ -120,7 +119,6 @@ public class Resource {
             StringWriter sw = new StringWriter();
             marshaller.marshal(insertResource, sw);
             soapBody = sw.toString();
-            LOGGER.debug("Generated Body: \n {}", soapBody);
         }catch (JAXBException e) {
             LOGGER.error("Failed To Marshal Object: {}", e.getMessage());
         }
