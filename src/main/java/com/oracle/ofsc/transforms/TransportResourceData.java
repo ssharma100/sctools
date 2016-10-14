@@ -7,7 +7,7 @@ import org.apache.camel.dataformat.bindy.annotation.DataField;
  * Modeling for ArcBest
  */
 @CsvRecord(separator = ",")
-public class ArcBestResource {
+public class TransportResourceData {
     @DataField(pos=1)
     private String parentId;
 
