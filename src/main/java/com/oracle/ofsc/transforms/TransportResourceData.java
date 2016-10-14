@@ -4,7 +4,10 @@ import org.apache.camel.dataformat.bindy.annotation.CsvRecord;
 import org.apache.camel.dataformat.bindy.annotation.DataField;
 
 /**
- * Modeling for ArcBest
+ * Modeling for ArcBest for transportation provides
+ * and the resources (usually trucks) that they model
+ * as resources.
+ * 
  */
 @CsvRecord(separator = ",")
 public class TransportResourceData {

@@ -45,7 +45,7 @@ public class Resource {
         LOGGER.info("Generate Body For ResourceID: {}", externalId);
         // TODO: The request should have the information for the request, however, this is hardcoded for now:
         User userBlock =
-                Security.generateUserAuth((String )exchange.getIn().getHeader("CamelHttpQUery"), !USE_MD5);
+                Security.generateUserAuth((String )exchange.getIn().getHeader("CamelHttpQuery"), !USE_MD5);
 
         GetResource getResource = new GetResource();
         getResource.setUser(userBlock);
@@ -80,7 +80,7 @@ public class Resource {
         LOGGER.info("Generate Insert Resource Body For ResourceID: {}", id);
         // TODO: The request should have the information for the request, however, this is hardcoded for now:
         User userBlock =
-                Security.generateUserAuth((String )exchange.getIn().getHeader("CamelHttpQUery"), !USE_MD5);
+                Security.generateUserAuth((String )exchange.getIn().getHeader("CamelHttpQuery"), !USE_MD5);
 
         InsertResource insertResource = new InsertResource();
         insertResource.setUser(userBlock);

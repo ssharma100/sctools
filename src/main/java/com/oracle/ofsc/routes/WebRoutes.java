@@ -33,18 +33,18 @@ public class WebRoutes extends RouteBuilder {
     public void configure() {
         // RESTful End Point For Resource Management
         // - Get Resource
-        from("restlet:http://localhost:8085/sctool/v1/resource/{id}?restletMethods=post,get")
+        from("restlet:http://localhost:8085/sctool/v1/transportation/resource/{id}?restletMethods=post,get")
                 .to("log:" + LOG_CLASS + "?showAll=true&multiline=true&level=INFO")
                 .choice()
                     .when(isPost)
-                        .to("direct://resource/insert")
+                        .to("direct://transportation/resource/insert")
                     .otherwise()
-                        .to("direct://resource/get");
+                        .to("direct://transportation/resource/get");
 
         from("restlet:http://localhost:8085/sctool/v1/activity/{activityId}?restletMethods=post,get")
                 .to("direct://extractHeaders")
                 .to("log:" + LOG_CLASS + "?showAll=true&multiline=true&level=INFO")
-                .to("direct://activity/get");
+                .to("direct://transportation/activity/get");
 
     }
 }
