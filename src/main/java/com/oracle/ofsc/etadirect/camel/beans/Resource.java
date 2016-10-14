@@ -39,9 +39,12 @@ public class Resource {
      */
     public void mapToGetRequest (Exchange exchange) {
         String externalId = (String )exchange.getIn().getHeader("id");
+
         LOGGER.info("Generate Body For ResourceID: {}", externalId);
         // TODO: The request should have the information for the request, however, this is hardcoded for now:
-        User userBlock = Security.generateUserAuth(COMPANY, USER, PASSWD, !USE_MD5);
+        User userBlock =
+                Security.generateUserAuth((String )exchange.getIn().getHeader("CamelHttpQUery"), !USE_MD5);
+
         GetResource getResource = new GetResource();
         getResource.setUser(userBlock);
         getResource.setId(externalId);
@@ -72,7 +75,9 @@ public class Resource {
         String id = (String )exchange.getIn().getHeader("id");
         LOGGER.info("Generate Insert Resource Body For ResourceID: {}", id);
         // TODO: The request should have the information for the request, however, this is hardcoded for now:
-        User userBlock = Security.generateUserAuth(COMPANY, USER, PASSWD, !USE_MD5);
+        User userBlock =
+                Security.generateUserAuth((String )exchange.getIn().getHeader("CamelHttpQUery"), !USE_MD5);
+
         InsertResource insertResource = new InsertResource();
         insertResource.setUser(userBlock);
         insertResource.setId(id);

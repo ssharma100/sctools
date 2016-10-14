@@ -42,6 +42,7 @@ public class WebRoutes extends RouteBuilder {
                         .to("direct://resource/get");
 
         from("restlet:http://localhost:8085/sctool/v1/activity/{activityId}?restletMethods=post,get")
+                .to("direct://extractHeaders")
                 .to("log:" + LOG_CLASS + "?showAll=true&multiline=true&level=INFO")
                 .to("direct://activity/get");
 

@@ -29,7 +29,7 @@
     <name>OFSC ETAdirect Integration</name>
     <url>http://www.oracle.com/cloudservice</url>
     <properties>
-        <camel-version>2.14.0</camel-version>
+        <camel-version>2.15.1</camel-version>
     </properties>
 
 

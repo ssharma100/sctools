@@ -1,6 +1,8 @@
 package com.oracle.ofsc.etadirect.camel.beans;
 
 import com.google.common.base.Preconditions;
+import com.google.common.base.Splitter;
+import com.google.common.collect.Lists;
 import com.oracle.ofsc.etadirect.soap.User;
 import org.joda.time.DateTime;
 import org.joda.time.DateTimeZone;
@@ -8,11 +10,14 @@ import org.joda.time.format.DateTimeFormatter;
 import org.joda.time.format.ISODateTimeFormat;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.util.StringUtils;;
 
 import java.nio.charset.StandardCharsets;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
-
+import java.util.Iterator;
+import java.util.List;
+import java.util.Properties;
 
 /**
  * Created by Samir on 10/6/2016.
@@ -26,12 +31,32 @@ public class Security {
 
     /**
      * Generates a JAXB object for the user block in the ETAdirect SOAP request
-     * @param company
-     * @param user
-     * @param password
+     * @param queryStr
      * @return
      */
-    public static User generateUserAuth(String company, String user, String password, boolean useMD5) {
+    public static User generateUserAuth(String queryStr, boolean useMD5) {
+
+        Preconditions.checkNotNull(queryStr, "Query String Must Be Provided For Auth");
+        List<String> params = Lists.newArrayList(Splitter.on('&').trimResults().omitEmptyStrings().split(queryStr));
+
+        String user=null;
+        String password=null;
+        String company=null;
+
+        for (String param : params) {
+            String[] nvpair = param.split("=", 2);
+            switch (nvpair[0]) {
+            case "user":
+                user = nvpair[1];
+                break;
+            case "company":
+                company = nvpair[1];
+                break;
+            case "passwd":
+                password = nvpair[1];
+                break;
+            }
+        }
         Preconditions.checkNotNull(company, "Must Provide 'company' For Auth Credentials");
         Preconditions.checkNotNull(user, "Must Provide 'user' For Auth Credentials");
         Preconditions.checkNotNull(password, "Must Provide 'password' For Auth Credentials");
