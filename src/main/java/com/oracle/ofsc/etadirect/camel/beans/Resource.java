@@ -5,6 +5,7 @@ import com.oracle.ofsc.transforms.TransportResourceData;
 import org.apache.camel.Body;
 import org.apache.camel.Exchange;
 import org.apache.camel.Predicate;
+import org.apache.commons.lang3.StringUtils;
 import org.restlet.util.Series;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -99,8 +100,16 @@ public class Resource {
         properties.add(new Property("name", td.getName()));
         properties.add(new Property("language", "en"));
         properties.add(new Property("time_zone", "Pacific"));
-
         insertResource.setProperties(properties);
+
+        // Look For Any Work Skills
+        if (StringUtils.isNotBlank(td.getLiftGate())) {
+            WorkSkill lifGate = new WorkSkill();
+            ArrayList<WorkSkill> workSkills = new ArrayList<>(5);
+            workSkills.add(new WorkSkill("LVL2", "100"));
+            insertResource.setWorkSkills(workSkills);
+        }
+
 
         String soapBody = null;
         try {

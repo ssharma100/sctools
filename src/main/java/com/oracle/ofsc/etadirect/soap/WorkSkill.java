@@ -1,5 +1,7 @@
 package com.oracle.ofsc.etadirect.soap;
 
+import javax.xml.bind.annotation.XmlAccessType;
+import javax.xml.bind.annotation.XmlAccessorType;
 import javax.xml.bind.annotation.XmlElement;
 import javax.xml.bind.annotation.XmlType;
 
@@ -8,14 +10,20 @@ import javax.xml.bind.annotation.XmlType;
  */
 @SuppressWarnings("unused")
 @XmlType(propOrder = { "label", "ratio" })
+@XmlAccessorType(XmlAccessType.PROPERTY)
 public class WorkSkill {
 
     private String label;
     private String ratio;
 
     public WorkSkill() {
-
     }
+
+    public WorkSkill (String label, String ratio) {
+        this.label = label;
+        this.ratio = ratio;
+    }
+
     @XmlElement(name="label")
     public String getLabel() {
         return label;
@@ -25,7 +33,7 @@ public class WorkSkill {
         this.label = label;
     }
 
-    @XmlElement(name="value")
+    @XmlElement(name="ratio")
     public String getRatio() {
         return ratio;
     }

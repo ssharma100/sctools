@@ -8,14 +8,15 @@ import java.util.List;
  */
 
 @XmlRootElement(name="urn:insert_resource")
-@XmlType(propOrder = { "user", "id", "properties" })
-@XmlSeeAlso({User.class, Property.class})
+@XmlType(propOrder = { "user", "id", "properties", "workSkills" })
+@XmlSeeAlso({User.class, Property.class, WorkSkill.class})
 @XmlAccessorType(XmlAccessType.PROPERTY)
 public class InsertResource {
 
     public User user;
     public String id;
     public List<Property> properties;
+    public List<WorkSkill> workSkills;
 
     public InsertResource () {
 
@@ -45,5 +46,15 @@ public class InsertResource {
 
     public void setProperties(List<Property> properties) {
         this.properties = properties;
+    }
+
+    @XmlElementWrapper(name="workskills")
+    @XmlElement(name="workskill")
+    public List<WorkSkill> getWorkSkills() {
+        return workSkills;
+    }
+
+    public void setWorkSkills(List<WorkSkill> workSkills) {
+        this.workSkills = workSkills;
     }
 }
