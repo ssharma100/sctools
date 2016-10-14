@@ -13,10 +13,10 @@ import java.util.List;
 @XmlAccessorType(XmlAccessType.PROPERTY)
 public class InsertResource {
 
-    public User user;
-    public String id;
-    public List<Property> properties;
-    public List<WorkSkill> workSkills;
+    private User user;
+    private String id;
+    private List<Property> properties;
+    private List<WorkSkill> workSkills;
 
     public InsertResource () {
 
