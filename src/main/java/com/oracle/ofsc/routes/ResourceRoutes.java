@@ -2,6 +2,7 @@ package com.oracle.ofsc.routes;
 
 
 import org.apache.camel.Exchange;
+import org.apache.camel.Predicate;
 import org.apache.camel.builder.RouteBuilder;
 import org.apache.camel.processor.interceptor.Tracer;
 
@@ -13,7 +14,6 @@ import org.apache.camel.processor.interceptor.Tracer;
 public class ResourceRoutes extends RouteBuilder {
 
     private static final String LOG_CLASS = "com.oracle.ofsc.routes.ResourceRoutes";
-
 
     @Override
     public void configure() throws Exception {

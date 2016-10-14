@@ -2,6 +2,8 @@ package com.oracle.ofsc.etadirect.camel.beans;
 
 import com.oracle.ofsc.etadirect.soap.*;
 import org.apache.camel.Exchange;
+import org.apache.camel.Predicate;
+import org.restlet.util.Series;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -72,6 +74,8 @@ public class Resource {
      *
      */
     public void mapToInsertResource (Exchange exchange) {
+        Series restHeaders = (Series )exchange.getIn().getHeader("org.restlet.http.headers");
+        String oppty = restHeaders.getFirstValue("Oppty");
         String id = (String )exchange.getIn().getHeader("id");
         LOGGER.info("Generate Insert Resource Body For ResourceID: {}", id);
         // TODO: The request should have the information for the request, however, this is hardcoded for now:
