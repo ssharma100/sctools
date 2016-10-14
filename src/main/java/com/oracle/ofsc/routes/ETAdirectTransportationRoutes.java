@@ -6,12 +6,15 @@ import com.oracle.ofsc.etadirect.soap.GetResource;
 import org.apache.camel.LoggingLevel;
 import org.apache.camel.Predicate;
 import org.apache.camel.builder.RouteBuilder;
+import org.apache.camel.dataformat.bindy.csv.BindyCsvDataFormat;
+import org.apache.camel.spi.DataFormat;
 
 /**
  * Created by Samir on 10/3/2016.
  */
 public class ETAdirectTransportationRoutes extends RouteBuilder{
     private static final String LOG_CLASS = "com.oracle.ofsc.routes.ETAdirectRoutes";
+    private DataFormat bindy = new BindyCsvDataFormat("com.oracle.ofsc.transforms");
 
     @Override
     public void configure() throws Exception {
@@ -23,11 +26,12 @@ public class ETAdirectTransportationRoutes extends RouteBuilder{
                 .bean(Resource.class, "mapToGetRequest")
                 .to("direct://etadirectsoap/resource");
 
-        from("direct://transportation/resource/insert")
-                .routeId("etaDirectResourceInsert")
-                .to("log:" + LOG_CLASS + "?level=INFO")
-                .bean(Resource.class, "mapToInsertResource")
-                .to("direct://etadirectsoap/resource");
+        from("direct://transportation/resource/insert").routeId("etaDirectResourceInsert")
+                .unmarshal(bindy)
+                .split(body())
+                    .to("log:" + LOG_CLASS + "?level=INFO")
+                    .bean(Resource.class, "mapToInsertResource")
+                    .to("direct://etadirectsoap/resource");
 
         from("direct://transportation/activity/get")
                 .routeId("etaDirectActivityGet")

@@ -7,7 +7,7 @@ import org.apache.camel.dataformat.bindy.annotation.DataField;
  * Modeling for ArcBest for transportation provides
  * and the resources (usually trucks) that they model
  * as resources.
- * 
+ *
  */
 @CsvRecord(separator = ",")
 public class TransportResourceData {
@@ -18,7 +18,7 @@ public class TransportResourceData {
     private int truckLength;
 
     @DataField(pos=3)
-    private int name;
+    private String name;
 
     @DataField(pos=4)
     private String liftGate;
@@ -45,11 +45,11 @@ public class TransportResourceData {
         this.truckLength = truckLength;
     }
 
-    public int getName() {
+    public String getName() {
         return name;
     }
 
-    public void setName(int name) {
+    public void setName(String name) {
         this.name = name;
     }
 

@@ -1,6 +1,8 @@
 package com.oracle.ofsc.etadirect.camel.beans;
 
 import com.oracle.ofsc.etadirect.soap.*;
+import com.oracle.ofsc.transforms.TransportResourceData;
+import org.apache.camel.Body;
 import org.apache.camel.Exchange;
 import org.apache.camel.Predicate;
 import org.restlet.util.Series;
@@ -12,6 +14,7 @@ import javax.xml.bind.JAXBException;
 import javax.xml.bind.Marshaller;
 import java.io.StringWriter;
 import java.util.ArrayList;
+import java.util.HashMap;
 
 /**
  * Provides mapping of the current request to the required XML that should be
@@ -74,30 +77,32 @@ public class Resource {
      *
      */
     public void mapToInsertResource (Exchange exchange) {
-        Series restHeaders = (Series )exchange.getIn().getHeader("org.restlet.http.headers");
-        String oppty = restHeaders.getFirstValue("Oppty");
         String id = (String )exchange.getIn().getHeader("id");
         LOGGER.info("Generate Insert Resource Body For ResourceID: {}", id);
         // TODO: The request should have the information for the request, however, this is hardcoded for now:
         User userBlock =
                 Security.generateUserAuth((String )exchange.getIn().getHeader("CamelHttpQuery"), !USE_MD5);
+        HashMap<String, TransportResourceData> map =
+                (HashMap<String, TransportResourceData>) exchange.getIn().getBody();
+        TransportResourceData td = map.get("com.oracle.ofsc.transforms.TransportResourceData");
 
         InsertResource insertResource = new InsertResource();
         insertResource.setUser(userBlock);
-        insertResource.setId(id);
+        insertResource.setId(td.getName());
+
 
         // Mandatory Elements
         ArrayList<Property> properties = new ArrayList<>(10);
         properties.add(new Property("status", "active"));
-        properties.add(new Property("parent_id", "55100"));
+        properties.add(new Property("parent_id", id));
         properties.add(new Property("type", "TR"));
-        properties.add(new Property("name", id));
+        properties.add(new Property("name", td.getName()));
         properties.add(new Property("language", "en"));
         properties.add(new Property("time_zone", "Pacific"));
 
         insertResource.setProperties(properties);
 
-        String body = null;
+        String soapBody = null;
         try {
             JAXBContext context = JAXBContext.newInstance(InsertResource.class);
             Marshaller marshaller = context.createMarshaller();
@@ -105,14 +110,13 @@ public class Resource {
             marshaller.setProperty(Marshaller.JAXB_FRAGMENT, true);
             StringWriter sw = new StringWriter();
             marshaller.marshal(insertResource, sw);
-            body = sw.toString();
-            LOGGER.info("Generated Body: \n {}", body);
+            soapBody = sw.toString();
+            LOGGER.debug("Generated Body: \n {}", soapBody);
         }catch (JAXBException e) {
             LOGGER.error("Failed To Marshal Object: {}", e.getMessage());
         }
         StringBuffer sb = new StringBuffer();
-        sb.append(SOAP_WRAPPER_HEADER).append(body).append(SOAP_WRAPPER_FOOTER);
+        sb.append(SOAP_WRAPPER_HEADER).append(soapBody).append(SOAP_WRAPPER_FOOTER);
         exchange.getIn().setBody(sb.toString());
-
     }
 }
