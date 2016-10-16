@@ -2,11 +2,8 @@ package com.oracle.ofsc.etadirect.camel.beans;
 
 import com.oracle.ofsc.etadirect.soap.*;
 import com.oracle.ofsc.transforms.TransportResourceData;
-import org.apache.camel.Body;
 import org.apache.camel.Exchange;
-import org.apache.camel.Predicate;
 import org.apache.commons.lang3.StringUtils;
-import org.restlet.util.Series;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 

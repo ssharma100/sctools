@@ -15,6 +15,7 @@ import org.springframework.util.StringUtils;;
 import java.nio.charset.StandardCharsets;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
+import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Properties;
@@ -31,36 +32,12 @@ public class Security {
 
     /**
      * Generates a JAXB object for the user block in the ETAdirect SOAP request
-     * @param queryStr
+     * @param camelHttpQuery
      * @return
      */
-    public static User generateUserAuth(String queryStr, boolean useMD5) {
+    public static User generateUserAuth(String camelHttpQuery, boolean useMD5) {
 
-        Preconditions.checkNotNull(queryStr, "Query String Must Be Provided For Auth");
-        List<String> params = Lists.newArrayList(Splitter.on('&').trimResults().omitEmptyStrings().split(queryStr));
-
-        String user=null;
-        String password=null;
-        String company=null;
-
-        for (String param : params) {
-            String[] nvpair = param.split("=", 2);
-            switch (nvpair[0]) {
-            case "user":
-                user = nvpair[1];
-                break;
-            case "company":
-                company = nvpair[1];
-                break;
-            case "passwd":
-                password = nvpair[1];
-                break;
-            }
-        }
-        Preconditions.checkNotNull(company, "Must Provide 'company' For Auth Credentials");
-        Preconditions.checkNotNull(user, "Must Provide 'user' For Auth Credentials");
-        Preconditions.checkNotNull(password, "Must Provide 'password' For Auth Credentials");
-
+        HashMap<String, String> authInfo = extractAuthInfo(camelHttpQuery);
         // Get current time in ISO 8601 Format:
         DateTime currentTime = new DateTime(DateTimeZone.UTC);
         DateTimeFormatter fmt = ISODateTimeFormat.dateTimeNoMillis();
@@ -71,14 +48,14 @@ public class Security {
         String auth = null;
         try {
             if (useMD5) {
-                String md5Passwd = hexMD5Encode(password);
+                String md5Passwd = hexMD5Encode(authInfo.get("passwd"));
                 auth = hexMD5Encode(now + md5Passwd);
                 LOGGER.info("Auth String (MD5): {}", auth);
             }
             else {
-                String loginHash = hexSHA256Encode(user);
+                String loginHash = hexSHA256Encode(authInfo.get("user"));
                 LOGGER.debug("Login Hash: {}" , loginHash);
-                String passHash = hexSHA256Encode(password + loginHash);
+                String passHash = hexSHA256Encode(authInfo.get("passwd") + loginHash);
                 LOGGER.debug("Password Hash: {}", passHash);
                 auth = hexSHA256Encode(now + passHash);
                 LOGGER.info("Auth String (SHA256): {}", auth);
@@ -90,8 +67,8 @@ public class Security {
 
         User userBlock = new User();
         // Format the user block as per auth structure/requirements
-        userBlock.setCompany(company);
-        userBlock.setLogin(user);
+        userBlock.setCompany(authInfo.get("company"));
+        userBlock.setLogin(authInfo.get("user"));
         userBlock.setNow(now);
         userBlock.setAuth_string(auth);
         return userBlock;
@@ -125,4 +102,23 @@ public class Security {
         }
         return sb.toString();
     }
+
+    public static HashMap<String, String> extractAuthInfo(String queryStr) {
+        Preconditions.checkNotNull(queryStr, "Query String Must Be Provided For Auth");
+        List<String> params = Lists.newArrayList(Splitter.on('&').trimResults().omitEmptyStrings().split(queryStr));
+        HashMap<String, String> map = new HashMap<>(4);
+
+
+        for (String param : params) {
+            String[] nvpair = param.split("=", 2);
+            map.put(nvpair[0], nvpair[1]);
+        }
+        Preconditions.checkArgument(!map.isEmpty(), "No Credentials Values Found");
+        Preconditions.checkNotNull(map.get("company"), "Must Provide 'company' For Auth Credentials");
+        Preconditions.checkNotNull(map.get("user"), "Must Provide 'user' For Auth Credentials");
+        Preconditions.checkNotNull(map.get("passwd"), "Must Provide 'password' For Auth Credentials");
+
+        return map;
+    }
+
 }

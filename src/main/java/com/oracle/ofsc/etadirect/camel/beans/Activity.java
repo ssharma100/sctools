@@ -1,11 +1,13 @@
 package com.oracle.ofsc.etadirect.camel.beans;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.oracle.ofsc.etadirect.soap.GetActivity;
-import com.oracle.ofsc.etadirect.soap.InsertActivity;
 import com.oracle.ofsc.etadirect.soap.Property;
 import com.oracle.ofsc.etadirect.soap.User;
 import org.apache.camel.Exchange;
 import org.joda.time.DateTime;
+import org.joda.time.Period;
 import org.joda.time.format.DateTimeFormat;
 import org.joda.time.format.DateTimeFormatter;
 import org.slf4j.Logger;
@@ -14,15 +16,16 @@ import org.slf4j.LoggerFactory;
 import javax.xml.bind.JAXBContext;
 import javax.xml.bind.JAXBException;
 import javax.xml.bind.Marshaller;
-import javax.xml.bind.Unmarshaller;
 import java.io.StringWriter;
 import java.util.ArrayList;
+import java.util.HashMap;
 
 /**
  * Created by Samir on 10/9/2016.
  */
 public class Activity {
     private static final Logger LOGGER = LoggerFactory.getLogger(Activity.class.getName());
+    private static final ObjectMapper activityMapper = new ObjectMapper();
 
     private static final String SOAP_WRAPPER_HEADER =
             "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n" +
@@ -43,7 +46,6 @@ public class Activity {
     public void mapToGetRequest (Exchange exchange) {
         String activityId = (String )exchange.getIn().getHeader("id");
         LOGGER.info("Generate Body For ActivityID: {}", activityId);
-        // TODO: The request should have the information for the request, however, this is hardcoded for now:
         User userBlock =
                 Security.generateUserAuth((String )exchange.getIn().getHeader("CamelHttpQuery"), !USE_MD5);
 
@@ -69,15 +71,18 @@ public class Activity {
         exchange.getIn().setBody(sb.toString());
     }
 
-    public void mapToInsertRequest (Exchange exchange) {
+    /**
+     *
+     * @param exchange
+     */
+    public void mapToInsertSoapRequest (Exchange exchange) {
         DateTimeFormatter dtf = DateTimeFormat.forPattern("yyyy-MM-dd");
         String bucketId = (String) exchange.getIn().getHeader("id");
         LOGGER.info("Generate Body For BucketID: {}", bucketId);
-        // TODO: The request should have the information for the request, however, this is hardcoded for now:
         User userBlock =
                 Security.generateUserAuth((String )exchange.getIn().getHeader("CamelHttpQuery"), !USE_MD5);
 
-        InsertActivity activityIns = new InsertActivity();
+        com.oracle.ofsc.etadirect.soap.InsertActivity activityIns = new com.oracle.ofsc.etadirect.soap.InsertActivity();
         activityIns.setUser(userBlock);
 
         activityIns.setBucketId(bucketId);
@@ -95,7 +100,7 @@ public class Activity {
         // Convert To String As The Mapping For spring-ws will not correctly set the headers in the Soap Envelope
         String soapBody = null;
         try {
-            JAXBContext context = JAXBContext.newInstance(InsertActivity.class);
+            JAXBContext context = JAXBContext.newInstance(com.oracle.ofsc.etadirect.soap.InsertActivity.class);
             Marshaller marshaller = context.createMarshaller();
             marshaller.setProperty(Marshaller.JAXB_FORMATTED_OUTPUT, true);
             marshaller.setProperty(Marshaller.JAXB_FRAGMENT, true);
@@ -110,5 +115,40 @@ public class Activity {
         exchange.getIn().setBody(sb.toString());
     }
 
+
+    public void mapToInsertRestRequest (Exchange exchange) {
+        DateTimeFormatter dtf = DateTimeFormat.forPattern("yyyy-MM-dd");
+        String bucketId = (String) exchange.getIn().getHeader("id");
+        LOGGER.info("Generate Body For BucketID: {}", bucketId);
+
+        HashMap<String, String> authInfo =
+                Security.extractAuthInfo((String )exchange.getIn().getHeader("CamelHttpQuery"));
+
+        String username = authInfo.get("user") + "@" + authInfo.get("company");
+        String passwd =   authInfo.get("passwd");
+        com.oracle.ofsc.etadirect.rest.InsertActivity activityIns = new com.oracle.ofsc.etadirect.rest.InsertActivity();
+
+        activityIns.setResourceId(bucketId);
+        activityIns.setDate(dtf.print(new DateTime().plus(Period.days(1))));
+        activityIns.setActivityType("04");
+        activityIns.setApptNumber(new DateTime().toString());
+        activityIns.setCustomerName("Joe Blow");
+        activityIns.setTimeZone("Pacific");
+        activityIns.setDuration(10);
+
+        // Skip The Pos In Route - Default To Unordered.
+        // Convert To String As The Mapping For spring-ws will not correctly set the headers in the Soap Envelope
+        String restBody = null;
+        try {
+            restBody = activityMapper.writeValueAsString(activityIns);
+        } catch (JsonProcessingException e) {
+            LOGGER.error("Failed To Marshal JSON Object: {}", e.getMessage());
+        }
+        // Set Values For HTTP4:
+        exchange.getIn().setHeader("username", username);
+        exchange.getIn().setHeader("passwd", passwd);
+        exchange.getIn().setHeader(Exchange.CONTENT_TYPE, "application/json");
+        exchange.getIn().setBody(restBody);
+    }
 }
 
