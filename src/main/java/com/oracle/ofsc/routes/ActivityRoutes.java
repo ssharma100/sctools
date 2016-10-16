@@ -36,7 +36,8 @@ public class ActivityRoutes extends RouteBuilder {
                 // Send Actual request to endpoint of Res Service (ETAdirect)
                 .setHeader(Exchange.HTTP_METHOD, constant(org.apache.camel.component.http4.HttpMethods.POST))
                 .setHeader("CamelHttpQuery", constant(null))
-                .to("https4:api.etadirect.com/rest/ofscCore/v1/activities?bridgeEndpoint=true&throwExceptionOnFailure=false&authenticationPreemptive=true&authMethod=Basic&authUsername='${in.header[username]}'&authPassword='${in.header[passwd]'")
+
+                .toD("https4:api.etadirect.com/rest/ofscCore/v1/activities/?bridgeEndpoint=true&throwExceptionOnFailure=false&authenticationPreemptive=true&authUsername=${in.header[username]}&authPassword=${in.header[passwd]}")
                 .to("log:" + LOG_CLASS + "?level=INFO");
     }
 }

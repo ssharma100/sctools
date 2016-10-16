@@ -14,7 +14,7 @@ import org.apache.camel.spi.DataFormat;
  */
 public class ETAdirectTransportationRoutes extends RouteBuilder{
     private static final String LOG_CLASS = "com.oracle.ofsc.routes.ETAdirectRoutes";
-    private DataFormat bindy = new BindyCsvDataFormat("com.oracle.ofsc.transforms");
+    private DataFormat resourceInsert = new BindyCsvDataFormat(com.oracle.ofsc.transforms.TransportResourceData.class);
 
     @Override
     public void configure() throws Exception {
@@ -27,7 +27,7 @@ public class ETAdirectTransportationRoutes extends RouteBuilder{
                 .to("direct://etadirectsoap/resource");
 
         from("direct://transportation/resource/insert").routeId("etaDirectResourceInsert")
-                .unmarshal(bindy)
+                .unmarshal(resourceInsert)
                 .split(body())
                     .to("log:" + LOG_CLASS + "?level=INFO")
                     .bean(Resource.class, "mapToInsertResource")
