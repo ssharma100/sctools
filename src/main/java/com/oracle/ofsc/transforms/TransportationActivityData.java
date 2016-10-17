@@ -21,28 +21,30 @@ public class TransportationActivityData {
     @DataField(pos=3)
     private String  resourceId;
     @DataField(pos=4)
-    private String activityDate;
+    private String  activityType;
     @DataField(pos=5)
-    private String  workOrder;
+    private String activityDate;
     @DataField(pos=6)
+    private String  workOrder;
+    @DataField(pos=7)
     private int     weight;
-    @DataField(pos=7, precision = 2)
+    @DataField(pos=8, precision = 2)
     private BigDecimal cube;
-    @DataField(pos=8, precision = 4)
-    private BigDecimal latitude;
     @DataField(pos=9, precision = 4)
+    private BigDecimal latitude;
+    @DataField(pos=10, precision = 4)
     private BigDecimal longitude;
-    @DataField(pos=10)
-    private int         duration;
     @DataField(pos=11)
-    private String      zipCode;
+    private int         duration;
     @DataField(pos=12)
-    private String      deliveryStart;
+    private String      zipCode;
     @DataField(pos=13)
-    private String      deliveryEnd;
+    private String      deliveryStart;
     @DataField(pos=14)
-    private String      liftGate;
+    private String      deliveryEnd;
     @DataField(pos=15)
+    private String      liftGate;
+    @DataField(pos=16)
     private String      pickUpTime;
 
     public TransportationActivityData() {}
@@ -165,5 +167,13 @@ public class TransportationActivityData {
 
     public void setActivityDate(String activityDate) {
         this.activityDate = activityDate;
+    }
+
+    public String getActivityType() {
+        return activityType;
+    }
+
+    public void setActivityType(String activityType) {
+        this.activityType = activityType;
     }
 }

@@ -26,6 +26,9 @@ public class InsertActivity {
     private int   travelTime = 20;
     private String workZone;
 
+    private String deliveryWindowStart;
+    private String deliveryWindowEnd;
+
     private String streetAddress;
     private String city;
     private String stateProvince;
@@ -173,5 +176,21 @@ public class InsertActivity {
 
     public void setPostalCode(String postalCode) {
         this.postalCode = postalCode;
+    }
+
+    public String getDeliveryWindowStart() {
+        return deliveryWindowStart;
+    }
+
+    public void setDeliveryWindowStart(String deliveryWindowStart) {
+        this.deliveryWindowStart = deliveryWindowStart;
+    }
+
+    public String getDeliveryWindowEnd() {
+        return deliveryWindowEnd;
+    }
+
+    public void setDeliveryWindowEnd(String deliveryWindowEnd) {
+        this.deliveryWindowEnd = deliveryWindowEnd;
     }
 }

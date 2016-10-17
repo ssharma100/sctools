@@ -137,17 +137,18 @@ public class Activity {
         com.oracle.ofsc.etadirect.rest.InsertActivity activityIns = new com.oracle.ofsc.etadirect.rest.InsertActivity();
 
         activityIns.setResourceId(bucketId);
-        activityIns.setDate(dtf.print(new DateTime().plus(Period.days(1))));
-        activityIns.setActivityType("1000");
-        activityIns.setApptNumber(new DateTime().toString());
+        activityIns.setDate(activityData.getActivityDate());
+        activityIns.setActivityType(activityData.getActivityType());
+        activityIns.setApptNumber(activityData.getAppointmentKey());
         activityIns.setCustomerName("Joe Blow");
         activityIns.setTimeZone("Pacific");
         activityIns.setDuration(activityData.getDuration());
         activityIns.setLatitude(activityData.getLatitude());
         activityIns.setLongitude(activityData.getLongitude());
+        activityIns.setDeliveryWindowStart(activityData.getDeliveryStart());
+        activityIns.setDeliveryWindowEnd(activityData.getDeliveryEnd());
 
         // Skip The Pos In Route - Default To Unordered.
-        // Convert To String As The Mapping For spring-ws will not correctly set the headers in the Soap Envelope
         String restBody = null;
         try {
             restBody = activityMapper.writeValueAsString(activityIns);
