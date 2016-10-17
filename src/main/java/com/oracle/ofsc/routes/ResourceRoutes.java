@@ -26,7 +26,7 @@ public class ResourceRoutes extends RouteBuilder {
                 .end()
                 // Send actual request to endpoint of Web Service.
                 .setHeader(Exchange.HTTP_METHOD, constant(org.apache.camel.component.http4.HttpMethods.POST))
-                .to("https4:api.etadirect.com/soap/resource-management/v3/?bridgeEndpoint=true")
+                .to("https4:api.etadirect.com/soap/resource-management/v3/?bridgeEndpoint=true&throwExceptionOnFailure=false")
                 .to("log:" + LOG_CLASS + "?level=INFO");
 
 

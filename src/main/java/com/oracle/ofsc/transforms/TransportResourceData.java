@@ -9,7 +9,7 @@ import org.apache.camel.dataformat.bindy.annotation.DataField;
  * as resources.
  *
  */
-@CsvRecord(separator = ",")
+@CsvRecord(separator = ",", skipFirstLine = true)
 public class TransportResourceData {
     @DataField(pos=1)
     private String parentId;
@@ -28,6 +28,9 @@ public class TransportResourceData {
 
     @DataField(pos=6)
     private String cubeCap;
+
+    @DataField(pos=7)
+    private String timezone;
 
     public String getParentId() {
         return parentId;
@@ -75,5 +78,13 @@ public class TransportResourceData {
 
     public void setCubeCap(String cubeCap) {
         this.cubeCap = cubeCap;
+    }
+
+    public String getTimezone() {
+        return timezone;
+    }
+
+    public void setTimezone(String timezone) {
+        this.timezone = timezone;
     }
 }

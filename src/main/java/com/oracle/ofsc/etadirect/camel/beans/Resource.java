@@ -13,6 +13,7 @@ import javax.xml.bind.Marshaller;
 import java.io.StringWriter;
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.List;
 
 /**
  * Provides mapping of the current request to the required XML that should be
@@ -75,9 +76,7 @@ public class Resource {
         // TODO: The request should have the information for the request, however, this is hardcoded for now:
         User userBlock =
                 Security.generateUserAuth((String )exchange.getIn().getHeader("CamelHttpQuery"), !USE_MD5);
-        HashMap<String, TransportResourceData> map =
-                (HashMap<String, TransportResourceData>) exchange.getIn().getBody();
-        TransportResourceData td = map.get("com.oracle.ofsc.transforms.TransportResourceData");
+        TransportResourceData td = (TransportResourceData )exchange.getIn().getBody();
 
         InsertResource insertResource = new InsertResource();
         insertResource.setUser(userBlock);
@@ -86,19 +85,26 @@ public class Resource {
 
         // Mandatory Elements
         ArrayList<Property> properties = new ArrayList<>(10);
+        insertResource.setProperties(properties);
         properties.add(new Property("status", "active"));
         properties.add(new Property("parent_id", id));
-        properties.add(new Property("type", "TR"));
         properties.add(new Property("name", td.getName()));
         properties.add(new Property("language", "en"));
-        properties.add(new Property("time_zone", "Pacific"));
-        insertResource.setProperties(properties);
+        properties.add(new Property("time_zone", td.getTimezone()));
+        properties.add(new Property("weight_cap", td.getWeight()));
+        properties.add(new Property("cubic_cap", td.getCubeCap()));
+        // Overridden Later If This Is A Lift Gate Truck
+        properties.add(new Property("type", "PR"));
 
         // Look For Any Work Skills
-        if (StringUtils.isNotBlank(td.getLiftGate())) {
-            ArrayList<WorkSkill> workSkills = new ArrayList<>(5);
-            workSkills.add(new WorkSkill("LVL2", "100"));
-            insertResource.setWorkSkills(workSkills);
+        if (StringUtils.isNotBlank(td.getLiftGate()) && td.getLiftGate().equalsIgnoreCase("y")) {
+            WorkSkills workSkills = new WorkSkills();
+            workSkills.setWorkskillGroup("TruckingGroup");
+            ArrayList<WorkSkill> workskill = new ArrayList<>(5);
+            workskill.add(new WorkSkill("LVL2", "50"));
+            workSkills.setWorkskill(workskill);
+            insertResource.setWorkskills(workSkills);
+            properties.add(new Property("type", "LGT"));
         }
 
         String soapBody = null;
@@ -113,6 +119,7 @@ public class Resource {
         }catch (JAXBException e) {
             LOGGER.error("Failed To Marshal Object: {}", e.getMessage());
         }
+
         StringBuffer sb = new StringBuffer();
         sb.append(SOAP_WRAPPER_HEADER).append(soapBody).append(SOAP_WRAPPER_FOOTER);
         exchange.getIn().setBody(sb.toString());

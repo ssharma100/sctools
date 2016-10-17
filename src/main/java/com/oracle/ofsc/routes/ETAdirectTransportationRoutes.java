@@ -26,7 +26,8 @@ public class ETAdirectTransportationRoutes extends RouteBuilder{
                 .bean(Resource.class, "mapToGetRequest")
                 .to("direct://etadirectsoap/resource");
 
-        from("direct://transportation/resource/insert").routeId("etaDirectResourceInsert")
+        from("direct://transportation/resource/insert")
+                .routeId("etaDirectResourceInsert")
                 .unmarshal(resourceInsert)
                 .split(body())
                     .to("log:" + LOG_CLASS + "?level=INFO")

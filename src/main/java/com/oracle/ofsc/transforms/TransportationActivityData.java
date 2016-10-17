@@ -8,7 +8,7 @@ import org.apache.camel.dataformat.bindy.annotation.CsvRecord;
  * This data will be used by the system to generate the calls to ETAdirect
  * when creating an activity.
  */
-@CsvRecord(separator = ",")
+@CsvRecord(separator = ",", skipFirstLine = true)
 public class TransportationActivityData {
 
 

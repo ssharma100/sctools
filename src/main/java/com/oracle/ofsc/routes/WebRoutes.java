@@ -35,6 +35,7 @@ public class WebRoutes extends RouteBuilder {
         // - Get Resource
         // - Inser Resource
         from("restlet:http://localhost:8085/sctool/v1/transportation/resource/{id}?restletMethods=post,get")
+                .routeId("invokeTransResourceCall")
                 .to("log:" + LOG_CLASS + "?showAll=true&multiline=true&level=INFO")
                 .choice()
                     .when(isPost)
@@ -46,6 +47,7 @@ public class WebRoutes extends RouteBuilder {
         // - Get Activity
         // - Insert Activity
         from("restlet:http://localhost:8085/sctool/v1/transportation/activity/{id}?restletMethods=post,get")
+                .routeId("invokeTransActivityCall")
                 .to("log:" + LOG_CLASS + "?showAll=true&multiline=true&level=INFO")
                 .choice()
                     .when(isPost)
