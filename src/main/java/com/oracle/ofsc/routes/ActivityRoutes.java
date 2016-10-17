@@ -38,6 +38,7 @@ public class ActivityRoutes extends RouteBuilder {
                 .setHeader("CamelHttpQuery", constant(null))
 
                 .toD("https4:api.etadirect.com/rest/ofscCore/v1/activities/?bridgeEndpoint=true&throwExceptionOnFailure=false&authenticationPreemptive=true&authUsername=${in.header[username]}&authPassword=${in.header[passwd]}")
-                .to("log:" + LOG_CLASS + "?level=INFO");
+                .to("log:" + LOG_CLASS + "?level=DEBUG");
+
     }
 }

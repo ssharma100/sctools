@@ -2,6 +2,7 @@ package com.oracle.ofsc.routes;
 
 import com.oracle.ofsc.etadirect.camel.beans.Activity;
 import com.oracle.ofsc.etadirect.camel.beans.Resource;
+import com.oracle.ofsc.etadirect.camel.beans.ResponseHandler;
 import com.oracle.ofsc.etadirect.soap.GetResource;
 import org.apache.camel.LoggingLevel;
 import org.apache.camel.Predicate;
@@ -15,6 +16,7 @@ import org.apache.camel.spi.DataFormat;
 public class ETAdirectTransportationRoutes extends RouteBuilder{
     private static final String LOG_CLASS = "com.oracle.ofsc.routes.ETAdirectRoutes";
     private DataFormat resourceInsert = new BindyCsvDataFormat(com.oracle.ofsc.transforms.TransportResourceData.class);
+    private DataFormat activityInsert = new BindyCsvDataFormat(com.oracle.ofsc.transforms.TransportationActivityData.class);
 
     @Override
     public void configure() throws Exception {
@@ -42,8 +44,11 @@ public class ETAdirectTransportationRoutes extends RouteBuilder{
 
         from("direct://transportation/activity/insert")
                 .routeId("etaDirectActivityInsert")
-                .to("log:" + LOG_CLASS + "?level=INFO")
-                .bean(Activity.class, "mapToInsertRestRequest")
-                .to("direct://etadirectrest/activity");
+                .unmarshal(activityInsert)
+                .split(body())
+                    .to("log:" + LOG_CLASS + "?level=DEBUG")
+                    .bean(Activity.class, "mapToInsertRestRequest")
+                    .to("direct://etadirectrest/activity")
+                    .bean(ResponseHandler.class, "restResponse");
     }
 }

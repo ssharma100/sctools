@@ -5,6 +5,8 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.oracle.ofsc.etadirect.soap.GetActivity;
 import com.oracle.ofsc.etadirect.soap.Property;
 import com.oracle.ofsc.etadirect.soap.User;
+import com.oracle.ofsc.transforms.TransportResourceData;
+import com.oracle.ofsc.transforms.TransportationActivityData;
 import org.apache.camel.Exchange;
 import org.joda.time.DateTime;
 import org.joda.time.Period;
@@ -115,7 +117,12 @@ public class Activity {
         exchange.getIn().setBody(sb.toString());
     }
 
-
+    /**
+     * Performs the mapping from the read data used in the activity to load information
+     * into the activity insertion
+     *
+     * @param exchange
+     */
     public void mapToInsertRestRequest (Exchange exchange) {
         DateTimeFormatter dtf = DateTimeFormat.forPattern("yyyy-MM-dd");
         String bucketId = (String) exchange.getIn().getHeader("id");
@@ -123,6 +130,7 @@ public class Activity {
 
         HashMap<String, String> authInfo =
                 Security.extractAuthInfo((String )exchange.getIn().getHeader("CamelHttpQuery"));
+        TransportationActivityData activityData = (TransportationActivityData )exchange.getIn().getBody();
 
         String username = authInfo.get("user") + "@" + authInfo.get("company");
         String passwd =   authInfo.get("passwd");
@@ -130,11 +138,13 @@ public class Activity {
 
         activityIns.setResourceId(bucketId);
         activityIns.setDate(dtf.print(new DateTime().plus(Period.days(1))));
-        activityIns.setActivityType("04");
+        activityIns.setActivityType("1000");
         activityIns.setApptNumber(new DateTime().toString());
         activityIns.setCustomerName("Joe Blow");
         activityIns.setTimeZone("Pacific");
-        activityIns.setDuration(10);
+        activityIns.setDuration(activityData.getDuration());
+        activityIns.setLatitude(activityData.getLatitude());
+        activityIns.setLongitude(activityData.getLongitude());
 
         // Skip The Pos In Route - Default To Unordered.
         // Convert To String As The Mapping For spring-ws will not correctly set the headers in the Soap Envelope
