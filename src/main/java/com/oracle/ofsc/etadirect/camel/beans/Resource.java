@@ -97,15 +97,22 @@ public class Resource {
         properties.add(new Property("type", "PR"));
 
         // Look For Any Work Skills
+
+        WorkSkills workSkills = new WorkSkills();
+        // Don't Set Any Groups
+        // workSkills.setWorkskillGroup("TruckingGroup");
+
+        ArrayList<WorkSkill> workskill = new ArrayList<>(5);
+        workskill.add(new WorkSkill("LVL1", "100"));
         if (StringUtils.isNotBlank(td.getLiftGate()) && td.getLiftGate().equalsIgnoreCase("y")) {
-            WorkSkills workSkills = new WorkSkills();
-            workSkills.setWorkskillGroup("TruckingGroup");
-            ArrayList<WorkSkill> workskill = new ArrayList<>(5);
-            workskill.add(new WorkSkill("LVL2", "50"));
-            workSkills.setWorkskill(workskill);
-            insertResource.setWorkskills(workSkills);
-            properties.add(new Property("type", "LGT"));
+            // Only Add LiftGate If We Have Y In The Data
+            workskill.add(new WorkSkill("LVL2", "100"));
         }
+
+        workSkills.setWorkskill(workskill);
+        insertResource.setWorkskills(workSkills);
+        properties.add(new Property("type", "LGT"));
+
 
         String soapBody = null;
         try {
