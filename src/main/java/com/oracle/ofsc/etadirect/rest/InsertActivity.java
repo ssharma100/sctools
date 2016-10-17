@@ -34,6 +34,9 @@ public class InsertActivity {
     private String stateProvince;
     private String postalCode;
 
+    // Special Items
+    private String lift_gate;
+
     public String getResourceId() {
         return resourceId;
     }
@@ -192,5 +195,13 @@ public class InsertActivity {
 
     public void setDeliveryWindowEnd(String deliveryWindowEnd) {
         this.deliveryWindowEnd = deliveryWindowEnd;
+    }
+
+    public String getLift_gate() {
+        return lift_gate;
+    }
+
+    public void setLift_gate(String lift_gate) {
+        this.lift_gate = lift_gate;
     }
 }

@@ -8,6 +8,7 @@ import com.oracle.ofsc.etadirect.soap.User;
 import com.oracle.ofsc.transforms.TransportResourceData;
 import com.oracle.ofsc.transforms.TransportationActivityData;
 import org.apache.camel.Exchange;
+import org.apache.commons.lang3.StringUtils;
 import org.joda.time.DateTime;
 import org.joda.time.Period;
 import org.joda.time.format.DateTimeFormat;
@@ -147,6 +148,11 @@ public class Activity {
         activityIns.setLongitude(activityData.getLongitude());
         activityIns.setDeliveryWindowStart(activityData.getDeliveryStart());
         activityIns.setDeliveryWindowEnd(activityData.getDeliveryEnd());
+        String liftGate = activityData.getLiftGate();
+        if (StringUtils.isNotBlank((liftGate)) && liftGate.equalsIgnoreCase("y")) {
+            activityIns.setLift_gate(liftGate);
+        }
+
 
         // Skip The Pos In Route - Default To Unordered.
         String restBody = null;
