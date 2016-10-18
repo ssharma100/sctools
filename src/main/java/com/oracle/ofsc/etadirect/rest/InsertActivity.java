@@ -28,6 +28,8 @@ public class InsertActivity {
 
     private String deliveryWindowStart;
     private String deliveryWindowEnd;
+    private String serviceWindowStart;
+    private String serviceWindowEnd;
 
     private String streetAddress;
     private String city;
@@ -203,5 +205,21 @@ public class InsertActivity {
 
     public void setLift_gate(String lift_gate) {
         this.lift_gate = lift_gate;
+    }
+
+    public String getServiceWindowStart() {
+        return serviceWindowStart;
+    }
+
+    public void setServiceWindowStart(String serviceWindowStart) {
+        this.serviceWindowStart = serviceWindowStart;
+    }
+
+    public String getServiceWindowEnd() {
+        return serviceWindowEnd;
+    }
+
+    public void setServiceWindowEnd(String serviceWindowEnd) {
+        this.serviceWindowEnd = serviceWindowEnd;
     }
 }

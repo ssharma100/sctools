@@ -146,8 +146,22 @@ public class Activity {
         activityIns.setDuration(activityData.getDuration());
         activityIns.setLatitude(activityData.getLatitude());
         activityIns.setLongitude(activityData.getLongitude());
-        activityIns.setDeliveryWindowStart(activityData.getDeliveryStart());
-        activityIns.setDeliveryWindowEnd(activityData.getDeliveryEnd());
+
+        DateTimeFormatter inFormatter = DateTimeFormat.forPattern("HH:mm:ss");
+        DateTimeFormatter outFormatter = DateTimeFormat.forPattern("HH:mm:ss");
+        // Set Appointment Time Management
+        if(StringUtils.isNotBlank(activityData.getPickUpTime())) {
+            // Make the PickUp Window 1 Hour Long
+            // We only get the start time - so set it first
+            DateTime pickUpStart = inFormatter.parseDateTime(activityData.getPickUpTime());
+            activityIns.setServiceWindowStart(outFormatter.print(pickUpStart));
+            activityIns.setServiceWindowEnd(outFormatter.print(pickUpStart.plusHours(1)));
+        } else {
+            DateTime deliveryStart = inFormatter.parseDateTime(activityData.getDeliveryStart());
+            DateTime deliveryEnd = inFormatter.parseDateTime(activityData.getDeliveryEnd());
+            activityIns.setServiceWindowStart(outFormatter.print(deliveryStart));
+            activityIns.setServiceWindowEnd(outFormatter.print(deliveryEnd));
+        }
         String liftGate = activityData.getLiftGate();
         if (StringUtils.isNotBlank((liftGate)) && liftGate.equalsIgnoreCase("y")) {
             activityIns.setLift_gate(liftGate);
