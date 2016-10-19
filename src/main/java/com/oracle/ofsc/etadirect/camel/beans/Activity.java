@@ -142,7 +142,7 @@ public class Activity {
         activityIns.setActivityType(activityData.getActivityType());
         activityIns.setApptNumber(activityData.getAppointmentKey());
         activityIns.setCustomerName("Joe Blow");
-        activityIns.setTimeZone("Pacific");
+        activityIns.setTimeZone(activityData.getTimezone());
         activityIns.setDuration(activityData.getDuration());
         activityIns.setLatitude(activityData.getLatitude());
         activityIns.setLongitude(activityData.getLongitude());

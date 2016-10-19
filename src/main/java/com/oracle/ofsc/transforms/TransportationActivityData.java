@@ -46,6 +46,8 @@ public class TransportationActivityData {
     private String      liftGate;
     @DataField(pos=16)
     private String      pickUpTime;
+    @DataField(pos=17)
+    private String      timezone;
 
     public TransportationActivityData() {}
 
@@ -175,5 +177,13 @@ public class TransportationActivityData {
 
     public void setActivityType(String activityType) {
         this.activityType = activityType;
+    }
+
+    public String getTimezone() {
+        return timezone;
+    }
+
+    public void setTimezone(String timezone) {
+        this.timezone = timezone;
     }
 }
