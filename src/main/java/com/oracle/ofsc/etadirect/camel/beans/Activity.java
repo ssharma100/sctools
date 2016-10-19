@@ -157,10 +157,16 @@ public class Activity {
             activityIns.setServiceWindowStart(outFormatter.print(pickUpStart));
             activityIns.setServiceWindowEnd(outFormatter.print(pickUpStart.plusHours(1)));
         } else {
-            DateTime deliveryStart = inFormatter.parseDateTime(activityData.getDeliveryStart());
-            DateTime deliveryEnd = inFormatter.parseDateTime(activityData.getDeliveryEnd());
-            activityIns.setServiceWindowStart(outFormatter.print(deliveryStart));
-            activityIns.setServiceWindowEnd(outFormatter.print(deliveryEnd));
+
+            if (StringUtils.isNotBlank(activityData.getDeliveryStart())) {
+                DateTime deliveryStart = inFormatter.parseDateTime(activityData.getDeliveryStart());
+                activityIns.setServiceWindowStart(outFormatter.print(deliveryStart));
+            }
+
+            if (StringUtils.isNotBlank(activityData.getDeliveryEnd()))  {
+                DateTime deliveryEnd = inFormatter.parseDateTime(activityData.getDeliveryEnd());
+                activityIns.setServiceWindowEnd(outFormatter.print(deliveryEnd));
+            }
         }
         String liftGate = activityData.getLiftGate();
         if (StringUtils.isNotBlank((liftGate)) && liftGate.equalsIgnoreCase("y")) {
