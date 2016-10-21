@@ -2,6 +2,8 @@ package com.oracle.ofsc.etadirect.rest;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 
+import java.math.BigDecimal;
+
 /**
  *
  */
@@ -16,8 +18,8 @@ public class RouteInfo {
     private String activityType;
     private Integer duration;
     private Integer travelTime;
-    private String longitude;
-    private String latitude;
+    private BigDecimal longitude;
+    private BigDecimal latitude;
     private Integer positionInRoute;
     private String deliveryWindowStart;
     private String deliveryWindowEnd;
@@ -65,22 +67,6 @@ public class RouteInfo {
 
     public void setActivityType(String activityType) {
         this.activityType = activityType;
-    }
-
-    public String getLongitude() {
-        return longitude;
-    }
-
-    public void setLongitude(String longitude) {
-        this.longitude = longitude;
-    }
-
-    public String getLatitude() {
-        return latitude;
-    }
-
-    public void setLatitude(String latitude) {
-        this.latitude = latitude;
     }
 
     public Integer getDuration() {
@@ -153,5 +139,21 @@ public class RouteInfo {
 
     public void setDate(String date) {
         this.date = date;
+    }
+
+    public BigDecimal getLongitude() {
+        return longitude;
+    }
+
+    public void setLongitude(BigDecimal longitude) {
+        this.longitude = longitude;
+    }
+
+    public BigDecimal getLatitude() {
+        return latitude;
+    }
+
+    public void setLatitude(BigDecimal latitude) {
+        this.latitude = latitude;
     }
 }

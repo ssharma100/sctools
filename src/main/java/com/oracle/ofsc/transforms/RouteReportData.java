@@ -3,6 +3,8 @@ package com.oracle.ofsc.transforms;
 import org.apache.camel.dataformat.bindy.annotation.CsvRecord;
 import org.apache.camel.dataformat.bindy.annotation.DataField;
 
+import java.math.BigDecimal;
+
 /**
  * Created by xxx_sharma on 10/20/16.
  */
@@ -41,6 +43,12 @@ public class RouteReportData {
 
     @DataField(pos=11)
     private String endTime;
+
+    @DataField(pos=12, precision = 4)
+    private BigDecimal latitude;
+
+    @DataField(pos=13, precision = 4)
+    private BigDecimal longitude;
 
     public RouteReportData() {}
 
@@ -131,5 +139,21 @@ public class RouteReportData {
     public int getRoutePosition() {
 
         return routePosition;
+    }
+
+    public BigDecimal getLongitude() {
+        return longitude;
+    }
+
+    public void setLongitude(BigDecimal longitude) {
+        this.longitude = longitude;
+    }
+
+    public BigDecimal getLatitude() {
+        return latitude;
+    }
+
+    public void setLatitude(BigDecimal latitude) {
+        this.latitude = latitude;
     }
 }

@@ -18,6 +18,8 @@ package com.oracle.ofsc.routes;
 
 import org.apache.camel.Predicate;
 import org.apache.camel.builder.RouteBuilder;
+import org.apache.camel.dataformat.bindy.csv.BindyCsvDataFormat;
+import org.apache.camel.spi.DataFormat;
 import org.apache.camel.spring.Main;
 import org.restlet.data.Method;
 
@@ -27,6 +29,8 @@ import org.restlet.data.Method;
 public class WebRoutes extends RouteBuilder {
     private static final String LOG_CLASS = "com.oracle.ofsc.routes.WebRoutes";
     private Predicate isPost = header("CamelHttpMethod").isEqualTo("POST");
+    private DataFormat routeReport = new BindyCsvDataFormat(com.oracle.ofsc.transforms.RouteReportData.class);
+
     /**
      * Let's configure the Camel routing rules using Java code...
      */
@@ -59,5 +63,12 @@ public class WebRoutes extends RouteBuilder {
                 .routeId("invokeRouteQueryCall")
                 .to("log:" + LOG_CLASS + "?showAll=true&multiline=true&level=INFO")
                 .to("direct://common/get/route");
+
+        from("restlet:http://localhost:8085/sctool/v1/bulkroute/{station}/{routeDay}?restletMethod=get")
+                .routeId("invokeBulkRouteQueryCall")
+                .to("log:" + LOG_CLASS + "?showAll=true&multiline=true&level=INFO")
+                .to("direct://common/get/route/bulk")
+                .to("log:" + LOG_CLASS + "?showAll=true&multiline=true&level=DEBUG");
+
     }
 }
