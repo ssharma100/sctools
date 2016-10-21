@@ -70,5 +70,11 @@ public class WebRoutes extends RouteBuilder {
                 .to("direct://common/get/route/bulk")
                 .to("log:" + LOG_CLASS + "?showAll=true&multiline=true&level=DEBUG");
 
+        // Call To Geolocation Information (Enhancement)
+        from("restlet:http://localhost:8085/sctool/v1/route/enhance/distance/{googleKey}?restletMethod=post")
+                .routeId("routingEnhanceDistance")
+                .to("log:" + LOG_CLASS + "?showAll=true&multiline=true&level=INFO")
+                .to("direct://common/get/route/enhance/distance")
+                .to("log:" + LOG_CLASS + "?showAll=true&multiline=true&level=DEBUG");
     }
 }

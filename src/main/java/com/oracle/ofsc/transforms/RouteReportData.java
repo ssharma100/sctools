@@ -50,6 +50,19 @@ public class RouteReportData {
     @DataField(pos=13, precision = 4)
     private BigDecimal longitude;
 
+    @DataField(pos=14)
+    private String originAddr;
+
+    @DataField(pos=15)
+    private String destAddr;
+
+    @DataField(pos=16)
+    private String driveTime;
+
+    @DataField(pos=17)
+    private String driveDistance;
+
+
     public RouteReportData() {}
 
     public void setRoutePosition(int routePosition) {
@@ -155,5 +168,37 @@ public class RouteReportData {
 
     public void setLatitude(BigDecimal latitude) {
         this.latitude = latitude;
+    }
+
+    public String getOriginAddr() {
+        return originAddr;
+    }
+
+    public void setOriginAddr(String originAddr) {
+        this.originAddr = originAddr;
+    }
+
+    public String getDestAddr() {
+        return destAddr;
+    }
+
+    public void setDestAddr(String destAddr) {
+        this.destAddr = destAddr;
+    }
+
+    public String getDriveTime() {
+        return driveTime;
+    }
+
+    public void setDriveTime(String driveTime) {
+        this.driveTime = driveTime;
+    }
+
+    public String getDriveDistance() {
+        return driveDistance;
+    }
+
+    public void setDriveDistance(String driveDistance) {
+        this.driveDistance = driveDistance;
     }
 }
