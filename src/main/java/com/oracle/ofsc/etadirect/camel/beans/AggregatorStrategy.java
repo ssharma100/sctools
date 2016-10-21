@@ -6,6 +6,7 @@ import org.apache.camel.processor.aggregate.AggregationStrategy;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.util.ArrayList;
 import java.util.List;
 
 /**
@@ -25,13 +26,23 @@ public class AggregatorStrategy implements AggregationStrategy {
         List<RouteReportData> oldResultList = oldExchange.getIn().getBody(List.class);
         List<RouteReportData>  currentResultList = newExchange.getIn().getBody(List.class);
 
+        // If the First Time Around - No Results Are Provided, Just Skip The Aggregation
+        if (null == oldResultList) {
+            LOGGER.info("No Original Results - Creating Blank");
+            oldResultList = new ArrayList<>();
+        }
         LOGGER.info("Old Exchange List: " + oldResultList.size());
-        LOGGER.info("New Exchange List: " + currentResultList.size());
 
-        // put items together
-        oldResultList.addAll(currentResultList);
-        // put combined List back on old to preserve it
-        oldExchange.getIn().setBody(oldResultList);
+        if (null == currentResultList) {
+            LOGGER.info("Aborting Aggregation - No Current Results");
+        }
+        else {
+            LOGGER.info("New Exchange List: " + currentResultList.size());
+            // put items together
+            oldResultList.addAll(currentResultList);
+            // put combined List back on old to preserve it
+            oldExchange.getIn().setBody(oldResultList);
+        }
         LOGGER.info("Updated Old Exchange List: " + oldResultList.size());
 
         // return old as this is the one that has all the orders gathered until now

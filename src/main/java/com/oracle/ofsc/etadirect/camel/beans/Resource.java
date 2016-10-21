@@ -167,34 +167,43 @@ public class Resource {
             return;
         }
 
-        // Generate the output based on the object Map To Bindy:
+
+
+
         List<RouteReportData> resultList = new ArrayList<>(10);
-        for(RouteInfo info : routeList.getItems()) {
-            RouteReportData report = new RouteReportData();
-            report.setActivityId(info.getActivityId());
-            report.setApptNumber(info.getApptNumber());
-            report.setResourceId(info.getResourceId());
-            report.setDate(info.getDate());
-            report.setStartTime(info.getStartTime());
-            report.setEndTime(info.getEndTime());
-            report.setStatus(info.getStatus());
-            report.setTimezone(info.getResourceTimeZone());
-            if (null != info.getTravelTime()) {
-                report.setTravelTime(info.getTravelTime());
+        // Bail out if there is nothing to parse.
+        if (routeList.getItems() == null) {
+            LOGGER.warn("No Information For Route!");
+        }
+        else {
+            // Generate the output based on the object Map To Bindy:
+            for (RouteInfo info : routeList.getItems()) {
+                RouteReportData report = new RouteReportData();
+                report.setActivityId(info.getActivityId());
+                report.setApptNumber(info.getApptNumber());
+                report.setResourceId(info.getResourceId());
+                report.setDate(info.getDate());
+                report.setStartTime(info.getStartTime());
+                report.setEndTime(info.getEndTime());
+                report.setStatus(info.getStatus());
+                report.setTimezone(info.getResourceTimeZone());
+                if (null != info.getTravelTime()) {
+                    report.setTravelTime(info.getTravelTime());
+                }
+                if (null != info.getDuration()) {
+                    report.setDuration(info.getDuration());
+                }
+                if (null != info.getPositionInRoute()) {
+                    report.setRoutePosition(info.getPositionInRoute());
+                }
+                if (null != info.getLatitude()) {
+                    report.setLatitude(info.getLatitude());
+                }
+                if (null != info.getLongitude()) {
+                    report.setLongitude(info.getLongitude());
+                }
+                resultList.add(report);
             }
-            if (null != info.getDuration()) {
-                report.setDuration(info.getDuration());
-            }
-            if (null != info.getPositionInRoute()) {
-                report.setRoutePosition(info.getPositionInRoute());
-            }
-            if (null != info.getLatitude()) {
-                report.setLatitude(info.getLatitude());
-            }
-            if (null != info.getLongitude()) {
-                report.setLongitude(info.getLongitude());
-            }
-            resultList.add(report);
         }
         exchange.getIn().setBody(resultList);
     }

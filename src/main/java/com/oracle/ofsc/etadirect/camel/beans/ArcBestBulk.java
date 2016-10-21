@@ -27,6 +27,13 @@ public class ArcBestBulk {
             case "019":
                 LOGGER.error("Processing Station: St Joseph, KS");
                 resourceList= ImmutableList.of("STJOE20192", "STJOE20193");
+                break;
+            case "189":
+                LOGGER.error("Processing Station: Bockton, MA");
+                resourceList= ImmutableList.of("BOCK8453", "BOCK8454", "BOCK8455", "BOCK8456", "BOCK8457", "BOCK8458",
+                        "BOCK8459", "BOCK8460", "BOCK8461", "BOCK8462", "BOCK8463", "BOCK8464", "BOCK8465", "BOCK8466",
+                        "BOCK8467", "BOCK8468", "BOCK8469", "BOCK8471", "BOCK8472", "BOCK8473");
+                break;
             default:
                 LOGGER.warn("Unsupported Station: " + station);
         }
