@@ -55,7 +55,7 @@ public class WebRoutes extends RouteBuilder {
                     .otherwise()
                         .to("direct://transportation/activity/get");
 
-        from("restlet:http://localhost:8085/sctool/v1/route/{id}?restletMethod=get")
+        from("restlet:http://localhost:8085/sctool/v1/route/{id}/{routeDay}?restletMethod=get")
                 .routeId("invokeRouteQueryCall")
                 .to("log:" + LOG_CLASS + "?showAll=true&multiline=true&level=INFO")
                 .to("direct://common/get/route");

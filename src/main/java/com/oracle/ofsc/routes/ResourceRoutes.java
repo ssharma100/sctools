@@ -42,9 +42,8 @@ public class ResourceRoutes extends RouteBuilder {
                 .setHeader(Exchange.HTTP_METHOD, constant(org.apache.camel.component.http4.HttpMethods.GET))
                 .setHeader("CamelHttpQuery", constant(null))
 
-                .toD("https4:api.etadirect.com/rest/ofscCore/v1/resources/IRVN09025/routes/2016-10-25?bridgeEndpoint=true&throwExceptionOnFailure=false&authenticationPreemptive=true&authUsername=${in.header[username]}&authPassword=${in.header[passwd]}")
+                .toD("https4:api.etadirect.com/rest/ofscCore/v1/resources/${in.header[id]}/routes/${in.header[routeDay]}?bridgeEndpoint=true&throwExceptionOnFailure=false&authenticationPreemptive=true&authUsername=${in.header[username]}&authPassword=${in.header[passwd]}")
                 .to("log:" + LOG_CLASS + "?level=INFO");
-
 
     }
 }

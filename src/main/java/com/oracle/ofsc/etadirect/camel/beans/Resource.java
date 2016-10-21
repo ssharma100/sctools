@@ -1,6 +1,10 @@
 package com.oracle.ofsc.etadirect.camel.beans;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.oracle.ofsc.etadirect.rest.RouteInfo;
+import com.oracle.ofsc.etadirect.rest.RouteList;
 import com.oracle.ofsc.etadirect.soap.*;
+import com.oracle.ofsc.transforms.RouteReportData;
 import com.oracle.ofsc.transforms.TransportResourceData;
 import com.oracle.ofsc.transforms.TransportationActivityData;
 import org.apache.camel.Exchange;
@@ -13,6 +17,8 @@ import org.slf4j.LoggerFactory;
 import javax.xml.bind.JAXBContext;
 import javax.xml.bind.JAXBException;
 import javax.xml.bind.Marshaller;
+import java.io.IOException;
+import java.io.InputStream;
 import java.io.StringWriter;
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -34,6 +40,8 @@ public class Resource {
     private static final String SOAP_WRAPPER_FOOTER = "   </soapenv:Body>\n" + "</soapenv:Envelope>";
 
     private static final boolean USE_MD5 = true;
+
+    private static final ObjectMapper resourceMapper = new ObjectMapper();
 
     /**
      * Generates body for resource "get" request
@@ -145,4 +153,42 @@ public class Resource {
         LOGGER.info("SetUp Completed For User: " + exchange.getIn().getHeader("username"));
 
     }
+
+    public void extractRoutes(Exchange exchange) {
+        LOGGER.info("Generating CSV Routing Output From Route Results");
+        InputStream is = (InputStream )exchange.getIn().getBody();
+        // Marshal Json IS To Object
+        RouteList routeList;
+        try {
+            routeList = resourceMapper.readValue(is, RouteList.class);
+            LOGGER.info("Completed Server Route List Parsing");
+        } catch (IOException e) {
+            LOGGER.error("Failed To Parse Server Response Json (InputStream)", e);
+            return;
+        }
+
+        // Generate the output based on the object Map To Bindy:
+        List<RouteReportData> resultList = new ArrayList<>(10);
+        for(RouteInfo info : routeList.getItems()) {
+            RouteReportData report = new RouteReportData();
+            report.setActivityId(info.getActivityId());
+            report.setApptNumber(info.getApptNumber());
+            report.setResourceId(info.getResourceId());
+            report.setDate(info.getDate());
+            report.setStartTime(info.getStartTime());
+            report.setEndTime(info.getEndTime());
+            report.setStatus(info.getStatus());
+            report.setTimezone(info.getResourceTimeZone());
+            if (null != info.getDuration()) {
+                report.setDuration(info.getDuration());
+            }
+            if (null != info.getPositionInRoute()) {
+                report.setRoutePosition(info.getPositionInRoute());
+            }
+
+            resultList.add(report);
+        }
+        exchange.getIn().setBody(resultList);
+    }
 }
+
