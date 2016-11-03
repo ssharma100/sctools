@@ -16,7 +16,7 @@ It helps to install the components in the order as shown in the following sectio
 
 ## Java 8 SDK Installation
 You can find the JDK/SDK Download at [Oracle's JDK Page](http://www.oracle.com/technetwork/java/javase/downloads/jdk8-downloads-2133151.html)
-Download the vesion that best fits your system/OS and install it - the directions should be on the site and are
+Download the version that best fits your system/OS and install it - the directions should be on the site and are
 specific to the type of platform you are running on.
 Based on your installation you should make note of the JAVA_HOME environment variable (make sure that it has been
 set and points to the Java 8 version that you just installed).
@@ -34,7 +34,14 @@ or to run the route from within maven try
 
     mvn camel:run
 
-For more help see the Apache Camel documentation
+For more help see the Apache Camel documentation.
+
+## Using The RESTful Calls
+To provide the best methodology of invocation
 
     http://camel.apache.org/
-    
+
+## Example Requests
+
+_Location Loading_
+http://localhost:8085/sctool/v1/location?user=SOAPUPLOAD&company=securitaselectro1.test&passwd=Test123

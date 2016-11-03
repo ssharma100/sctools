@@ -10,6 +10,9 @@ import org.apache.camel.builder.RouteBuilder;
 import org.apache.camel.dataformat.bindy.csv.BindyCsvDataFormat;
 import org.apache.camel.spi.DataFormat;
 
+import java.util.List;
+import java.util.Map;
+
 /**
  * Created by ssharma on 10/20/16.
  */
@@ -17,6 +20,7 @@ public class ETAdirectCommonRoutes extends RouteBuilder {
 
     private static final String LOG_CLASS = "com.oracle.ofsc.routes.ETAdirectRoutes";
     private DataFormat routeReport = new BindyCsvDataFormat(com.oracle.ofsc.transforms.RouteReportData.class);
+    private DataFormat locationsList = new BindyCsvDataFormat(com.oracle.ofsc.transforms.LocationListData.class);
     @Override public void configure() throws Exception {
 
         from("direct://common/get/route")
@@ -51,5 +55,13 @@ public class ETAdirectCommonRoutes extends RouteBuilder {
                     .bean(Location.class, "covertJsonToRouteReport")
                 .end()
                 .marshal(routeReport);
+
+        from("direct://common/set/locations")
+                .routeId("setLocations")
+                .unmarshal(locationsList)
+                .split(body())
+                    .bean(Location.class, "loadLocation")
+                    .to("direct://etadirectrest/setLocation")
+                .end();
     }
 }

@@ -47,6 +47,13 @@ public class WebRoutes extends RouteBuilder {
                     .otherwise()
                         .to("direct://transportation/resource/get");
 
+        // Location Management Functions
+        from("restlet:http://localhost:8085/sctool/v1/location?restletMethod=post")
+                .routeId("locationUpload")
+                .to("log:" + LOG_CLASS + "?showAll=true&multiline=true&level=INFO")
+                .to("direct://common/set/locations")
+                .to("log:" + LOG_CLASS + "?showAll=true&multiline=true&level=DEBUG");
+
         // RESTful End Point For Activity
         // - Get Activity
         // - Insert Activity

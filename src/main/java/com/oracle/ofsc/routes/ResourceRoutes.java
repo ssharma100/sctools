@@ -44,7 +44,6 @@ public class ResourceRoutes extends RouteBuilder {
 
                 .toD("https4:api.etadirect.com/rest/ofscCore/v1/resources/${in.header[id]}/routes/${in.header[routeDay]}?bridgeEndpoint=true&throwExceptionOnFailure=false&authenticationPreemptive=true&authUsername=${in.header[username]}&authPassword=${in.header[passwd]}")
                 .to("log:" + LOG_CLASS + "?level=INFO");
-
     }
 }
 
