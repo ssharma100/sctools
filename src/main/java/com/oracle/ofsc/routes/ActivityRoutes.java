@@ -1,6 +1,5 @@
 package com.oracle.ofsc.routes;
 
-import com.oracle.ofsc.etadirect.camel.beans.Activity;
 import org.apache.camel.Exchange;
 import org.apache.camel.LoggingLevel;
 import org.apache.camel.builder.RouteBuilder;
