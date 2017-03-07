@@ -5,7 +5,9 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.oracle.ofsc.etadirect.soap.GetActivity;
 import com.oracle.ofsc.etadirect.soap.Property;
 import com.oracle.ofsc.etadirect.soap.User;
+import com.oracle.ofsc.transforms.GenericActivityData;
 import com.oracle.ofsc.transforms.TransportationActivityData;
+import org.apache.camel.Body;
 import org.apache.camel.Exchange;
 import org.apache.commons.lang3.StringUtils;
 import org.joda.time.DateTime;
@@ -22,7 +24,8 @@ import java.util.ArrayList;
 import java.util.HashMap;
 
 /**
- * Created by Samir on 10/9/2016.
+ * Conversion Bean - Given an input of the specific type, will convert the bindy object
+ * into the required object for a SOAP or RESTful call to ETAdirect.
  */
 public class Activity {
     private static final Logger LOGGER = LoggerFactory.getLogger(Activity.class.getName());
@@ -44,6 +47,7 @@ public class Activity {
      * Generates body for resource "get" request
      * @param exchange
      */
+    @SuppressWarnings("unused")
     public void mapToGetRequest (Exchange exchange) {
         String activityId = (String )exchange.getIn().getHeader("id");
         LOGGER.info("Generate Body For ActivityID: {}", activityId);
@@ -76,6 +80,7 @@ public class Activity {
      *
      * @param exchange
      */
+    @SuppressWarnings("unused")
     public void mapToInsertSoapRequest (Exchange exchange) {
         DateTimeFormatter dtf = DateTimeFormat.forPattern("yyyy-MM-dd");
         String bucketId = (String) exchange.getIn().getHeader("id");
@@ -122,18 +127,57 @@ public class Activity {
      *
      * @param exchange
      */
+    @SuppressWarnings("unused")
     public void mapToInsertRestRequest (Exchange exchange) {
-        DateTimeFormatter dtf = DateTimeFormat.forPattern("yyyy-MM-dd");
         String bucketId = (String) exchange.getIn().getHeader("id");
         LOGGER.info("Generate Body For BucketID: {}", bucketId);
 
+        String type = (String) exchange.getIn().getHeader("activity_type");
         HashMap<String, String> authInfo =
                 Security.extractAuthInfo((String )exchange.getIn().getHeader("CamelHttpQuery"));
-        TransportationActivityData activityData = (TransportationActivityData )exchange.getIn().getBody();
 
         String username = authInfo.get("user") + "@" + authInfo.get("company");
         String passwd =   authInfo.get("passwd");
+
+        com.oracle.ofsc.etadirect.rest.InsertActivity activityIns = null;
+        switch (type) {
+        case "transportation":
+            LOGGER.debug("Generating Activity Request From Transportation Activity");
+            activityIns = this.generateTransportationActivity(exchange.getIn().getBody(), bucketId);
+            break;
+        case "generic":
+            LOGGER.debug("Generating Activity Request From Generic Activity");
+            activityIns = this.generateGenericActivity(exchange.getIn().getBody(), bucketId);
+            break;
+        default:
+            LOGGER.error("Unrecognized Requesting Endpoint {} - No Activity Generator Found", type);
+        }
+
+        // Skip The Pos In Route - Default To Unordered.
+        String restBody = null;
+        try {
+            restBody = activityMapper.writeValueAsString(activityIns);
+        } catch (JsonProcessingException e) {
+            LOGGER.error("Failed To Marshal JSON Object: {}", e.getMessage());
+        }
+        // Set Values For HTTP4:
+        exchange.getIn().setHeader("username", username);
+        exchange.getIn().setHeader("passwd", passwd);
+        exchange.getIn().setHeader(Exchange.CONTENT_TYPE, "application/json");
+        exchange.getIn().setBody(restBody);
+    }
+
+    /**
+     * Specific mapping of input (prased object) holding a transportation activity - to the Rest object
+     * @param inObject
+     * @param bucketId
+     * @return
+     */
+    private com.oracle.ofsc.etadirect.rest.InsertActivity generateTransportationActivity(Object inObject, String bucketId) {
+        TransportationActivityData activityData = (TransportationActivityData )inObject;
         com.oracle.ofsc.etadirect.rest.InsertActivity activityIns = new com.oracle.ofsc.etadirect.rest.InsertActivity();
+
+        // Build Activity For Insertion
 
         activityIns.setResourceId(bucketId);
         activityIns.setDate(activityData.getActivityDate());
@@ -171,19 +215,44 @@ public class Activity {
             activityIns.setLift_gate(liftGate);
         }
 
+        return activityIns;
+    }
 
-        // Skip The Pos In Route - Default To Unordered.
-        String restBody = null;
-        try {
-            restBody = activityMapper.writeValueAsString(activityIns);
-        } catch (JsonProcessingException e) {
-            LOGGER.error("Failed To Marshal JSON Object: {}", e.getMessage());
+    /**
+     * Mapping between the inbound parsed Bindy object, for Generic activity types.
+     * @param inObject
+     * @param bucketId
+     * @return
+     */
+    private com.oracle.ofsc.etadirect.rest.InsertActivity generateGenericActivity(Object inObject, String bucketId) {
+        GenericActivityData activityData = (GenericActivityData)inObject;
+        com.oracle.ofsc.etadirect.rest.InsertActivity activityIns = new com.oracle.ofsc.etadirect.rest.InsertActivity();
+
+        activityIns.setResourceId(bucketId);
+        activityIns.setDate(activityData.getActivityDate());
+        activityIns.setActivityType(activityData.getActivityType());
+        activityIns.setApptNumber(activityData.getActivityKey());
+        activityIns.setCustomerName(activityData.getStore());
+        activityIns.setTimeZone(activityData.getTimezone());
+        activityIns.setDuration(activityData.getDuration());
+        activityIns.setLatitude(activityData.getLatitude());
+        activityIns.setLongitude(activityData.getLongitude());
+
+        DateTimeFormatter inFormatter = DateTimeFormat.forPattern("HH:mm:ss");
+        DateTimeFormatter outFormatter = DateTimeFormat.forPattern("HH:mm:ss");
+
+        // Set Appointment Time Management
+        if (StringUtils.isNotBlank(activityData.getActivityStart())) {
+            DateTime deliveryStart = inFormatter.parseDateTime(activityData.getActivityStart());
+            activityIns.setServiceWindowStart(outFormatter.print(deliveryStart));
         }
-        // Set Values For HTTP4:
-        exchange.getIn().setHeader("username", username);
-        exchange.getIn().setHeader("passwd", passwd);
-        exchange.getIn().setHeader(Exchange.CONTENT_TYPE, "application/json");
-        exchange.getIn().setBody(restBody);
+
+        if (StringUtils.isNotBlank(activityData.getActivityEnd()))  {
+            DateTime deliveryEnd = inFormatter.parseDateTime(activityData.getActivityEnd());
+            activityIns.setServiceWindowEnd(outFormatter.print(deliveryEnd));
+        }
+
+        return activityIns;
     }
 }
 

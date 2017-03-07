@@ -30,14 +30,16 @@ public class GenericActivityData {
     @DataField(pos=9)
     private String      activityEnd;
     @DataField(pos=10)
-    private String      city;
+    private String      store;
     @DataField(pos=11)
-    private String      state;
+    private String      city;
     @DataField(pos=12)
-    private String      zipCode;
+    private String      state;
     @DataField(pos=13)
-    private String      timezone;
+    private String      zipCode;
     @DataField(pos=14)
+    private String      timezone;
+    @DataField(pos=15)
     private String      timeSlot;
 
     public GenericActivityData() {}
@@ -152,5 +154,13 @@ public class GenericActivityData {
 
     public void setTimeSlot(String timeSlot) {
         this.timeSlot = timeSlot;
+    }
+
+    public String getStore() {
+        return store;
+    }
+
+    public void setStore(String store) {
+        this.store = store;
     }
 }
