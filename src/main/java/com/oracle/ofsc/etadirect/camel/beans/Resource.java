@@ -4,6 +4,8 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.oracle.ofsc.etadirect.rest.RouteInfo;
 import com.oracle.ofsc.etadirect.rest.RouteList;
 import com.oracle.ofsc.etadirect.soap.*;
+import com.oracle.ofsc.etadirect.utils.OfscTimeZone;
+import com.oracle.ofsc.transforms.GenericResourceData;
 import com.oracle.ofsc.transforms.RouteReportData;
 import com.oracle.ofsc.transforms.TransportResourceData;
 import com.oracle.ofsc.transforms.TransportationActivityData;
@@ -82,44 +84,26 @@ public class Resource {
      */
     public void mapToInsertResource(Exchange exchange) {
         String id = (String) exchange.getIn().getHeader("id");
-        LOGGER.info("Generate Insert Resource Body For ResourceID: {}", id);
+        String category = (String) exchange.getIn().getHeader("resource_category");
+
+        LOGGER.info("Generate Insert Resource Body For Insertion Under ResourceID: {}", id);
         // TODO: The request should have the information for the request, however, this is hardcoded for now:
         User userBlock = Security.generateUserAuth((String) exchange.getIn().getHeader("CamelHttpQuery"), !USE_MD5);
-        TransportResourceData td = (TransportResourceData) exchange.getIn().getBody();
+        InsertResource insertResource = null;
 
-        InsertResource insertResource = new InsertResource();
-        insertResource.setUser(userBlock);
-        insertResource.setId(td.getName());
+        switch (category) {
+        case "transportation":
+            insertResource = this.generateTransportationResource(id, (TransportResourceData) exchange.getIn().getBody());
+            break;
+        case "generic":
+            insertResource = this.generateGenericResource(id, (GenericResourceData) exchange.getIn().getBody());
+            break;
+        default:
 
-        // Mandatory Elements
-        ArrayList<Property> properties = new ArrayList<>(10);
-        insertResource.setProperties(properties);
-        properties.add(new Property("status", "active"));
-        properties.add(new Property("parent_id", id));
-        properties.add(new Property("name", td.getName()));
-        properties.add(new Property("language", "en"));
-        properties.add(new Property("time_zone", td.getTimezone()));
-        properties.add(new Property("weight_cap", td.getWeight()));
-        properties.add(new Property("cubic_cap", td.getCubeCap()));
-        // Overridden Later If This Is A Lift Gate Truck
-        properties.add(new Property("type", "PR"));
-
-        // Look For Any Work Skills
-
-        WorkSkills workSkills = new WorkSkills();
-        // Don't Set Any Groups
-        // workSkills.setWorkskillGroup("TruckingGroup");
-
-        ArrayList<WorkSkill> workskill = new ArrayList<>(5);
-        workskill.add(new WorkSkill("LVL1", "100"));
-        if (StringUtils.isNotBlank(td.getLiftGate()) && td.getLiftGate().equalsIgnoreCase("y")) {
-            // Only Add LiftGate If We Have Y In The Data
-            workskill.add(new WorkSkill("LVL2", "100"));
         }
 
-        workSkills.setWorkskill(workskill);
-        insertResource.setWorkskills(workSkills);
-        properties.add(new Property("type", "LGT"));
+        // Load The Credentials
+        insertResource.setUser(userBlock);
 
         String soapBody = null;
         try {
@@ -137,6 +121,88 @@ public class Resource {
         StringBuffer sb = new StringBuffer();
         sb.append(SOAP_WRAPPER_HEADER).append(soapBody).append(SOAP_WRAPPER_FOOTER);
         exchange.getIn().setBody(sb.toString());
+    }
+
+    private InsertResource generateGenericResource(String id, GenericResourceData resource) {
+        InsertResource insertResource = new InsertResource();
+        insertResource.setId(resource.getResourceId());
+
+        // Mandatory Elements
+        ArrayList<Property> properties = new ArrayList<>(10);
+        insertResource.setProperties(properties);
+        properties.add(new Property("status", "active"));
+        properties.add(new Property("parent_id", id));
+        properties.add(new Property("name", resource.getName()));
+        properties.add(new Property("language", "en"));
+        // Must map from time zone DB values to Ofsc specific values
+        try {
+            OfscTimeZone tz = OfscTimeZone.valueOf(StringUtils.substringAfter(resource.getTimezone(), "/"));
+            properties.add(new Property("time_zone", tz.getOfscLabel()));
+        } catch (Exception e) {
+            LOGGER.error("Unknown TimeZone {}", resource.getTimezone());
+            properties.add(new Property("time_zone", "Eastern"));
+        }
+
+        properties.add(new Property("resource_affiliation", resource.getAffiliation()));
+        properties.add(new Property("work_hours", Integer.toString(resource.getWeeklyHours())));
+
+        // Need To Parse The WorkSkill Field
+        WorkSkills workSkills = new WorkSkills();
+        ArrayList<WorkSkill> workskillList = new ArrayList<>(5);
+        String workSkillsVec = resource.getWorkSkillList();
+        String skills[] = StringUtils.split(workSkillsVec, "|");
+        for (String skill : skills) {
+            workskillList.add(new WorkSkill(skill, "100"));
+        }
+
+        workSkills.setWorkskill(workskillList);
+        insertResource.setWorkskills(workSkills);
+
+        return insertResource;
+    }
+
+    /**
+     * Specific mapping for the Transportation Resource (Trucks)
+     * @param id
+     * @param truck
+     * @return
+     */
+    private InsertResource generateTransportationResource(String id, TransportResourceData truck) {
+
+        InsertResource insertResource = new InsertResource();
+        insertResource.setId(truck.getName());
+
+        // Mandatory Elements
+        ArrayList<Property> properties = new ArrayList<>(10);
+        insertResource.setProperties(properties);
+        properties.add(new Property("status", "active"));
+        properties.add(new Property("parent_id", id));
+        properties.add(new Property("name", truck.getName()));
+        properties.add(new Property("language", "en"));
+        properties.add(new Property("time_zone", truck.getTimezone()));
+        properties.add(new Property("weight_cap", truck.getWeight()));
+        properties.add(new Property("cubic_cap", truck.getCubeCap()));
+        // Overridden Later If This Is A Lift Gate Truck
+        properties.add(new Property("type", "PR"));
+
+        // Look For Any Work Skills
+
+        WorkSkills workSkills = new WorkSkills();
+        // Don't Set Any Groups
+        // workSkills.setWorkskillGroup("TruckingGroup");
+
+        ArrayList<WorkSkill> workskill = new ArrayList<>(5);
+        workskill.add(new WorkSkill("LVL1", "100"));
+        if (StringUtils.isNotBlank(truck.getLiftGate()) && truck.getLiftGate().equalsIgnoreCase("y")) {
+            // Only Add LiftGate If We Have Y In The Data
+            workskill.add(new WorkSkill("LVL2", "100"));
+        }
+
+        workSkills.setWorkskill(workskill);
+        insertResource.setWorkskills(workSkills);
+        properties.add(new Property("type", "LGT"));
+
+        return insertResource;
     }
 
     public void authOnly(Exchange exchange) {

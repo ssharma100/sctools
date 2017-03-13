@@ -43,5 +43,18 @@ To provide the best methodology of invocation
 
 ## Example Requests
 
+### Common Elements
+
+### Loading A Resource:
+Loading of resource supports:
+- Generic Resources: A normal/basic resource
+- Truck/Transportation Based Resource - resources that have weight and cargo capacity
+
+The loader will take the input file of the format, depending on what loader you are using (loader must match format of uploaded data)
+
+http://localhost:8085/sctool/v1/generic/resource/{id}
+Where {id} is the external resource ID of the parent under which the new resource will be added.
+
+
 _Location Loading_
 http://localhost:8085/sctool/v1/location?user=SOAPUPLOAD&company=securitaselectro1.test&passwd=Test123

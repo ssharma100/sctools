@@ -132,7 +132,7 @@ public class Activity {
         String bucketId = (String) exchange.getIn().getHeader("id");
         LOGGER.info("Generate Body For BucketID: {}", bucketId);
 
-        String type = (String) exchange.getIn().getHeader("activity_type");
+        String category = (String) exchange.getIn().getHeader("activity_category");
         HashMap<String, String> authInfo =
                 Security.extractAuthInfo((String )exchange.getIn().getHeader("CamelHttpQuery"));
 
@@ -140,7 +140,7 @@ public class Activity {
         String passwd =   authInfo.get("passwd");
 
         com.oracle.ofsc.etadirect.rest.InsertActivity activityIns = null;
-        switch (type) {
+        switch (category) {
         case "transportation":
             LOGGER.debug("Generating Activity Request From Transportation Activity");
             activityIns = this.generateTransportationActivity(exchange.getIn().getBody(), bucketId);
@@ -150,7 +150,7 @@ public class Activity {
             activityIns = this.generateGenericActivity(exchange.getIn().getBody(), bucketId);
             break;
         default:
-            LOGGER.error("Unrecognized Requesting Endpoint {} - No Activity Generator Found", type);
+            LOGGER.error("Unrecognized Requesting Endpoint {} - No Activity Generator Found", category);
         }
 
         // Skip The Pos In Route - Default To Unordered.

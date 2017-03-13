@@ -38,7 +38,7 @@ public class WebRoutes extends RouteBuilder {
     public void configure() {
         // RESTful End Point For Resource Management
         // - Get Resource
-        // - Inser Resource
+        // - Insert Resource
         from("restlet:http://localhost:8085/sctool/v1/transportation/resource/{id}?restletMethods=post,get")
                 .routeId("invokeTransResourceCall")
                 .to("log:" + LOG_CLASS + "?showAll=true&multiline=true&level=INFO")
@@ -47,6 +47,16 @@ public class WebRoutes extends RouteBuilder {
                         .to("direct://transportation/resource/insert")
                     .otherwise()
                         .to("direct://transportation/resource/get");
+
+        // RESTful End Point For Generic Resource Management
+        from("restlet:http://localhost:8085/sctool/v1/generic/resource/{id}?restletMethods=post,get")
+                .routeId("invokeGenResourceCall")
+                .to("log:" + LOG_CLASS + "?showAll=true&multiline=true&level=INFO")
+                .choice()
+                .when(isPost)
+                .to("direct://generic/resource/insert")
+                .otherwise()
+                .to("direct://generic/resource/get");
 
         // Location Management Functions
         // Supports the ability to create a location within the OFSC
@@ -79,8 +89,6 @@ public class WebRoutes extends RouteBuilder {
                 .otherwise()
                 .to("direct://generic/activity/get");
 
-
-
         // Obtains the route list (ordered) for the given resource "id"
         // Output will be formatted in a CSV
         from("restlet:http://localhost:8085/sctool/v1/route/{id}/{routeDay}?restletMethod=get")
@@ -103,6 +111,5 @@ public class WebRoutes extends RouteBuilder {
                 .to("log:" + LOG_CLASS + "?showAll=true&multiline=true&level=INFO")
                 .to("direct://common/get/route/enhance/distance")
                 .to("log:" + LOG_CLASS + "?showAll=true&multiline=true&level=DEBUG");
-
     }
 }
