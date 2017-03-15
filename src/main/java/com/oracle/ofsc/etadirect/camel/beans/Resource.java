@@ -132,8 +132,10 @@ public class Resource {
         insertResource.setProperties(properties);
         properties.add(new Property("status", "active"));
         properties.add(new Property("parent_id", id));
-        properties.add(new Property("name", resource.getName()));
+        properties.add(new Property("name", StringUtils.trim(resource.getName())));
         properties.add(new Property("language", "en"));
+        properties.add(new Property("type", "PR"));
+        properties.add(new Property("Resource type", "2"));
         // Must map from time zone DB values to Ofsc specific values
         try {
             OfscTimeZone tz = OfscTimeZone.valueOf(StringUtils.substringAfter(resource.getTimezone(), "/"));
@@ -143,7 +145,12 @@ public class Resource {
             properties.add(new Property("time_zone", "Eastern"));
         }
 
-        properties.add(new Property("resource_affiliation", resource.getAffiliation()));
+        if (StringUtils.isBlank(resource.getAffiliation())) {
+            properties.add(new Property("resource_affiliation", "None"));
+        }
+        else {
+            properties.add(new Property("resource_affiliation", resource.getAffiliation()));
+        }
         properties.add(new Property("work_hours", Integer.toString(resource.getWeeklyHours())));
 
         // Need To Parse The WorkSkill Field
