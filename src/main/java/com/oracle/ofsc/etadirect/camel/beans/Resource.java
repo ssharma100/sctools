@@ -1,6 +1,7 @@
 package com.oracle.ofsc.etadirect.camel.beans;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.google.common.collect.ImmutableList;
 import com.oracle.ofsc.etadirect.rest.RouteInfo;
 import com.oracle.ofsc.etadirect.rest.RouteList;
 import com.oracle.ofsc.etadirect.soap.*;
@@ -15,6 +16,7 @@ import org.joda.time.format.DateTimeFormat;
 import org.joda.time.format.DateTimeFormatter;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import sun.security.provider.MD5;
 
 import javax.xml.bind.JAXBContext;
 import javax.xml.bind.JAXBException;
@@ -22,6 +24,7 @@ import javax.xml.bind.Marshaller;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.StringWriter;
+import java.security.NoSuchAlgorithmException;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -79,6 +82,41 @@ public class Resource {
         exchange.getIn().setBody(sb.toString());
     }
 
+    public void mapToInsertUser(Exchange exchange) {
+        String category = (String) exchange.getIn().getHeader("resource_category");
+
+        LOGGER.info("Generate Insert User Body");
+        // TODO: The request should have the information for the request, however, this is hardcoded for now:
+        User userBlock = Security.generateUserAuth((String) exchange.getIn().getHeader("CamelHttpQuery"), !USE_MD5);
+        InsertUser insertUser = null;
+
+        switch (category) {
+        case "generic":
+            insertUser = this.generateGenericUser((GenericResourceData) exchange.getIn().getBody());
+            break;
+
+        default:
+        }
+
+        // Load The Credentials
+        insertUser.setUser(userBlock);
+        String soapBody = null;
+        try {
+            JAXBContext context = JAXBContext.newInstance(InsertUser.class);
+            Marshaller marshaller = context.createMarshaller();
+            marshaller.setProperty(Marshaller.JAXB_FORMATTED_OUTPUT, true);
+            marshaller.setProperty(Marshaller.JAXB_FRAGMENT, true);
+            StringWriter sw = new StringWriter();
+            marshaller.marshal(insertUser, sw);
+            soapBody = sw.toString();
+        } catch (JAXBException e) {
+            LOGGER.error("Failed To Marshal Object: {}", e.getMessage());
+        }
+        StringBuffer sb = new StringBuffer();
+        sb.append(SOAP_WRAPPER_HEADER).append(soapBody).append(SOAP_WRAPPER_FOOTER);
+        exchange.getIn().setBody(sb.toString());
+    }
+
     /**
      * Generates the request body and complete SOAP request for a resource creation
      */
@@ -121,6 +159,39 @@ public class Resource {
         StringBuffer sb = new StringBuffer();
         sb.append(SOAP_WRAPPER_HEADER).append(soapBody).append(SOAP_WRAPPER_FOOTER);
         exchange.getIn().setBody(sb.toString());
+    }
+
+    private InsertUser generateGenericUser(GenericResourceData user) {
+        InsertUser insertUser = new InsertUser();
+
+        insertUser.setLogin(user.getLogin());
+        List<Property> propertyList = new ArrayList<>(5);
+        propertyList.add(new Property("status", "active"));
+        try {
+            propertyList.add(new Property("password", Security.hexMD5Encode(user.getPass())));
+        } catch (NoSuchAlgorithmException e) {
+            LOGGER.error("Failed To MD5 (Hex) Encrypt Password");
+        }
+        propertyList.add(new Property("name", user.getName()));
+        propertyList.add(new Property("language", "en"));
+        propertyList.add(new Property("type", "Technician"));
+        propertyList.add(new Property("main_resource_id", user.getResourceId()));
+        // Must map from time zone DB values to Ofsc specific values
+        try {
+            OfscTimeZone tz = OfscTimeZone.valueOf(StringUtils.substringAfter(user.getTimezone(), "/"));
+            propertyList.add(new Property("time_zone", tz.getOfscLabel()));
+        } catch (Exception e) {
+            LOGGER.error("Unknown TimeZone {}", user.getTimezone());
+            propertyList.add(new Property("time_zone", "Eastern"));
+        }
+        Properties properties = new Properties();
+        properties.setProperty(propertyList);
+        insertUser.setProperties(properties);
+
+        com.oracle.ofsc.etadirect.soap.Resource resource = new com.oracle.ofsc.etadirect.soap.Resource();
+        resource.setValues(ImmutableList.of(user.getResourceId()));
+        insertUser.setResources(resource);
+        return insertUser;
     }
 
     private InsertResource generateGenericResource(String id, GenericResourceData resource) {
@@ -239,9 +310,6 @@ public class Resource {
             LOGGER.error("Failed To Parse Server Response Json (InputStream)", e);
             return;
         }
-
-
-
 
         List<RouteReportData> resultList = new ArrayList<>(10);
         // Bail out if there is nothing to parse.

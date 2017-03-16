@@ -89,7 +89,7 @@ public class Security {
         return hexString.toString();
     }
 
-    private static String hexMD5Encode( String input) throws NoSuchAlgorithmException {
+    public static String hexMD5Encode( String input) throws NoSuchAlgorithmException {
         MessageDigest md = MessageDigest.getInstance("MD5");
         md.update(input.getBytes(StandardCharsets.UTF_8));
 
