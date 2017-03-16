@@ -2,9 +2,6 @@ package com.oracle.ofsc.etadirect.soap;
 
 import javax.xml.bind.annotation.*;
 
-/**
- * Created by xxx_sharma on 10/12/16.
- */
 @XmlType(propOrder = { "name", "value" })
 @XmlAccessorType(XmlAccessType.PROPERTY)
 public class Property {

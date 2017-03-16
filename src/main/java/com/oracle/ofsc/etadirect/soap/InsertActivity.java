@@ -42,6 +42,7 @@ public class InsertActivity {
     public void setDate(String date) {
         this.date = date;
     }
+
     @XmlElement(name="resource_id")
     public String getBucketId() {
         return bucketId;
@@ -50,6 +51,7 @@ public class InsertActivity {
     public void setBucketId(String bucketId) {
         this.bucketId = bucketId;
     }
+
     @XmlElement(name="position_in_route")
     public String getPosInRoute() {
         return posInRoute;
