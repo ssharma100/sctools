@@ -10,14 +10,16 @@ import java.util.List;
  * SOAP body generator for inserting a user
  */
 @XmlRootElement(name="urn:insert_user")
-@XmlType(propOrder = { "user", "login", "properties", "resources" })
-@XmlSeeAlso({User.class, Property.class, Resource.class})
+@XmlType(propOrder = { "user", "login", "properties", "resources", "profiles", "managedProfiles"})
+@XmlSeeAlso({User.class, Property.class, Resource.class, Profile.class})
 public class InsertUser {
 
     private User user;
     private String login;
     private Properties properties;
     private Resource resources;
+    private Profile profiles;
+    private ManagedProfile managedProfiles;
 
     public InsertUser () {
 
@@ -55,5 +57,22 @@ public class InsertUser {
 
     public void setResources(Resource resources) {
         this.resources = resources;
+    }
+
+    public Profile getProfiles() {
+        return profiles;
+    }
+
+    public void setProfiles(Profile profiles) {
+        this.profiles = profiles;
+    }
+
+    @XmlElement(name="managed_profiles")
+    public ManagedProfile getManagedProfiles() {
+        return managedProfiles;
+    }
+
+    public void setManagedProfiles(ManagedProfile managedProfiles) {
+        this.managedProfiles = managedProfiles;
     }
 }

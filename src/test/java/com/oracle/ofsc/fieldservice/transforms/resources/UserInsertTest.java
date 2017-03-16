@@ -1,6 +1,8 @@
 package com.oracle.ofsc.fieldservice.transforms.resources;
 
 import com.google.common.collect.ImmutableList;
+import com.oracle.ofsc.etadirect.soap.ManagedProfile;
+import com.oracle.ofsc.etadirect.soap.Profile;
 import com.oracle.ofsc.etadirect.soap.Properties;
 import com.oracle.ofsc.etadirect.soap.Resource;
 import com.oracle.ofsc.etadirect.soap.InsertUser;
@@ -33,6 +35,10 @@ public class UserInsertTest {
         Properties properties = new Properties();
         properties.setProperty(ImmutableList.of(firstProp, secondProp));
 
+        Profile profiles = new Profile(ImmutableList.of("profile1", "profile2"));
+        ManagedProfile managedProfile = new ManagedProfile(ImmutableList.of("mgedprofile1", "mgedprofile2"));
+        insertUser.setManagedProfiles(managedProfile);
+        insertUser.setProfiles(profiles);
         insertUser.setProperties(properties);
 
         String soapBody;
