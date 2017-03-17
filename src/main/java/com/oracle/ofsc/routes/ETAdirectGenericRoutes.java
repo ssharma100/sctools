@@ -26,7 +26,6 @@ public class ETAdirectGenericRoutes extends RouteBuilder {
                 .bean(Resource.class, "mapToGetRequest")
                 .to("direct://etadirectsoap/resource");
 
-
         from("direct://generic/resource/insert")
                 .routeId("etaDirectGenResourceInsert")
                 .unmarshal(resourceInsert)
@@ -34,6 +33,15 @@ public class ETAdirectGenericRoutes extends RouteBuilder {
                 .to("log:" + LOG_CLASS + "?level=INFO")
                 .setHeader("resource_category", constant("generic"))
                 .bean(Resource.class, "mapToInsertResource")
+                .to("direct://etadirectsoap/resource");
+
+        from("direct://generic/user/insert")
+                .routeId("etaDirectGenUserInsert")
+                .unmarshal(resourceInsert)
+                .split(body())
+                .to("log:" + LOG_CLASS + "?level=INFO")
+                .setHeader("resource_category", constant("generic"))
+                .bean(Resource.class, "mapToInsertUser")
                 .to("direct://etadirectsoap/resource");
 
         from("direct://generic/activity/get")

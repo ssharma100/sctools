@@ -47,6 +47,12 @@ public class GenericResourceData {
     @DataField(pos=12)
     private String affiliation;
 
+    @DataField(pos=13)
+    private String login;
+
+    @DataField(pos=14)
+    private String pass;
+
     // Accessor Methods
     public String getName() {
         return name;
@@ -143,5 +149,21 @@ public class GenericResourceData {
 
     public void setWorkSkillList(String workSkillList) {
         this.workSkillList = workSkillList;
+    }
+
+    public String getLogin() {
+        return login;
+    }
+
+    public void setLogin(String login) {
+        this.login = login;
+    }
+
+    public String getPass() {
+        return pass;
+    }
+
+    public void setPass(String pass) {
+        this.pass = pass;
     }
 }

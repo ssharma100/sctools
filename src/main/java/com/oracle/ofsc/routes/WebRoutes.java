@@ -58,6 +58,12 @@ public class WebRoutes extends RouteBuilder {
                 .otherwise()
                 .to("direct://generic/resource/get");
 
+        // RESTful End Point For Generic User Management
+        from("restlet:http://localhost:8085/sctool/v1/generic/user?restletMethods=post")
+                .routeId("invokeGenUserPostCall")
+                .to("log:" + LOG_CLASS + "?showAll=true&multiline=true&level=INFO")
+                .to("direct://generic/user/insert");
+
         // Location Management Functions
         // Supports the ability to create a location within the OFSC
         from("restlet:http://localhost:8085/sctool/v1/location?restletMethod=post")
