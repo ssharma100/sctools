@@ -229,7 +229,8 @@ public class Activity {
         com.oracle.ofsc.etadirect.rest.InsertActivity activityIns = new com.oracle.ofsc.etadirect.rest.InsertActivity();
 
         activityIns.setResourceId(bucketId);
-        activityIns.setDate(activityData.getActivityDate());
+        // Date For The Activity - Leave Blank For Now
+        // activityIns.setDate(activityData.getActivityDate());
         activityIns.setActivityType(activityData.getActivityType());
         activityIns.setApptNumber(activityData.getActivityKey());
         activityIns.setCustomerName(activityData.getStore());
@@ -238,19 +239,9 @@ public class Activity {
         activityIns.setLatitude(activityData.getLatitude());
         activityIns.setLongitude(activityData.getLongitude());
 
-        DateTimeFormatter inFormatter = DateTimeFormat.forPattern("HH:mm:ss");
-        DateTimeFormatter outFormatter = DateTimeFormat.forPattern("HH:mm:ss");
-
-        // Set Appointment Time Management
-        if (StringUtils.isNotBlank(activityData.getActivityStart())) {
-            DateTime deliveryStart = inFormatter.parseDateTime(activityData.getActivityStart());
-            activityIns.setServiceWindowStart(outFormatter.print(deliveryStart));
-        }
-
-        if (StringUtils.isNotBlank(activityData.getActivityEnd()))  {
-            DateTime deliveryEnd = inFormatter.parseDateTime(activityData.getActivityEnd());
-            activityIns.setServiceWindowEnd(outFormatter.print(deliveryEnd));
-        }
+        activityIns.setTimeSlot(activityData.getTimeSlot());
+        activityIns.setSlaWindowStart(activityData.getActivityStartDate() + " " + activityData.getActivityStartTime());
+        activityIns.setSlaWindowEnd(activityData.getActivityEndDate() + " " + activityData.getActivityEndTime());
 
         return activityIns;
     }

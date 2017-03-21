@@ -18,6 +18,7 @@ public class InsertActivity {
     private String customerNumber;
     private String language = "en";
     private String timeZone;
+    private String timeSlot;
     private int duration;
     private String recordType;
     // Address Oriented Information
@@ -30,6 +31,9 @@ public class InsertActivity {
     private String deliveryWindowEnd;
     private String serviceWindowStart;
     private String serviceWindowEnd;
+
+    private String slaWindowStart;     // Follow "YYYY-MM-DD HH:MM:SS"
+    private String slaWindowEnd;       // Follow "YYYY-MM-DD HH:MM:SS"
 
     private String streetAddress;
     private String city;
@@ -101,6 +105,14 @@ public class InsertActivity {
 
     public void setTimeZone(String timeZone) {
         this.timeZone = timeZone;
+    }
+
+    public String getTimeSlot() {
+        return timeSlot;
+    }
+
+    public void setTimeSlot(String timeSlot) {
+        this.timeSlot = timeSlot;
     }
 
     public int getDuration() {
@@ -221,5 +233,21 @@ public class InsertActivity {
 
     public void setServiceWindowEnd(String serviceWindowEnd) {
         this.serviceWindowEnd = serviceWindowEnd;
+    }
+
+    public String getSlaWindowStart() {
+        return slaWindowStart;
+    }
+
+    public void setSlaWindowStart(String slaWindowStart) {
+        this.slaWindowStart = slaWindowStart;
+    }
+
+    public String getSlaWindowEnd() {
+        return slaWindowEnd;
+    }
+
+    public void setSlaWindowEnd(String slaWindowEnd) {
+        this.slaWindowEnd = slaWindowEnd;
     }
 }

@@ -52,7 +52,8 @@ create view impact_activity_24 as
 SELECT 
 concat('BLine1_', ICD.ACTUAL_CALLID) as ActivityKey,
 DATE(ICD.CALL_STARTED_LOCAL) as OriginalStartDate, 
-DATE(date_add(ICD.CALL_STARTED_LOCAL, INTERVAL +24 WEEK)) as StartDate,
+DATE(date_add(ICD.DATE_PLANNED, INTERVAL +24 WEEK)) as StartDate,
+DATE(DATE_ADD(date_add(ICD.DATE_PLANNED, INTERVAL +24 WEEK), INTERVAL ICD.DURATION_PLANNED_MINUTES MINUTE)) as EndDate,
 'bucket' as ExternalID, concat('imp', ICD.DURATION_PLANNED_MINUTES) as ActivityType,
 STORE.LATITUDE as Latitude, STORE.LONGITUDE as Longitude,
 TS.OFSC_Label as 'timeslot',
@@ -60,13 +61,14 @@ ICD.STARTED_BY_EMPLOYEE_NO as 'ReqResource',
 STORE.acosta_no as 'StoreID',
 STORE.address as 'Address', STORE.city as 'City', STORE.State as 'State', STORE.ZIPCODE as 'Zip',
 ALLCALL.DEFAULTCALLDURATION as 'DefaultCallDuration', ICD.DURATION_PLANNED_MINUTES as 'PlannedDuration',
-TIME(ICD.CALL_STARTED_LOCAL) as 'StartTime', TIME(ICD.COMPLETED_ON_LOCAL) as 'EndTime',
+TIME(ICR.EARLIEST_VISIT_TIME) as 'StartTime', TIME(ICR.LATEST_VISIT_TIME) as 'EndTime',
 ICD.STORE as Store
 FROM 
 impact_actual_call_details as ICD
 JOIN all_stores as STORE on STORE.acosta_no = ICD.acosta_no
 JOIN all_call_types as ALLCALL on ALLCALL.CallType_Code = concat('imp', ICD.DURATION_PLANNED_MINUTES)
 JOIN time_slots as TS on TS.Start_Time = TIME(ICD.CALL_STARTED_LOCAL) AND TS.End_Time = TIME(ICD.COMPLETED_ON_LOCAL)
+JOIN impact_call_requirements as ICR on ICR.ACOSTA_NO = ICD.ACOSTA_NO
 WHERE
 ICD.CALL_STATUS_DETAILS = 'Successful'
 AND 
@@ -77,6 +79,7 @@ ICD.Store NOT LIKE 'Wal%';
 -- 39 Weeks Ahead
 
 select * from impact_actual_call_details limit 100;
+select * from impact_call_requirements limit 100;
 
 select distinct(ActivityType) from impact_activity;
 drop view impact_activity_24;
@@ -89,6 +92,6 @@ select * from impact_activity_24 limit 100;
 select distinct (startdate) from impact_activity_24 limit 100;
 select count(*) from impact_activity_24 where startdate = '2017-07-07';
 select ActivityKey, ReqResource as ResourceId, activitytype, startdate, Latitude, Longitude, PlannedDuration as Duration, StartTime, EndTime, Store, city as City, state as State, zip as Zip, 'Eastern' as Timezone, TimeSlot as TimeSlot from impact_activity_24 limit 50;
-select ActivityKey, ReqResource as ResourceId, activitytype, startdate, Latitude, Longitude, PlannedDuration as Duration, StartTime, EndTime, Store, city as City, state as State, zip as Zip, 'Eastern' as Timezone, TimeSlot as TimeSlot from impact_activity_24 where startdate = '2017-07-07';
+select ActivityKey, ReqResource as ResourceId, activitytype, startdate, EndDate, Latitude, Longitude, PlannedDuration as Duration, StartTime, EndTime, Store, city as City, state as State, zip as Zip, 'Eastern' as Timezone, TimeSlot as TimeSlot from impact_activity_24 where startdate = '2017-07-07' limit 10;
 
 select * from impact_activity_24 where activitykey='BLine1_A000-1877-5879C816' and Store not like 'Walmart%';
