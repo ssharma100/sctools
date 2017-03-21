@@ -18,28 +18,30 @@ public class GenericActivityData {
     @DataField(pos=3)
     private String  activityType;
     @DataField(pos=4)
-    private String activityDate;
-    @DataField(pos=5, precision = 4)
-    private BigDecimal latitude;
+    private String activityStartDate;
+    @DataField(pos=5)
+    private String activityEndDate;
     @DataField(pos=6, precision = 4)
+    private BigDecimal latitude;
+    @DataField(pos=7, precision = 4)
     private BigDecimal longitude;
-    @DataField(pos=7)
-    private int         duration;
     @DataField(pos=8)
-    private String      activityStart;
+    private int         duration;
     @DataField(pos=9)
-    private String      activityEnd;
+    private String      activityStartTime;
     @DataField(pos=10)
-    private String      store;
+    private String      activityEndTime;
     @DataField(pos=11)
-    private String      city;
+    private String      store;
     @DataField(pos=12)
-    private String      state;
+    private String      city;
     @DataField(pos=13)
-    private String      zipCode;
+    private String      state;
     @DataField(pos=14)
-    private String      timezone;
+    private String      zipCode;
     @DataField(pos=15)
+    private String      timezone;
+    @DataField(pos=16)
     private String      timeSlot;
 
     public GenericActivityData() {}
@@ -68,12 +70,20 @@ public class GenericActivityData {
         this.activityType = activityType;
     }
 
-    public String getActivityDate() {
-        return activityDate;
+    public String getActivityStartDate() {
+        return activityStartDate;
     }
 
-    public void setActivityDate(String activityDate) {
-        this.activityDate = activityDate;
+    public void setActivityStartDate(String activityStartDate) {
+        this.activityStartDate = activityStartDate;
+    }
+
+    public String getActivityEndDate() {
+        return activityEndDate;
+    }
+
+    public void setActivityEndDate(String activityEndDate) {
+        this.activityEndDate = activityEndDate;
     }
 
     public BigDecimal getLatitude() {
@@ -100,20 +110,20 @@ public class GenericActivityData {
         this.duration = duration;
     }
 
-    public String getActivityStart() {
-        return activityStart;
+    public String getActivityStartTime() {
+        return activityStartTime;
     }
 
-    public void setActivityStart(String activityStart) {
-        this.activityStart = activityStart;
+    public void setActivityStartTime(String activityStartTime) {
+        this.activityStartTime = activityStartTime;
     }
 
-    public String getActivityEnd() {
-        return activityEnd;
+    public String getActivityEndTime() {
+        return activityEndTime;
     }
 
-    public void setActivityEnd(String activityEnd) {
-        this.activityEnd = activityEnd;
+    public void setActivityEndTime(String activityEndTime) {
+        this.activityEndTime = activityEndTime;
     }
 
     public String getCity() {
