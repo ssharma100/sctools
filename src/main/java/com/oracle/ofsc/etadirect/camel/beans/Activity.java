@@ -238,6 +238,8 @@ public class Activity {
         activityIns.setDuration(activityData.getDuration());
         activityIns.setLatitude(activityData.getLatitude());
         activityIns.setLongitude(activityData.getLongitude());
+        activityIns.setCity(activityData.getCity());
+        activityIns.setStateProvince(activityData.getState());
 
         activityIns.setTimeSlot(activityData.getTimeSlot());
         activityIns.setSlaWindowStart(activityData.getActivityStartDate() + " " + activityData.getActivityStartTime());
