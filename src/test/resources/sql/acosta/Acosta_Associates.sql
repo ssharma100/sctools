@@ -59,7 +59,7 @@ Concat('PRIMARY_', AI.Employee_No) as Name,
 AI.Address_1_PRIM as Street,
 AI.City_PRIM as City,
 AI.State_PROV_PRIM as State,
-AI.Zip_code_PRIM as Zip,
+LEFT(AI.Zip_code_PRIM,5) as Zip,
 AI.Country as Country,
 '5555657788' as Phone,
 '5555651122' as Pager,
@@ -71,7 +71,8 @@ WHERE AI.Team not like 'Walmart%'
 AND AI.ZIP_CODE_PRIM <> ''
 AND AI.HIREDATE < '2017-02-01 00:00:00';
 
-Select * from resource_homeloc limit 2;
+Select * from resource_homeloc;
+Select * from resource_homeloc where resourceid='992290033';
 drop view resource_homeloc;
 
 -- View for Continuity Associates
@@ -130,4 +131,4 @@ select * from mixed_resources_upload;
 
 drop view mixed_resources_upload;
 
-select * from associates_info where employee_no='992201250';
+select EMPLOYEE_NO from associates_info;

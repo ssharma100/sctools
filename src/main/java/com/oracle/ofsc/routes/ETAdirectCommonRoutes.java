@@ -63,5 +63,11 @@ public class ETAdirectCommonRoutes extends RouteBuilder {
                     .bean(Location.class, "loadLocation")
                     .to("direct://etadirectrest/setLocation")
                 .end();
+
+        from("direct://common/get/locations")
+                .routeId("getLocations")
+                .bean(Resource.class, "authOnly")
+                .to("direct://etadirectrest/getLocation")
+                .end();
     }
 }
