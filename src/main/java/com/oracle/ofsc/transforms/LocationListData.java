@@ -3,6 +3,8 @@ package com.oracle.ofsc.transforms;
 import org.apache.camel.dataformat.bindy.annotation.CsvRecord;
 import org.apache.camel.dataformat.bindy.annotation.DataField;
 
+import java.math.BigDecimal;
+
 /**
  * Created by xxx_s_000 on 11/3/2016.
  */
@@ -28,6 +30,10 @@ public class LocationListData {
     private String pager;
     @DataField(pos=10)
     private String email;
+    @DataField(pos=11, precision = 4)
+    private BigDecimal longitude;
+    @DataField(pos=12, precision = 4)
+    private BigDecimal latitude;
 
     public String getExternalId() {
         return externalId;
@@ -107,5 +113,21 @@ public class LocationListData {
 
     public void setEmail(String email) {
         this.email = email;
+    }
+
+    public BigDecimal getLongitude() {
+        return longitude;
+    }
+
+    public void setLongitude(BigDecimal longitude) {
+        this.longitude = longitude;
+    }
+
+    public BigDecimal getLatitude() {
+        return latitude;
+    }
+
+    public void setLatitude(BigDecimal latitude) {
+        this.latitude = latitude;
     }
 }

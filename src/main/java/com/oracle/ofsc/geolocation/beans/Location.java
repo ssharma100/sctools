@@ -67,7 +67,7 @@ public class Location {
 
     public void loadLocation (Exchange exchange) {
         LOGGER.info("Loading Location Information To JSON From LocationData");
-        Map<String, Object> parsedLocations = null;
+
         LocationListData location = exchange.getIn().getBody(LocationListData.class);
         // Check For Property And Set If This Is The First Time Around
         List<LocationListData> originalLocations = exchange.getProperty(PROP_ORIGINALS, List.class);
@@ -76,6 +76,7 @@ public class Location {
             exchange.setProperty(PROP_ORIGINALS, originalLocations);
         }
         originalLocations.add(location);
+
         // Generate Output Json
         InsertLocation jsonLocation = new InsertLocation();
         jsonLocation.setLabel(location.getName());
@@ -83,6 +84,8 @@ public class Location {
         jsonLocation.setCity(location.getCity());
         jsonLocation.setState(location.getState());
         jsonLocation.setPostalCode(location.getZip());
+        jsonLocation.setLatitude(location.getLatitude());
+        jsonLocation.setLongitude(location.getLongitude());
 
         // Set Values For HTTP Call And Authentication To ETAdirect
         HashMap<String, String> authInfo =
