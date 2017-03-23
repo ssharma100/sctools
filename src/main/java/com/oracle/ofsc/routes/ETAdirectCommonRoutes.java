@@ -5,6 +5,7 @@ import com.oracle.ofsc.etadirect.camel.beans.ArcBestBulk;
 import com.oracle.ofsc.etadirect.camel.beans.Resource;
 import com.oracle.ofsc.geolocation.beans.DistanceAggregationStrategy;
 import com.oracle.ofsc.geolocation.beans.Location;
+import com.oracle.ofsc.geolocation.beans.ResourceLocationDataAggregationStrategy;
 import org.apache.camel.Exchange;
 import org.apache.camel.Predicate;
 import org.apache.camel.builder.RouteBuilder;
@@ -79,7 +80,7 @@ public class ETAdirectCommonRoutes extends RouteBuilder {
                 .routeId("getAssignedLocations")
                 .unmarshal(resourceLocation)
                 .bean(Resource.class, "authOnly")
-                .split(body())
+                .split(body(), new ResourceLocationDataAggregationStrategy())
                     .bean(Location.class, "extractResource")
                     .to("direct://etadirectrest/getLocation")
                 .end();

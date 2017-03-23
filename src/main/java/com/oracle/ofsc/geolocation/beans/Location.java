@@ -71,7 +71,7 @@ public class Location {
      * @param exchange
      */
     public void extractResource(Exchange exchange) {
-        LOGGER.info("Extract Resource ID From Resouce Location Data List");
+        LOGGER.info("Extract Resource ID From Resource Location Data List");
         ResourceLocationData rld = exchange.getIn().getBody(ResourceLocationData.class);
         exchange.getIn().setHeader("id", rld.getResourceId());
         exchange.setProperty("original_rld", rld);
