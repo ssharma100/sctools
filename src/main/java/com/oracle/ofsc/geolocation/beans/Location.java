@@ -78,6 +78,19 @@ public class Location {
         exchange.getIn().setBody(null);
     }
 
+    /**
+     * Extracts the aggregated response and creates an array of RDL entries for
+     * marshalling
+     *
+     * @param exchange
+     */
+    public void buildResourceLocationData (Exchange exchange) {
+        LOGGER.info("Extract Resource ID From Resource Location Data List");
+        ArrayList<ResourceLocationData> list = (ArrayList<ResourceLocationData> )exchange.getProperty("entry_list");
+        LOGGER.info("Extracting {} Entries From Aggregation List", list.size());
+        exchange.getIn().setBody(list);
+    }
+
     public void loadInsertLocation (Exchange exchange) {
         LOGGER.info("Loading Location Information To JSON From LocationData");
 

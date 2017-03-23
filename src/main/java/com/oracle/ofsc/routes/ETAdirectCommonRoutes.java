@@ -3,13 +3,16 @@ package com.oracle.ofsc.routes;
 import com.oracle.ofsc.etadirect.camel.beans.AggregatorStrategy;
 import com.oracle.ofsc.etadirect.camel.beans.ArcBestBulk;
 import com.oracle.ofsc.etadirect.camel.beans.Resource;
+import com.oracle.ofsc.etadirect.rest.ResourceLocationResponse;
 import com.oracle.ofsc.geolocation.beans.DistanceAggregationStrategy;
 import com.oracle.ofsc.geolocation.beans.Location;
 import com.oracle.ofsc.geolocation.beans.ResourceLocationDataAggregationStrategy;
 import org.apache.camel.Exchange;
 import org.apache.camel.Predicate;
 import org.apache.camel.builder.RouteBuilder;
+import org.apache.camel.component.jackson.JacksonDataFormat;
 import org.apache.camel.dataformat.bindy.csv.BindyCsvDataFormat;
+import org.apache.camel.model.dataformat.JsonLibrary;
 import org.apache.camel.spi.DataFormat;
 
 import java.util.List;
@@ -25,7 +28,9 @@ public class ETAdirectCommonRoutes extends RouteBuilder {
     private DataFormat locationsList = new BindyCsvDataFormat(com.oracle.ofsc.transforms.LocationListData.class);
     private DataFormat resourceLocation = new BindyCsvDataFormat(com.oracle.ofsc.transforms.ResourceLocationData.class);
 
-    private Predicate hasId = header("id").isNotNull();
+    private JacksonDataFormat jacksonDataFormat = new JacksonDataFormat();
+
+
 
     @Override public void configure() throws Exception {
 
@@ -80,9 +85,13 @@ public class ETAdirectCommonRoutes extends RouteBuilder {
                 .routeId("getAssignedLocations")
                 .unmarshal(resourceLocation)
                 .bean(Resource.class, "authOnly")
+                .setHeader("CamelJacksonUnmarshalType", constant("com.oracle.ofsc.etadirect.rest.ResourceLocationResponse"))
                 .split(body(), new ResourceLocationDataAggregationStrategy())
                     .bean(Location.class, "extractResource")
                     .to("direct://etadirectrest/getLocation")
-                .end();
+                    .unmarshal(jacksonDataFormat)
+                .end()
+                .bean(Location.class, "buildResourceLocationData")
+                .marshal(resourceLocation);
     }
 }
