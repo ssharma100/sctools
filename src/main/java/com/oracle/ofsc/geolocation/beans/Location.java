@@ -7,6 +7,7 @@ import com.oracle.ofsc.etadirect.rest.InsertLocation;
 import com.oracle.ofsc.etadirect.rest.RouteList;
 import com.oracle.ofsc.geolocation.transforms.google.DistanceJson;
 import com.oracle.ofsc.transforms.LocationListData;
+import com.oracle.ofsc.transforms.ResourceLocationData;
 import com.oracle.ofsc.transforms.RouteReportData;
 import com.oracle.ofsc.transforms.TransportationActivityData;
 import org.apache.camel.Exchange;
@@ -65,7 +66,19 @@ public class Location {
         exchange.getOut().setHeader(Exchange.HTTP_QUERY, "units=imperial&"+ routeCords + "&key=AIzaSyDG2GXoRuhBSAicyU1TpBJ8PpagJHIyNyk");
     }
 
-    public void loadLocation (Exchange exchange) {
+    /**
+     * Extracts the Resource + makes a copy of the body for later use
+     * @param exchange
+     */
+    public void extractResource(Exchange exchange) {
+        LOGGER.info("Extract Resource ID From Resouce Location Data List");
+        ResourceLocationData rld = exchange.getIn().getBody(ResourceLocationData.class);
+        exchange.getIn().setHeader("id", rld.getResourceId());
+        exchange.setProperty("original_rld", rld);
+        exchange.getIn().setBody(null);
+    }
+
+    public void loadInsertLocation (Exchange exchange) {
         LOGGER.info("Loading Location Information To JSON From LocationData");
 
         LocationListData location = exchange.getIn().getBody(LocationListData.class);

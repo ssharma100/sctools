@@ -75,6 +75,11 @@ public class WebRoutes extends RouteBuilder {
                 .otherwise()
                     .to("direct://common/get/locations");
 
+        from("restlet:http://localhost:8085/sctool/v1/fetchAssignLocation?restletMethod=post")
+                .routeId("assigmentFetch")
+                .to("log:" + LOG_CLASS + "?showAll=true&multiline=true&level=INFO")
+                .to("direct://common/get/assignedLocations");
+
         // RESTful End Point For Activity
         // - Get Activity (Transportation)
         // - Insert Activity (Transportation)

@@ -6,6 +6,7 @@ import com.oracle.ofsc.etadirect.camel.beans.Resource;
 import com.oracle.ofsc.geolocation.beans.DistanceAggregationStrategy;
 import com.oracle.ofsc.geolocation.beans.Location;
 import org.apache.camel.Exchange;
+import org.apache.camel.Predicate;
 import org.apache.camel.builder.RouteBuilder;
 import org.apache.camel.dataformat.bindy.csv.BindyCsvDataFormat;
 import org.apache.camel.spi.DataFormat;
@@ -21,6 +22,10 @@ public class ETAdirectCommonRoutes extends RouteBuilder {
     private static final String LOG_CLASS = "com.oracle.ofsc.routes.ETAdirectRoutes";
     private DataFormat routeReport = new BindyCsvDataFormat(com.oracle.ofsc.transforms.RouteReportData.class);
     private DataFormat locationsList = new BindyCsvDataFormat(com.oracle.ofsc.transforms.LocationListData.class);
+    private DataFormat resourceLocation = new BindyCsvDataFormat(com.oracle.ofsc.transforms.ResourceLocationData.class);
+
+    private Predicate hasId = header("id").isNotNull();
+
     @Override public void configure() throws Exception {
 
         from("direct://common/get/route")
@@ -60,14 +65,23 @@ public class ETAdirectCommonRoutes extends RouteBuilder {
                 .routeId("setLocations")
                 .unmarshal(locationsList)
                 .split(body())
-                    .bean(Location.class, "loadLocation")
+                    .bean(Location.class, "loadInsertLocation")
                     .to("direct://etadirectrest/setLocation")
                 .end();
 
         from("direct://common/get/locations")
                 .routeId("getLocations")
                 .bean(Resource.class, "authOnly")
-                .to("direct://etadirectrest/getLocation")
+                .to("direct://etadirectrest/getLocation");
+
+        // Performs Assignment Fetch
+        from("direct://common/get/assignedLocations")
+                .routeId("getAssignedLocations")
+                .unmarshal(resourceLocation)
+                .bean(Resource.class, "authOnly")
+                .split(body())
+                    .bean(Location.class, "extractResource")
+                    .to("direct://etadirectrest/getLocation")
                 .end();
     }
 }
