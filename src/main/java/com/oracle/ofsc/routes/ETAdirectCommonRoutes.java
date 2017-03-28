@@ -93,5 +93,16 @@ public class ETAdirectCommonRoutes extends RouteBuilder {
                 .end()
                 .bean(Location.class, "buildResourceLocationData")
                 .marshal(resourceLocation);
+
+
+        from("direct://common/get/assignLocations")
+                .routeId("applyLocationAssignment")
+                .unmarshal(resourceLocation)
+                .setHeader("CamelJacksonUnmarshalType", constant("com.oracle.ofsc.etadirect.rest.ResourceLocationResponse"))
+                .split(body())
+                    .bean(Location.class, "associateResourceLocations")
+                    .to("direct://etadirectrest/assignLocation")
+                    .unmarshal(jacksonDataFormat)
+                .end();
     }
 }
