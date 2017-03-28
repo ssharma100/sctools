@@ -3,10 +3,13 @@ package com.oracle.ofsc.geolocation.beans;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.oracle.ofsc.etadirect.camel.beans.Security;
+import com.oracle.ofsc.etadirect.rest.Assignment;
 import com.oracle.ofsc.etadirect.rest.InsertLocation;
+import com.oracle.ofsc.etadirect.rest.LocationAssignment;
 import com.oracle.ofsc.etadirect.rest.RouteList;
 import com.oracle.ofsc.geolocation.transforms.google.DistanceJson;
 import com.oracle.ofsc.transforms.LocationListData;
+import com.oracle.ofsc.transforms.ResourceLocationData;
 import com.oracle.ofsc.transforms.RouteReportData;
 import com.oracle.ofsc.transforms.TransportationActivityData;
 import org.apache.camel.Exchange;
@@ -65,9 +68,102 @@ public class Location {
         exchange.getOut().setHeader(Exchange.HTTP_QUERY, "units=imperial&"+ routeCords + "&key=AIzaSyDG2GXoRuhBSAicyU1TpBJ8PpagJHIyNyk");
     }
 
-    public void loadLocation (Exchange exchange) {
+    /**
+     * Extracts the Resource + makes a copy of the body for later use
+     * @param exchange
+     */
+    public void extractResource(Exchange exchange) {
+        LOGGER.info("Extract Resource ID From Resource Location Data List");
+        ResourceLocationData rld = exchange.getIn().getBody(ResourceLocationData.class);
+        exchange.getIn().setHeader("id", rld.getResourceId());
+        exchange.setProperty("original_rld", rld);
+        exchange.getIn().setBody(null);
+    }
+
+    /**
+     * Extracts the aggregated response and creates an array of RDL entries for
+     * marshalling
+     *
+     * @param exchange
+     */
+    public void buildResourceLocationData (Exchange exchange) {
+        LOGGER.info("Extract Resource ID From Resource Location Data List");
+        ArrayList<ResourceLocationData> list = (ArrayList<ResourceLocationData> )exchange.getProperty("entry_list");
+        LOGGER.info("Extracting {} Entries From Aggregation List", list.size());
+        exchange.getIn().setBody(list);
+    }
+
+    public void associateResourceLocations(Exchange exchange) {
+        LOGGER.info("Loading Location Application Information To JSON From Resource Location Data");
+
+        ResourceLocationData rld = exchange.getIn().getBody(ResourceLocationData.class);
+        // Set Values For HTTP Call And Authentication To ETAdirect
+        HashMap<String, String> authInfo =
+                Security.extractAuthInfo((String )exchange.getIn().getHeader("CamelHttpQuery"));
+        String username = authInfo.get("user") + "@" + authInfo.get("company");
+        String passwd =   authInfo.get("passwd");
+        exchange.getIn().setHeader("username", username);
+        exchange.getIn().setHeader("passwd", passwd);
+        exchange.getIn().setHeader(Exchange.CONTENT_TYPE, "application/json");
+
+        exchange.getIn().setHeader("id", rld.getResourceId());
+        LocationAssignment locationAssignment = new LocationAssignment();
+        // Set Up The Items
+        Assignment mon = new Assignment();
+        mon.setStart(rld.getMonStart());
+        mon.setEnd(rld.getMonEnd());
+        mon.setHomeZoneCenter(rld.getMonHome());
+        locationAssignment.setMon(mon);
+
+        Assignment tue = new Assignment();
+        tue.setStart(rld.getTueStart());
+        tue.setEnd(rld.getTuesEnd());
+        tue.setHomeZoneCenter(rld.getTuesHome());
+        locationAssignment.setTue(tue);
+
+        Assignment wed = new Assignment();
+        wed.setStart(rld.getWedStart());
+        wed.setEnd(rld.getWedEnd());
+        wed.setHomeZoneCenter(rld.getWedHome());
+        locationAssignment.setWed(wed);
+
+        Assignment thu = new Assignment();
+        thu.setStart(rld.getThursStart());
+        thu.setEnd(rld.getThursEnd());
+        thu.setHomeZoneCenter(rld.getThursHome());
+        locationAssignment.setThu(thu);
+
+        Assignment fri = new Assignment();
+        fri.setStart(rld.getFriStart());
+        fri.setEnd(rld.getFirEnd());
+        fri.setHomeZoneCenter(rld.getFriHome());
+        locationAssignment.setFri(fri);
+
+        Assignment sat = new Assignment();
+        sat.setStart(rld.getSatStart());
+        sat.setEnd(rld.getSatEnd());
+        sat.setHomeZoneCenter(rld.getSatHome());
+        locationAssignment.setSat(sat);
+
+        Assignment sun = new Assignment();
+        sun.setStart(rld.getSunStart());
+        sun.setEnd(rld.getSunEnd());
+        sun.setHomeZoneCenter(rld.getSunHome());
+        locationAssignment.setSun(sun);
+
+        String restBody = null;
+        try {
+            restBody = locationMapper.writeValueAsString(locationAssignment);
+        } catch (JsonProcessingException e) {
+            LOGGER.error("Failed To Marshal JSON Object: {}", e.getMessage());
+        }
+        exchange.setProperty("original_rld", rld);
+        exchange.getIn().setBody(restBody);
+    }
+
+    public void loadInsertLocation (Exchange exchange) {
         LOGGER.info("Loading Location Information To JSON From LocationData");
-        Map<String, Object> parsedLocations = null;
+
         LocationListData location = exchange.getIn().getBody(LocationListData.class);
         // Check For Property And Set If This Is The First Time Around
         List<LocationListData> originalLocations = exchange.getProperty(PROP_ORIGINALS, List.class);
@@ -76,6 +172,7 @@ public class Location {
             exchange.setProperty(PROP_ORIGINALS, originalLocations);
         }
         originalLocations.add(location);
+
         // Generate Output Json
         InsertLocation jsonLocation = new InsertLocation();
         jsonLocation.setLabel(location.getName());
@@ -83,6 +180,8 @@ public class Location {
         jsonLocation.setCity(location.getCity());
         jsonLocation.setState(location.getState());
         jsonLocation.setPostalCode(location.getZip());
+        jsonLocation.setLatitude(location.getLatitude());
+        jsonLocation.setLongitude(location.getLongitude());
 
         // Set Values For HTTP Call And Authentication To ETAdirect
         HashMap<String, String> authInfo =
@@ -102,6 +201,7 @@ public class Location {
         }
         exchange.getIn().setBody(restBody);
     }
+
     public void covertJsonToRouteReport (Exchange exchange) {
         LOGGER.info("Convert Response From Google Destination Call");
         InputStream is = (InputStream )exchange.getIn().getBody();

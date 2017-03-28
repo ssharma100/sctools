@@ -2,6 +2,8 @@ package com.oracle.ofsc.etadirect.rest;
 
 import com.fasterxml.jackson.databind.annotation.JsonSerialize;
 
+import java.math.BigDecimal;
+
 /**
  * Created by xxx_s_000 on 11/3/2016.
  */
@@ -14,6 +16,8 @@ public class InsertLocation {
     private String state;
     private String postalCode;
     private String status;
+    private BigDecimal latitude;
+    private BigDecimal longitude;
 
     public String getLabel() {
         return label;
@@ -61,5 +65,21 @@ public class InsertLocation {
 
     public void setStatus(String status) {
         this.status = status;
+    }
+
+    public BigDecimal getLatitude() {
+        return latitude;
+    }
+
+    public void setLatitude(BigDecimal latitude) {
+        this.latitude = latitude;
+    }
+
+    public BigDecimal getLongitude() {
+        return longitude;
+    }
+
+    public void setLongitude(BigDecimal longitude) {
+        this.longitude = longitude;
     }
 }
