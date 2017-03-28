@@ -92,6 +92,4 @@ select * from impact_activity_24 limit 100;
 select distinct (startdate) from impact_activity_24 limit 100;
 select count(*) from impact_activity_24 where startdate = '2017-07-07';
 select ActivityKey, ReqResource as ResourceId, activitytype, startdate, Latitude, Longitude, PlannedDuration as Duration, StartTime, EndTime, Store, city as City, state as State, zip as Zip, 'Eastern' as Timezone, TimeSlot as TimeSlot from impact_activity_24 limit 50;
-select ActivityKey, ReqResource as ResourceId, activitytype, startdate, EndDate, Latitude, Longitude, PlannedDuration as Duration, StartTime, EndTime, Store, city as City, state as State, zip as Zip, 'Eastern' as Timezone, TimeSlot as TimeSlot from impact_activity_24 where startdate = '2017-07-07' limit 10;
-
-select * from impact_activity_24 where activitykey='BLine1_A000-1877-5879C816' and Store not like 'Walmart%';
+select ActivityKey, ReqResource as ResourceId, activitytype, startdate, EndDate, Latitude, Longitude, PlannedDuration as Duration, StartTime, EndTime, Store, city as City, state as State, zip as Zip, 'Eastern' as Timezone, TimeSlot as TimeSlot from impact_activity_24 where startdate >= '2017-08-02' and startdate <= '2017-08-15';
