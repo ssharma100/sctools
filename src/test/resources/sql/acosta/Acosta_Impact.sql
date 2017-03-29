@@ -62,54 +62,27 @@ STORE.acosta_no as 'StoreID',
 STORE.address as 'Address', STORE.city as 'City', STORE.State as 'State', STORE.ZIPCODE as 'Zip',
 ALLCALL.DEFAULTCALLDURATION as 'DefaultCallDuration', ICD.DURATION_PLANNED_MINUTES as 'PlannedDuration',
 TIME(ICR.EARLIEST_VISIT_TIME) as 'StartTime', TIME(ICR.LATEST_VISIT_TIME) as 'EndTime',
-ICD.STORE as Store
+ICD.STORE as Store,
+ICR.RESOURCE_NUMBER as Resource_No
 FROM 
 impact_actual_call_details as ICD
 JOIN all_stores as STORE on STORE.acosta_no = ICD.acosta_no
 JOIN all_call_types as ALLCALL on ALLCALL.CallType_Code = concat('imp', ICD.DURATION_PLANNED_MINUTES)
-JOIN impact_call_requirements as ICR on ICR.SERVICE_ORDER_NUMBER = ICD.SERVICE_ORDER_NUMBER and ICR.ACOSTA_NO = ICD.ACOSTA_NO
+JOIN impact_call_requirements as ICR on 
+ICR.SERVICE_ORDER_NUMBER = ICD.SERVICE_ORDER_NUMBER and ICR.ACOSTA_NO = ICD.ACOSTA_NO AND ICR.Visit_id = ICD.Visit_id
 JOIN time_slots as TS on (TS.Start_Time = TIME(ICR.EARLIEST_VISIT_TIME) AND TS.End_Time = TIME(ICR.LATEST_VISIT_TIME))
 WHERE
 ICD.CALL_STATUS_DETAILS = 'Successful'
 AND 
 ICD.Store NOT LIKE 'Wal%';
 
-
--- 24 Weeks Ahead (As Duplicates)
-create view impact_activity_24_dups as 
-SELECT 
-concat('BLine1_', ICD.ACTUAL_CALLID) as ActivityKey,
-DATE(ICD.CALL_STARTED_LOCAL) as OriginalStartDate, 
-DATE(date_add(ICD.DATE_PLANNED, INTERVAL +24 WEEK)) as StartDate,
-DATE(DATE_ADD(date_add(ICD.DATE_PLANNED, INTERVAL +24 WEEK), INTERVAL ICD.DURATION_PLANNED_MINUTES MINUTE)) as EndDate,
-'bucket' as ExternalID, concat('imp', ICD.DURATION_PLANNED_MINUTES) as ActivityType,
-STORE.LATITUDE as Latitude, STORE.LONGITUDE as Longitude,
-TS.OFSC_Label as 'timeslot',
-ICD.STARTED_BY_EMPLOYEE_NO as 'ReqResource',
-STORE.acosta_no as 'StoreID',
-STORE.address as 'Address', STORE.city as 'City', STORE.State as 'State', STORE.ZIPCODE as 'Zip',
-ALLCALL.DEFAULTCALLDURATION as 'DefaultCallDuration', ICD.DURATION_PLANNED_MINUTES as 'PlannedDuration',
-TIME(ICR.EARLIEST_VISIT_TIME) as 'StartTime', TIME(ICR.LATEST_VISIT_TIME) as 'EndTime',
-ICD.STORE as Store
-FROM 
-impact_actual_call_details as ICD
-JOIN all_stores as STORE on STORE.acosta_no = ICD.acosta_no
-JOIN all_call_types as ALLCALL on ALLCALL.CallType_Code = concat('imp', ICD.DURATION_PLANNED_MINUTES)
-JOIN time_slots as TS on TS.Start_Time = TIME(ICD.CALL_STARTED_LOCAL) AND TS.End_Time = TIME(ICD.COMPLETED_ON_LOCAL)
-JOIN impact_call_requirements as ICR on ICR.SERVICE_ORDER_NUMBER = ICD.SERVICE_ORDER_NUMBER and ICR.ACOSTA_NO = ICD.ACOSTA_NO
-WHERE
-ICD.CALL_STATUS_DETAILS = 'Successful'
-AND 
-ICD.Store NOT LIKE 'Wal%'
-AND
-ICR.RESOURCE_NUMBER ='2';
-
-
-drop view impact_activity_24_dups;
+drop view impact_activity_24;
 -- 29 Weeks Ahead
 -- 34 Weeks Ahead
 -- 39 Weeks Ahead
 
+select * from impact_activity_24 limit 100;
+select * from impact_activity_24 where resource_id=2 limit 100;
 select * from impact_actual_call_details limit 100;
 select * from impact_call_requirements limit 100;
 
@@ -127,8 +100,12 @@ AND
 Store NOT LIKE 'Wal%' and Resource_Number = 2;
 
 
-select * from impact_actual_call_details where resource_number=4;
+select * from impact_actual_call_details where resource_number<>1 and CALL_STATUS_DETAILS = 'Successful' AND Store NOT LIKE 'Wal%' ;
+select resource_number, count(*) from impact_actual_call_details where resource_number<>1 and CALL_STATUS_DETAILS = 'Successful' AND Store NOT LIKE 'Wal%'  
+group by RESOURCE_NUMBER;
+select * from impact_actual_call_details where storeid = 246 and Acosta_no = 588758;
 select * from impact_actual_call_details where ACTUAL_CALLID='A000-1904-6060C652';
+select * from impact_call_requirements as ICR where ICR.SERVICE_ORDER_NUMBER = 21362 and ICR.ACOSTA_NO = 667327;
 
 select distinct(ActivityType) from impact_activity;
 drop view impact_activity_24;
@@ -138,7 +115,13 @@ drop view impact_activity_39;
 
 desc impact_activity;
 select * from impact_activity_24 limit 100;
-select * from impact_activity_24 where ActivityKey = 'BLine1_A000-1904-6060C652';
+select count(*) from impact_activity_24;
+select ActivityKey, count(*) from impact_activity_24 group by ActivityKey;
+select * from impact_activity_24 where ActivityKey = 'BLine1_A000-1872-0432C459';
+select * from impact_actual_call_details where ACTUAL_CALLID = 'A000-1872-0432C459';
+select * from impact_actual_call_details where Service_order_number = '22099' and acosta_no = '555472' and visit_id = '16750412';
+
+
 select * from impact_activity_24_dups;
 
 select distinct (startdate) from impact_activity_24 limit 100;
@@ -151,46 +134,10 @@ select * from all_stores limit 100;
 select * from impact_call_requirements limit 100;
 select * from impact_actual_call_details where acosta_no='561648';
 
+select * from impact_actual_call_details where Service_order_number = '22540' and acosta_no = '551450';
 select * from impact_call_requirements where acosta_no = '551450';
-select * from impact_call_requirements where Service_order_number = '22540' and acosta_no = '551450';
+select * from impact_call_requirements where Service_order_number = '22099' and acosta_no = '555472' and visit_id = '16750412';
+select * from impact_call_requirements where Service_order_number = '21362' and acosta_no = '667327' and visit_id = '16395298' order by EARLIEST_VISIT_DATE desc;
+select earliest_visit_date, LATEST_VISIT_DATE from impact_call_requirements where Service_order_number = '21362' and acosta_no = '667327' order by EARLIEST_VISIT_DATE desc;
 select * from all_call_types where CALLTYPE_CODE='imp30';
 select * from all_stores where acosta_no='551450';
-
--- Testing Only
-SELECT 
-concat('BLine1_', ICD.ACTUAL_CALLID) as ActivityKey,
-DATE(ICD.CALL_STARTED_LOCAL) as OriginalStartDate, 
-DATE(date_add(ICD.DATE_PLANNED, INTERVAL +24 WEEK)) as StartDate,
-DATE(DATE_ADD(date_add(ICD.DATE_PLANNED, INTERVAL +24 WEEK), INTERVAL ICD.DURATION_PLANNED_MINUTES MINUTE)) as EndDate,
-'bucket' as ExternalID, 
-concat('imp', ICD.DURATION_PLANNED_MINUTES) as ActivityType,
-STORE.LATITUDE as Latitude, STORE.LONGITUDE as Longitude,
-TS.OFSC_Label as 'timeslot',
-ICD.STARTED_BY_EMPLOYEE_NO as 'ReqResource',
-STORE.acosta_no as 'StoreID',
-STORE.address as 'Address', STORE.city as 'City', STORE.State as 'State', STORE.ZIPCODE as 'Zip',
-ALLCALL.DEFAULTCALLDURATION as 'DefaultCallDuration', ICD.DURATION_PLANNED_MINUTES as 'PlannedDuration',
-TIME(ICR.EARLIEST_VISIT_TIME) as 'StartTime', TIME(ICR.LATEST_VISIT_TIME) as 'EndTime',
-ICD.STORE as Store
-FROM 
-impact_actual_call_details as ICD
-JOIN all_stores as STORE on STORE.acosta_no = ICD.acosta_no
-JOIN all_call_types as ALLCALL on ALLCALL.CallType_Code = concat('imp', ICD.DURATION_PLANNED_MINUTES)
-JOIN impact_call_requirements as ICR on ICR.ACOSTA_NO = ICD.ACOSTA_NO
-JOIN time_slots as TS on (TS.Start_Time = TIME(ICR.EARLIEST_VISIT_TIME) AND TS.End_Time = TIME(ICR.LATEST_VISIT_TIME))
-WHERE
-ICD.CALL_STATUS_DETAILS = 'Successful'
-AND 
-ICD.Store NOT LIKE 'Wal%'
-AND ICD.ACTUAL_CALLID ='A000-1904-6060C652';
-
-select * from impact_actual_call_details as ICD 
--- JOIN all_stores as STORE on STORE.acosta_no = ICD.acosta_no
--- JOIN all_call_types as ALLCALL on ALLCALL.CallType_Code = concat('imp', ICD.DURATION_PLANNED_MINUTES)
-JOIN impact_call_requirements as ICR on ICR.SERVICE_ORDER_NUMBER = ICD.SERVICE_ORDER_NUMBER and ICR.ACOSTA_NO = ICD.ACOSTA_NO
--- JOIN time_slots as TS on (TS.Start_Time = TIME(ICR.EARLIEST_VISIT_TIME) AND TS.End_Time = TIME(ICR.LATEST_VISIT_TIME))
-where 
-ICD.CALL_STATUS_DETAILS = 'Successful'
-AND 
-ICD.Store NOT LIKE 'Wal%'
-AND ICD.ACTUAL_CALLID ='A000-1904-6060C652';
