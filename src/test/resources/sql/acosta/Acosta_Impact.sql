@@ -63,7 +63,8 @@ STORE.address as 'Address', STORE.city as 'City', STORE.State as 'State', STORE.
 ALLCALL.DEFAULTCALLDURATION as 'DefaultCallDuration', ICD.DURATION_PLANNED_MINUTES as 'PlannedDuration',
 TIME(ICR.EARLIEST_VISIT_TIME) as 'StartTime', TIME(ICR.LATEST_VISIT_TIME) as 'EndTime',
 ICD.STORE as Store,
-ICR.RESOURCE_NUMBER as Resource_No
+ICR.RESOURCE_NUMBER as Resource_No,
+CONCAT_WS('|', ICR.MONDAY, ICR.TUESDAY, ICR.WEDNESDAY, ICR.THURSDAY, ICR.FRIDAY, ICR.Saturday, ICR.Sunday) as DOW
 FROM 
 impact_actual_call_details as ICD
 JOIN all_stores as STORE on STORE.acosta_no = ICD.acosta_no
@@ -81,8 +82,9 @@ drop view impact_activity_24;
 -- 34 Weeks Ahead
 -- 39 Weeks Ahead
 
-select * from impact_activity_24 limit 100;
-select * from impact_activity_24 where resource_id=2 limit 100;
+select count(*) from impact_activity_24;
+select * from m limit 100;
+select * from impact_activity_24 where resource_No=2 limit 100;
 select * from impact_actual_call_details limit 100;
 select * from impact_call_requirements limit 100;
 
