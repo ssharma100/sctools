@@ -245,7 +245,60 @@ public class Activity {
         activityIns.setSlaWindowStart(activityData.getActivityStartDate() + " " + activityData.getActivityStartTime());
         activityIns.setSlaWindowEnd(activityData.getActivityEndDate() + " " + activityData.getActivityEndTime());
 
+        // Map The Days of The Week
+        activityIns.setImpact_allowable_days(extractDOW(activityData.getAllowedDOW()));
+
         return activityIns;
+    }
+
+    /**
+     * Converts the Vectored allowed day of week, to a named DoW string.
+     *
+     * @param allowedDowVector
+     * @return
+     */
+    private String extractDOW(String allowedDowVector) {
+        if (StringUtils.isBlank(allowedDowVector)) {
+            LOGGER.info("No DOW Vectored Value Provided");
+            return null;
+        }
+
+        String allowedDays[] = StringUtils.split(allowedDowVector, "|");
+        // We Must Parse Out 7 Days, If Not, Don't Try To Parse It
+        if (allowedDays.length != 7) {
+            LOGGER.error ("Skipping Parsing Of DoW - Only Found {} Entries", allowedDays.length);
+            return null;
+        }
+
+        StringBuilder sb = new StringBuilder();
+        for (int day=0;day < allowedDays.length; day++) {
+            boolean isDayAllowed = allowedDays[day].equals("1");
+            switch (day) {
+            case 0:
+                if (isDayAllowed) sb.append("Mon,");
+                break;
+            case 1:
+                if (isDayAllowed) sb.append("Tues,");
+                break;
+            case 2:
+                if (isDayAllowed) sb.append("Wed,");
+                break;
+            case 3:
+                if (isDayAllowed) sb.append("Thurs,");
+                break;
+            case 4:
+                if (isDayAllowed) sb.append("Fri,");
+                break;
+            case 5:
+                if (isDayAllowed) sb.append("Sat,");
+                break;
+            case 6:
+                if (isDayAllowed) sb.append("Sun,");
+                break;
+            }
+        }
+
+        return StringUtils.stripEnd(sb.toString(), ",");
     }
 }
 
