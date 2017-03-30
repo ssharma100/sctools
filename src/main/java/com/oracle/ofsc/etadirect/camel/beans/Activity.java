@@ -248,6 +248,12 @@ public class Activity {
         // Map The Days of The Week
         activityIns.setImpact_allowable_days(extractDOW(activityData.getAllowedDOW()));
 
+        // Only Map The Linkage If Two Or More Resources Are Required
+        if (activityData.getResourceCount() > 1) {
+            LOGGER.info("Setting Additional Resource Requirement For {}", activityData.getActivityKey());
+            activityIns.setLinked_sto(activityData.getActivityKey());
+        }
+
         return activityIns;
     }
 
