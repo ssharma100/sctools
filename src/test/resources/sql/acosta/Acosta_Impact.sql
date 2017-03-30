@@ -1,5 +1,6 @@
 
 desc impact_actual_call_details;
+show create table impact_actual_call_details;
 alter table impact_actual_call_details
 change `DATE_PLANNED` `DATE_PLANNED` date,
 change `TIME_PLANNED_LOCAL` `TIME_PLANNED_LOCAL` time,
@@ -32,8 +33,14 @@ drop `AREA_MANAGER_NAME`,
 drop `MARKET_MANAGER_NAME`,
 drop `RETAIL_DIRECTOR_NAME`;
 
+create index `icd_date` on impact_actual_call_details (DATE_PLANNED);
+create index `icd_store` on impact_actual_call_details (STORE);
+create index `icd_Acosta_no` on impact_actual_call_details (ACOSTA_NO);
+create index `icd_visit` on impact_actual_call_details (VISIT_ID);
+create index `icd_Serv_no` on impact_actual_call_details (SERVICE_ORDER_NUMBER);
+create index `icd_resource_no` on impact_actual_call_details (PLANNED_FOR_EMPLOYEE_NO, RESOURCE_NUMBER);
 
-select * from impact_actual_call_details;
+select * from c;
 
 delete from impact_actual_call_details;
 
@@ -83,7 +90,8 @@ drop view impact_activity_24;
 -- 39 Weeks Ahead
 
 select count(*) from impact_activity_24;
-select * from m limit 100;
+select * from impact_activity_24 limit 100;
+select * from impact_activity_24 order by StartDate asc limit 10;
 select * from impact_activity_24 where resource_No=2 limit 100;
 select * from impact_actual_call_details limit 100;
 select * from impact_call_requirements limit 100;
@@ -124,10 +132,12 @@ select * from impact_actual_call_details where ACTUAL_CALLID = 'A000-1872-0432C4
 select * from impact_actual_call_details where Service_order_number = '22099' and acosta_no = '555472' and visit_id = '16750412';
 
 
-select * from impact_activity_24_dups;
+select * from impact_activity_24 limit 10;
 
 select distinct (startdate) from impact_activity_24 limit 100;
 select count(*) from impact_activity_24 where startdate = '2017-07-07';
+
+-- Extraction Queries
 select ActivityKey, ReqResource as ResourceId, activitytype, startdate, Latitude, Longitude, PlannedDuration as Duration, StartTime, EndTime, Store, city as City, state as State, zip as Zip, 'Eastern' as Timezone, TimeSlot as TimeSlot from impact_activity_24 limit 50;
 select ActivityKey, ReqResource as ResourceId, activitytype, startdate, EndDate, Latitude, Longitude, PlannedDuration as Duration, StartTime, EndTime, Store, city as City, state as State, zip as Zip, 'Eastern' as Timezone, TimeSlot as TimeSlot from impact_activity_24 where startdate >= '2017-08-02' and startdate <= '2017-08-15';
 
