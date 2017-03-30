@@ -138,13 +138,16 @@ select distinct (startdate) from impact_activity_24 limit 100;
 select count(*) from impact_activity_24 where startdate = '2017-07-07';
 
 -- Extraction Queries
-select ActivityKey, ReqResource as ResourceId, activitytype, startdate, Latitude, Longitude, PlannedDuration as Duration, StartTime, EndTime, Store, city as City, state as State, zip as Zip, 'Eastern' as Timezone, TimeSlot as TimeSlot from impact_activity_24 limit 50;
-select ActivityKey, ReqResource as ResourceId, activitytype, startdate, EndDate, Latitude, Longitude, PlannedDuration as Duration, StartTime, EndTime, Store, city as City, state as State, zip as Zip, 'Eastern' as Timezone, TimeSlot as TimeSlot from impact_activity_24 where startdate >= '2017-08-02' and startdate <= '2017-08-15';
+select ActivityKey, ReqResource as ResourceId, activitytype, startdate, enddate, Latitude, Longitude, PlannedDuration as Duration, StartTime, EndTime, Store, city as City, state as State, zip as Zip, 'Eastern' as Timezone, TimeSlot as TimeSlot, Resource_No , DOW from impact_activity_24 limit 2;
+select ActivityKey, ReqResource as ResourceId, activitytype, startdate, enddate, Latitude, Longitude, PlannedDuration as Duration, StartTime, EndTime, Store, city as City, state as State, zip as Zip, 'Eastern' as Timezone, TimeSlot as TimeSlot, Resource_No , DOW from impact_activity_24 where Resource_No=2;
+select ActivityKey, ReqResource as ResourceId, activitytype, startdate, enddate, Latitude, Longitude, PlannedDuration as Duration, StartTime, EndTime, Store, city as City, state as State, zip as Zip, 'Eastern' as Timezone, TimeSlot as TimeSlot, Resource_No , DOW from impact_activity_24 where startdate >= '2017-06-01' and startdate <= '2017-06-31';
+select ActivityKey, ReqResource as ResourceId, activitytype, startdate, enddate, Latitude, Longitude, PlannedDuration as Duration, StartTime, EndTime, Store, city as City, state as State, zip as Zip, 'Eastern' as Timezone, TimeSlot as TimeSlot, Resource_No , DOW from impact_activity_24 where startdate >= '2017-07-01' and startdate <= '2017-07-31';
 
 
 select * from all_stores limit 100;
 select * from impact_call_requirements limit 100;
 select * from impact_actual_call_details where acosta_no='561648';
+select * from impact_actual_call_details where callid = 'A000-1872-0432';
 
 select * from impact_actual_call_details where Service_order_number = '22540' and acosta_no = '551450';
 select * from impact_call_requirements where acosta_no = '551450';
