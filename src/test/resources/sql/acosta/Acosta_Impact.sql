@@ -131,11 +131,31 @@ select * from impact_activity_24 where ActivityKey = 'BLine1_A000-1872-0432C459'
 select * from impact_actual_call_details where ACTUAL_CALLID = 'A000-1872-0432C459';
 select * from impact_actual_call_details where Service_order_number = '22099' and acosta_no = '555472' and visit_id = '16750412';
 
+select * from impact_actual_call_details where callid = 'A000-1872-0432';
+
+-- Checking For Duplications On The Actual CallID)
+select left(actual_callID, 14), count(*) from impact_actual_call_details where 
+CALL_STATUS_DETAILS = 'Successful'
+AND 
+Store NOT LIKE 'Wal%' group by left(actual_callID, 14) order by count(*) desc;
+
+-- Over All Count
+select count(*) from impact_actual_call_details where 
+CALL_STATUS_DETAILS = 'Successful'
+AND 
+Store NOT LIKE 'Wal%';
+
+select resource_number, count(*) from impact_actual_call_details where 
+CALL_STATUS_DETAILS = 'Successful'
+AND 
+Store NOT LIKE 'Wal%'
+group by resource_number;
+
 
 select * from impact_activity_24 limit 10;
 
 select distinct (startdate) from impact_activity_24 limit 100;
-select count(*) from impact_activity_24 where startdate = '2017-07-07';
+
 
 -- Extraction Queries
 select ActivityKey, ReqResource as ResourceId, activitytype, startdate, enddate, Latitude, Longitude, PlannedDuration as Duration, StartTime, EndTime, Store, city as City, state as State, zip as Zip, 'Eastern' as Timezone, TimeSlot as TimeSlot, Resource_No , DOW from impact_activity_24 limit 2;
