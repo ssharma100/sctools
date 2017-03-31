@@ -26,6 +26,7 @@ create table route_plan (
 `end_time` time NOT NULL COMMENT 'End Time Of The Appointment',
 `LATITUDE` DECIMAL(7,4),
 `LONGITUDE`DECIMAL(7,4),
+`route_order` integer NOT NULL COMMENT 'Order In The Days Route',
 `g_request` varchar(200) COMMENT 'Google Request Identifier',
 `g_result` enum('NotRun', 'OK', 'ERROR') DEFAULT 'NotRun',
 `g_msg` varchar(256),
@@ -43,3 +44,5 @@ INDEX `Key_DriveDist` (`g_drive_distance`)
 ) ENGINE=InnoDB DEFAULT CHARSET=latin1;
 
 drop table route_plan;
+
+select * from route_plan;

@@ -24,9 +24,11 @@ public class AcostaFunctions {
         BigDecimal latitude = (BigDecimal )resultFields.get("Latitude");
         BigDecimal longitude = (BigDecimal )resultFields.get("Longitude");
 
-        String sqlStatement = String.format("insert into route_plan (route_id, resource_id, appoint_id, start_time, end_time, latitude, longitude) "
-                        + "VALUES (DATE('%s'), '%s', '%s', TIME('%s'), TIME('%s'), %s, %s)",
-                started_on, resource_id, appoint_id, started_on, ended_on, latitude, longitude);
+        int sequence = (int ) exchange.getProperty("CamelSplitIndex");
+
+        String sqlStatement = String.format("insert into route_plan (route_id, resource_id, appoint_id, start_time, end_time, latitude, longitude, route_order) "
+                        + "VALUES (DATE('%s'), '%s', '%s', TIME('%s'), TIME('%s'), %s, %s, %d)",
+                started_on, resource_id, appoint_id, started_on, ended_on, latitude, longitude, sequence);
 
         LOGGER.debug("Generated:\n{}", sqlStatement);
         exchange.getIn().setBody(sqlStatement);
