@@ -1,10 +1,11 @@
 package com.oracle.ofsc.routes;
 
+import com.oracle.ofsc.etadirect.camel.beans.AcostaFunctions;
 import org.apache.camel.Predicate;
 import org.apache.camel.builder.RouteBuilder;
 
 /**
- * Created by ssharma on 3/30/17.
+ * Contains Acosta Routes That Address Route Plan Building
  */
 public class AcostaRoutes  extends RouteBuilder {
     private static final String LOG_CLASS = "com.oracle.ofsc.routes.AcostaRoutes";
@@ -17,17 +18,25 @@ public class AcostaRoutes  extends RouteBuilder {
                 .to("log:" + LOG_CLASS + "?showAll=true&multiline=true&level=INFO")
                 .choice()
                     .when(isGet)
-                        .to("direct://getRouteForDay")
+                        .to("direct://buildImpactRouteForDay")
                     .when(isDelete)
                         .to("direct://deleteRouteForDay")
                     .end();
 
-        from ("direct://getRouteForDay")
-                .setBody(constant(
-                        "select * from impact_actual_call_details where started_by_employee_no = :?resource_id and DATE(CALL_STARTED_LOCAL) = :?route_date ORDER BY CALL_STARTED_LOCAL"))
-                .to("jdbc:acostaDS?useHeadersAsParameters=true");
+        from ("direct://buildImpactRouteForDay")
+                .routeId("BuildRouteImpact")
+                .setHeader("sequence", constant(0))
+                .setBody(constant("select ICD.*, STORE.LATITUDE as Latitude, STORE.LONGITUDE as Longitude from impact_actual_call_details AS ICD JOIN all_stores as STORE on STORE.acosta_no = ICD.acosta_no and STORE.STOREID = ICD.STOREID where ICD.started_by_employee_no = :?resource_id "
+                        + "and DATE(ICD.CALL_STARTED_LOCAL) = :?route_date " + "and ICD.STATUS = 'Completed'" + "ORDER BY ICD.CALL_STARTED_LOCAL asc"))
+                .to("jdbc:acostaDS?useHeadersAsParameters=true&outputType=StreamList")
+                .split(body()).streaming()
+                    .bean(AcostaFunctions.class, "insertRouteSql")
+                    .to("jdbc:acostaDS?useHeadersAsParameters=false");
 
+        // Performs the removal of the Route for the given user and the given day:
         from ("direct://deleteRouteForDay")
-                .to("mock:something");
+                .setBody(constant(
+                        "delete from route_plan where resource_id = :?resource_id and route_id = :?route_date"))
+                .to("jdbc:acostaDS?useHeadersAsParameters=true");
     }
 }
