@@ -74,7 +74,7 @@ ICR.RESOURCE_NUMBER as Resource_No,
 CONCAT_WS('|', ICR.MONDAY, ICR.TUESDAY, ICR.WEDNESDAY, ICR.THURSDAY, ICR.FRIDAY, ICR.Saturday, ICR.Sunday) as DOW
 FROM 
 impact_actual_call_details as ICD
-JOIN all_stores as STORE on STORE.acosta_no = ICD.acosta_no
+JOIN all_stores as STORE on STORE.acosta_no = ICD.acosta_no and STORE.STOREID = ICD.STOREID
 JOIN all_call_types as ALLCALL on ALLCALL.CallType_Code = concat('imp', ICD.DURATION_PLANNED_MINUTES)
 JOIN impact_call_requirements as ICR on 
 ICR.SERVICE_ORDER_NUMBER = ICD.SERVICE_ORDER_NUMBER and ICR.ACOSTA_NO = ICD.ACOSTA_NO AND ICR.Visit_id = ICD.Visit_id
@@ -82,7 +82,8 @@ JOIN time_slots as TS on (TS.Start_Time = TIME(ICR.EARLIEST_VISIT_TIME) AND TS.E
 WHERE
 ICD.CALL_STATUS_DETAILS = 'Successful'
 AND 
-ICD.Store NOT LIKE 'Wal%';
+ICD.Store NOT LIKE 'Wal%'
+AND ICD.RESOURCE_NUMBER=1;
 
 drop view impact_activity_24;
 -- 29 Weeks Ahead
@@ -132,6 +133,7 @@ select * from impact_actual_call_details where ACTUAL_CALLID = 'A000-1872-0432C4
 select * from impact_actual_call_details where Service_order_number = '22099' and acosta_no = '555472' and visit_id = '16750412';
 
 select * from impact_actual_call_details where callid = 'A000-1872-0432';
+select * from impact_actual_call_details where STARTED_BY_EMPLOYEE_NO = '992336834';
 
 -- Checking For Duplications On The Actual CallID)
 select left(actual_callID, 14), count(*) from impact_actual_call_details where 

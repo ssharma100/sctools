@@ -24,6 +24,8 @@ create table route_plan (
 `appoint_id` varchar(128) NOT NULL COMMENT 'OFSC Or Actual_Call_ID Identification Number',
 `start_time` time NOT NULL COMMENT 'Start Time Of The Appointment',
 `end_time` time NOT NULL COMMENT 'End Time Of The Appointment',
+`LATITUDE` DECIMAL(7,4),
+`LONGITUDE`DECIMAL(7,4),
 `g_request` varchar(200) COMMENT 'Google Request Identifier',
 `g_result` enum('NotRun', 'OK', 'ERROR') DEFAULT 'NotRun',
 `g_msg` varchar(256),
@@ -39,3 +41,5 @@ INDEX `KEY_START_Time` (`start_time`, `end_time`),
 INDEX `Key_DriveTime` (`g_drive_time`),
 INDEX `Key_DriveDist` (`g_drive_distance`)
 ) ENGINE=InnoDB DEFAULT CHARSET=latin1;
+
+drop table route_plan;
