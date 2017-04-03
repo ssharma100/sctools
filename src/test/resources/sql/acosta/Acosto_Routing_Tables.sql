@@ -4,12 +4,9 @@
 -- the Google distance API
 
 create table route_queue (
-`id` varchar(128) NOT null COMMENT 'Unique Identifier for route - also activity ID',
+`from_activity` varchar(128) NOT null COMMENT 'Unique Identifier for route - also activity ID',
+`to_activity` varchar(128) NOT null COMMENT 'Unique Identifier for route - also activity ID',
 `resource_id` varchar(80) COMMENT 'Resource Idenifier For The Route',
-`callid` varchar(80) COMMENT 'Reference between actual call and apppointment requirement',
-`acosta_no` varchar(25) COMMENT 'Acosta specific reference number',
-`visitid` varchar(25) COMMENT 'Reference between actual call and apppointment requirement',
-`service_number` varchar(25) COMMENT 'Reference between actual call and apppointment requirement',
 `origin_lat` varchar(15) NOT NULL COMMENT 'Origination Latitude',
 `origin_long` varchar(15) NOT NULL COMMENT 'Origination Longitude',
 `dest_lat` varchar(15) NOT NULL COMMENT 'Destiniation Latitude',
@@ -21,17 +18,28 @@ KEY `KEY_RQ_PK` (`resource_id`)
 
 -- Travel Time/Distance Results Table
 
-create table distance_results (
-`id` varchar(128) NOT null COMMENT 'Unique Identifier for route - also activity ID',
-`resource_id` varchar(80) COMMENT 'Resource Idenifier For The Route',
+create table route_plan (
+`route_id` date NOT NULL COMMENT 'Unique Identifier For Route - date of the route',
+`resource_id` varchar(80)NOT NULL COMMENT 'Resource Idenifier For The Route',
+`appoint_id` varchar(128) NOT NULL COMMENT 'OFSC Or Actual_Call_ID Identification Number',
+`start_time` time NOT NULL COMMENT 'Start Time Of The Appointment',
+`end_time` time NOT NULL COMMENT 'End Time Of The Appointment',
+`LATITUDE` DECIMAL(7,4),
+`LONGITUDE`DECIMAL(7,4),
 `g_request` varchar(200) COMMENT 'Google Request Identifier',
-`result` enum('OK', 'ERROR') DEFAULT 'OK',
-`result_msg` varchar(256),
-`origin_address` varchar(300) COMMENT 'Origination Resolved Address',
+`g_result` enum('NotRun', 'OK', 'ERROR') DEFAULT 'NotRun',
+`g_msg` varchar(256),
+`origin_address` varchar(300) COMMENT 'Origination Resolved Address Single Line',
 `dest_address` varchar(300) COMMENT 'Destination Resolved Address',
-`drive_time` varchar(20) COMMENT 'Google Provided Drive Time',
-`drive_distance` varchar(20) COMMENT 'Google PRovided Drive Distance',
+`g_drive_time` integer COMMENT 'Google Provided Drive Time',
+`ofsc_drive_time` integer COMMENT 'OFSC Estiamted drive time',
+`g_drive_distance` varchar(20) COMMENT 'Google PRovided Drive Distance',
 
-PRIMARY KEY (`id`, `g_request`),
-KEY `KEY_ResQ_PK` (`resource_id`)
+PRIMARY KEY (`route_id`, `resource_id`, `appoint_id`),
+INDEX `KEY_ResQ_PK` (`resource_id`),
+INDEX `KEY_START_Time` (`start_time`, `end_time`),
+INDEX `Key_DriveTime` (`g_drive_time`),
+INDEX `Key_DriveDist` (`g_drive_distance`)
 ) ENGINE=InnoDB DEFAULT CHARSET=latin1;
+
+drop table route_plan;
