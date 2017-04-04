@@ -58,3 +58,13 @@ Where {id} is the external resource ID of the parent under which the new resourc
 
 _Location Loading_
 http://localhost:8085/sctool/v1/location?user=SOAPUPLOAD&company=securitaselectro1.test&passwd=Test123
+
+### Generating A Route (Customer Specific)
+The system is capable of generating the route plan for a given use. This takes the list of appointments for a given 
+day and converts the route to a DB table.  The DB table can then be used to integrate to other systems and/or provide
+reporting and analytic information on the route.
+The application takes a reosource_id and date, and looks for all jobs that were scheduled for the given day.  For the day,
+the jobs are copied to the route_plan table and given a sequence.
+The route table also provides for integration with Google, whereby we can populate drive time and address information
+(derived from Latitude/Longitude).
+
