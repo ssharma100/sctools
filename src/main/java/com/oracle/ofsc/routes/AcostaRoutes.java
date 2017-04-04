@@ -31,7 +31,7 @@ public class AcostaRoutes  extends RouteBuilder {
                                 + "from impact_actual_call_details AS ICD "
                                 + "JOIN all_stores as STORE on STORE.acosta_no = ICD.acosta_no and STORE.STOREID = ICD.STOREID "
                                 + "JOIN associates_info as ASSOC_INFO ON ASSOC_INFO.EMPLOYEE_NO = ICD.started_by_employee_no "
-                                + "where ICD.started_by_employee_no = :?resource_id "
+                                + "where ICD.completed_by_employee_no = :?resource_id "
                                 + "and DATE(ICD.CALL_STARTED_LOCAL) = :?route_date " + "and ICD.STATUS = 'Completed' "
                                 + "and ICD.Store NOT LIKE 'Wal%'"
                                 + "ORDER BY ICD.CALL_STARTED_LOCAL asc"))

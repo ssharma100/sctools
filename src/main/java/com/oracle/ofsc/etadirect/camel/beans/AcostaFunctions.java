@@ -2,6 +2,7 @@ package com.oracle.ofsc.etadirect.camel.beans;
 
 import org.apache.camel.Exchange;
 import org.joda.time.DateTime;
+import org.joda.time.Period;
 import org.joda.time.format.DateTimeFormat;
 import org.joda.time.format.DateTimeFormatter;
 import org.slf4j.Logger;
@@ -35,15 +36,15 @@ public class AcostaFunctions {
         sqlStatement.append("insert into route_plan (route_id, resource_id, appoint_id, start_time, end_time, latitude, longitude, route_order) ");
         if (0 == sequence) {
             DateTimeFormatter dtf = DateTimeFormat.forPattern("yyyy-MM-dd HH:mm:ss");
-            DateTime stubStart = new DateTime(started_on).withHourOfDay(8).withMinuteOfHour(0);
-            DateTime stubEnd = new DateTime(started_on).withHourOfDay(8).withMinuteOfHour(15);
+            DateTime startStart = new DateTime(started_on).minus(Period.minutes(5));
+            DateTime startEnd = new DateTime(ended_on).plus(Period.minutes(5));
 
             // Add The First Route + The Starting Route
             sqlStatement.append(
                     String.format("VALUES "
                                     + "(DATE('%s'), '%s', '%s', TIME('%s'), TIME('%s'), %s, %s, %d),", started_on, resource_id, "str" + appoint_id,
-                            dtf.print(stubStart),
-                            dtf.print(stubEnd),
+                            dtf.print(startStart),
+                            dtf.print(startEnd),
                             homeLatitude, homeLongitude, -1));
             // First Appointment Of The Day
             sqlStatement.append(String.format(" (DATE('%s'), '%s', '%s', TIME('%s'), TIME('%s'), %s, %s, %d)",
@@ -56,6 +57,16 @@ public class AcostaFunctions {
                             ended_on, latitude, longitude, sequence));
         }
 
+        // Check For This Being The Last Record, And Add The Home Route.
+        if (null != exchange.getProperty("CamelSplitSize")) {
+            DateTimeFormatter dtf = DateTimeFormat.forPattern("yyyy-MM-dd HH:mm:ss");
+            DateTime endStart = new DateTime(started_on).minus(Period.minutes(5));
+            DateTime endEnd = new DateTime(ended_on).plus(Period.minutes(5));
+
+            // Add End Point/Home
+            sqlStatement.append(String.format(",(DATE('%s'), '%s', '%s', TIME('%s'), TIME('%s'), %s, %s, %d)", started_on, resource_id, "end" + appoint_id,
+                    dtf.print(endStart), dtf.print(endEnd), homeLatitude, homeLongitude, 1000));
+        }
 
         LOGGER.debug("Generated:\n{}", sqlStatement);
 
