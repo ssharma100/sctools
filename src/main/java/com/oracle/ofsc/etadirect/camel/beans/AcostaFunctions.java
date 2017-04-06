@@ -33,11 +33,11 @@ public class AcostaFunctions {
         int sequence = (int ) exchange.getProperty("CamelSplitIndex");
 
         StringBuilder sqlStatement = new StringBuilder();
-        sqlStatement.append("insert into route_plan (route_id, resource_id, appoint_id, start_time, end_time, latitude, longitude, route_order) ");
+        sqlStatement.append("insert into route_plan (route_day, resource_id, appoint_id, start_time, end_time, latitude, longitude, route_order) ");
         if (0 == sequence) {
             DateTimeFormatter dtf = DateTimeFormat.forPattern("yyyy-MM-dd HH:mm:ss");
-            DateTime startStart = new DateTime(started_on).minus(Period.minutes(5));
-            DateTime startEnd = new DateTime(ended_on).plus(Period.minutes(5));
+            DateTime startStart = new DateTime(started_on).minus(Period.minutes(10));
+            DateTime startEnd = new DateTime(startStart).plus(Period.minutes(5));
 
             // Add The First Route + The Starting Route
             sqlStatement.append(
@@ -60,8 +60,8 @@ public class AcostaFunctions {
         // Check For This Being The Last Record, And Add The Home Route.
         if (null != exchange.getProperty("CamelSplitSize")) {
             DateTimeFormatter dtf = DateTimeFormat.forPattern("yyyy-MM-dd HH:mm:ss");
-            DateTime endStart = new DateTime(started_on).minus(Period.minutes(5));
-            DateTime endEnd = new DateTime(ended_on).plus(Period.minutes(5));
+            DateTime endStart = new DateTime(ended_on).plus(Period.minutes(10));
+            DateTime endEnd = new DateTime(endStart).plus(Period.minutes(5));
 
             // Add End Point/Home
             sqlStatement.append(String.format(",(DATE('%s'), '%s', '%s', TIME('%s'), TIME('%s'), %s, %s, %d)", started_on, resource_id, "end" + appoint_id,

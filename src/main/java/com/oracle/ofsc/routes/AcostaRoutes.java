@@ -33,15 +33,17 @@ public class AcostaRoutes  extends RouteBuilder {
                                 + "JOIN associates_info as ASSOC_INFO ON ASSOC_INFO.EMPLOYEE_NO = ICD.started_by_employee_no "
                                 + "where ICD.completed_by_employee_no = :?resource_id "
                                 + "and DATE(ICD.CALL_STARTED_LOCAL) = :?route_date " + "and ICD.STATUS = 'Completed' "
-                                + "and ICD.Store NOT LIKE 'Wal%'"
+                                + "and ICD.Store NOT LIKE 'Wal%' "
                                 + "ORDER BY ICD.CALL_STARTED_LOCAL asc"))
                 .to("jdbc:acostaDS?useHeadersAsParameters=true&outputType=StreamList")
-                .split(body()).streaming().bean(AcostaFunctions.class, "insertRouteSql").to("jdbc:acostaDS?useHeadersAsParameters=false");
+                .split(body()).streaming()
+                    .bean(AcostaFunctions.class, "insertRouteSql")
+                    .to("jdbc:acostaDS?useHeadersAsParameters=false");
 
         // Performs the removal of the Route for the given user and the given day:
         from ("direct://deleteRouteForDay")
                 .setBody(constant(
-                        "delete from route_plan where resource_id = :?resource_id and route_id = :?route_date"))
+                        "delete from route_plan where resource_id = :?resource_id and route_day = :?route_date"))
                 .to("jdbc:acostaDS?useHeadersAsParameters=true");
     }
 }
