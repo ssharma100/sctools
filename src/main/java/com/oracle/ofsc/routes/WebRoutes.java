@@ -103,10 +103,15 @@ public class WebRoutes extends RouteBuilder {
                 .routeId("invokeGenericActivityCall")
                 .to("log:" + LOG_CLASS + "?showAll=true&multiline=true&level=INFO")
                 .choice()
-                .when(isPost)
-                .to("direct://generic/activity/insert")
-                .otherwise()
-                .to("direct://generic/activity/get");
+                    .when(isPost)
+                        .to("direct://generic/activity/insert")
+                    .otherwise()
+                        .to("direct://generic/activity/get");
+
+        // Search (PassThroughQuery)
+        from("restlet:http://localhost:8085/sctool/v1/generic/activity/search/{apptNumber}?restletMethods=get")
+                .routeId("invokeSearchGenericActivity")
+                .to("log:" + LOG_CLASS + "?showAll=true&multiline=true&level=INFO");
 
         // Obtains the route list (ordered) for the given resource "id"
         // Output will be formatted in a CSV
