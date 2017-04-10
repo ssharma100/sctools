@@ -1,6 +1,7 @@
 package com.oracle.ofsc.transforms;
 
 import org.apache.camel.dataformat.bindy.annotation.CsvRecord;
+import org.apache.camel.dataformat.bindy.annotation.DataField;
 
 /**
  * CSV Translation/Mapping Object for Resource To Activity Assignment
@@ -8,8 +9,13 @@ import org.apache.camel.dataformat.bindy.annotation.CsvRecord;
  */
 @CsvRecord(separator = ",", skipFirstLine = true)
 public class ResourceAssignment {
+    @DataField(pos=1)
     private String activityKey;
+    @DataField(pos=2)
+    private String requiredResource;
+    @DataField(pos=3)
     private int etaId;
+
 
     public String getActivityKey() {
         return activityKey;
@@ -25,5 +31,13 @@ public class ResourceAssignment {
 
     public void setEtaId(int etaId) {
         this.etaId = etaId;
+    }
+
+    public String getRequiredResource() {
+        return requiredResource;
+    }
+
+    public void setRequiredResource(String requiredResource) {
+        this.requiredResource = requiredResource;
     }
 }

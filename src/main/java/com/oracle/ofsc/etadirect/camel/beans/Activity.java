@@ -2,10 +2,13 @@ package com.oracle.ofsc.etadirect.camel.beans;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.oracle.ofsc.etadirect.rest.ResourceAssignmentItem;
+import com.oracle.ofsc.etadirect.rest.ResourceAssignmentItems;
 import com.oracle.ofsc.etadirect.soap.GetActivity;
 import com.oracle.ofsc.etadirect.soap.Property;
 import com.oracle.ofsc.etadirect.soap.User;
 import com.oracle.ofsc.transforms.GenericActivityData;
+import com.oracle.ofsc.transforms.ResourceAssignment;
 import com.oracle.ofsc.transforms.TransportationActivityData;
 import org.apache.camel.Body;
 import org.apache.camel.Exchange;
@@ -43,6 +46,44 @@ public class Activity {
 
     private static final boolean USE_MD5 = true;
 
+    /**
+     * Method supporting the generation of a call to assign a resource to an activity
+     * @param exchange
+     */
+    public void assignResource(Exchange exchange) {
+
+        ResourceAssignment ra = (ResourceAssignment )exchange.getIn().getBody();
+
+        LOGGER.info("Generate Assignment For a_id {} With Resource ID {}" , ra.getEtaId(), ra.getRequiredResource());
+        HashMap<String, String> authInfo =
+                Security.extractAuthInfo((String )exchange.getIn().getHeader("CamelHttpQuery"));
+
+        String username = authInfo.get("user") + "@" + authInfo.get("company");
+        String passwd =   authInfo.get("passwd");
+
+        exchange.getIn().setHeader("id", ra.getEtaId());
+
+        ResourceAssignmentItems assignments = new ResourceAssignmentItems();
+        ResourceAssignmentItem item = new ResourceAssignmentItem();
+        item.setPreferenceType("required");
+        item.setResourceId(ra.getRequiredResource());
+        ArrayList<ResourceAssignmentItem> list = new ArrayList<>(3);
+        list.add(item);
+        assignments.setItems(list);
+
+        // Skip The Pos In Route - Default To Unordered.
+        String restBody = null;
+        try {
+            restBody = activityMapper.writeValueAsString(assignments);
+        } catch (JsonProcessingException e) {
+            LOGGER.error("Failed To Marshal JSON Object: {}", e.getMessage());
+        }
+        // Set Values For HTTP4:
+        exchange.getIn().setHeader("username", username);
+        exchange.getIn().setHeader("passwd", passwd);
+        exchange.getIn().setHeader(Exchange.CONTENT_TYPE, "application/json");
+        exchange.getIn().setBody(restBody);
+    }
     /**
      * Generates body for resource "get" request
      * @param exchange
@@ -119,6 +160,27 @@ public class Activity {
         StringBuffer sb = new StringBuffer();
         sb.append(SOAP_WRAPPER_HEADER).append(soapBody).append(SOAP_WRAPPER_FOOTER);
         exchange.getIn().setBody(sb.toString());
+    }
+
+    /**
+     * Authentication Only
+     * @param exchange
+     */
+    public void authOnly(Exchange exchange) {
+
+        LOGGER.info("Generate Auth Only For");
+
+        HashMap<String, String> authInfo = Security.extractAuthInfo((String) exchange.getIn().getHeader("CamelHttpQuery"));
+
+        String username = authInfo.get("user") + "@" + authInfo.get("company");
+        String passwd = authInfo.get("passwd");
+        // Set Values For HTTP4:
+        exchange.getIn().setHeader("username", username);
+        exchange.getIn().setHeader("passwd", passwd);
+        exchange.getIn().setHeader("dateFrom", authInfo.get("dateFrom"));
+        exchange.getIn().setHeader("dateTo", authInfo.get("dateTo"));
+
+        LOGGER.info("SetUp Completed For User: " + exchange.getIn().getHeader("username"));
     }
 
     /**

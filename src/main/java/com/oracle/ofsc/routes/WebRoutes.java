@@ -58,6 +58,11 @@ public class WebRoutes extends RouteBuilder {
                     .otherwise()
                         .to("direct://generic/resource/get");
 
+        // EndPoint For Resource To EtaDirect Assignment To Activity
+        from("restlet:http://localhost:8085/sctool/v1/generic/assignresource?restletMethod=post")
+                .routeId("invokeWebResAssign")
+                .to("direct://common/set/assignResource");
+
         // RESTful End Point For Generic User Management
         from("restlet:http://localhost:8085/sctool/v1/generic/user?restletMethods=post")
                 .routeId("invokeGenUserPostCall")
@@ -103,15 +108,21 @@ public class WebRoutes extends RouteBuilder {
                 .routeId("invokeGenericActivityCall")
                 .to("log:" + LOG_CLASS + "?showAll=true&multiline=true&level=INFO")
                 .choice()
-                .when(isPost)
-                .to("direct://generic/activity/insert")
-                .otherwise()
-                .to("direct://generic/activity/get");
+                    .when(isPost)
+                        .to("direct://generic/activity/insert")
+                    .otherwise()
+                        .to("direct://generic/activity/get");
+
+        // - Get Activity By Search Value
+        from("restlet:http://localhost:8085/sctool/v1/activity/{apptNumber}?restletMethod=get")
+                .routeId("invokeGetActivityAppNumber")
+                .to("direct://generic/activity/search/appNumber");
 
         // Obtains the route list (ordered) for the given resource "id"
         // Output will be formatted in a CSV
-        from("restlet:http://localhost:8085/sctool/v1/route/{id}/{routeDay}?restletMethod=get")
-                .routeId("invokeRouteQueryCall").to("log:" + LOG_CLASS + "?showAll=true&multiline=true&level=INFO").to("direct://common/get/route");
+        from("restlet:http://localhost:8085/sctool/v1/route/{id}/{routeDay}?restletMethod=get").routeId("invokeRouteQueryCall")
+                .to("log:" + LOG_CLASS + "?showAll=true&multiline=true&level=INFO")
+                .to("direct://common/get/route");
 
         // Specific to ABT - Due To The Fact That The Locations Were Just Hard Coded
         // Generates A Listing of All Routes For A Given Office/DC To Show The Whole Route For All Resources
