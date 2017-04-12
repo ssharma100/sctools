@@ -20,4 +20,4 @@ LINES TERMINATED BY '\n'
 IGNORE 1 LINES;
 
 
-select * from time_slots;
+select * from time_slots order by Start_Time, End_time;
