@@ -55,6 +55,8 @@ The loader will take the input file of the format, depending on what loader you 
 http://localhost:8085/sctool/v1/generic/resource/{id}
 Where {id} is the external resource ID of the parent under which the new resource will be added.
 
-
 _Location Loading_
 http://localhost:8085/sctool/v1/location?user=SOAPUPLOAD&company=securitaselectro1.test&passwd=Test123
+
+Reset Of Schedules:
+http://localhost:8085/sctool/v1/acosta/schedule/continuity/reset/{weekstart_date}

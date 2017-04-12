@@ -28,6 +28,7 @@ import java.security.NoSuchAlgorithmException;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 /**
  * Provides mapping of the current request to the required XML that should be
@@ -43,9 +44,7 @@ public class Resource {
                     "   <soapenv:Body>";
 
     private static final String SOAP_WRAPPER_FOOTER = "   </soapenv:Body>\n" + "</soapenv:Envelope>";
-
     private static final boolean USE_MD5 = true;
-
     private static final ObjectMapper resourceMapper = new ObjectMapper();
 
     /**
@@ -80,6 +79,46 @@ public class Resource {
         StringBuffer sb = new StringBuffer();
         sb.append(SOAP_WRAPPER_HEADER).append(body).append(SOAP_WRAPPER_FOOTER);
         exchange.getIn().setBody(sb.toString());
+    }
+
+    public void updateImpactible(Exchange exchange) {
+
+        Map resourceInfo = (Map )exchange.getIn().getBody();
+
+        String resourceId = (String )resourceInfo.get("Employee_No");
+        Integer impactHours = (Integer )resourceInfo.get("IMPACT_HOURS");
+
+        LOGGER.info("Generate Body For Resource Update Resource ID: {} For {} Impact Hours",  resourceId, impactHours);
+        HashMap<String, String> authInfo =
+                Security.extractAuthInfo((String )exchange.getIn().getHeader("CamelHttpQuery"));
+        String username = authInfo.get("user") + "@" + authInfo.get("company");
+        String passwd =   authInfo.get("passwd");
+
+        String restBody = generateImpactiblePatch(impactHours);
+
+        // Set Values For HTTP4:
+        exchange.getIn().setHeader("id", resourceId);
+        exchange.getIn().setHeader("username", username);
+        exchange.getIn().setHeader("passwd", passwd);
+        exchange.getIn().setHeader(Exchange.CONTENT_TYPE, "application/json");
+        exchange.getIn().setBody(restBody);
+
+    }
+
+    private String generateImpactiblePatch(Integer impactHours) {
+
+        if (impactHours == 0) {
+            return "{"
+                    + " \"XA_IMPACTABLE\": \"0\", "
+                    + " \"impact_hours\": 0 "
+                    + "}";
+        }
+        else {
+            return "{\n"
+                    + "     \"XA_IMPACTABLE\": \"1\",\n"
+                    + "     \"impact_hours\": " + impactHours
+                    + "}";
+        }
     }
 
     public void mapToInsertUser(Exchange exchange) {
