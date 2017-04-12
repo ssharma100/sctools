@@ -24,8 +24,15 @@
        http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans.xsd
        http://camel.apache.org/schema/spring http://camel.apache.org/schema/spring/camel-spring.xsd">
 
-  <camelContext xmlns="http://camel.apache.org/schema/spring">
-    <package>com.oracle.ofsc</package>
-  </camelContext>
+    <camelContext xmlns="http://camel.apache.org/schema/spring">
+        <package>com.oracle.ofsc</package>
+    </camelContext>
+
+    <bean id="acostaDS" class="org.apache.commons.dbcp2.BasicDataSource" destroy-method="close">
+        <property name="driverClassName" value="com.mysql.cj.jdbc.Driver"/>
+        <property name="url" value="jdbc:mysql://acosta.c4ury24fv0lk.us-west-2.rds.amazonaws.com:3306/acosta"/>
+        <property name="username" value="root"/>
+        <property name="password" value="etadirect123"/>
+    </bean>
 
 </beans>
