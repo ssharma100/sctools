@@ -42,6 +42,9 @@ public class InsertActivity {
 
     // Special Items
     private String lift_gate;
+    // Acosta items
+    private String impact_allowable_days;
+    private String linked_sto;
 
     public String getResourceId() {
         return resourceId;
@@ -249,5 +252,21 @@ public class InsertActivity {
 
     public void setSlaWindowEnd(String slaWindowEnd) {
         this.slaWindowEnd = slaWindowEnd;
+    }
+
+    public String getImpact_allowable_days() {
+        return impact_allowable_days;
+    }
+
+    public void setImpact_allowable_days(String impact_allowable_days) {
+        this.impact_allowable_days = impact_allowable_days;
+    }
+
+    public String getLinked_sto() {
+        return linked_sto;
+    }
+
+    public void setLinked_sto(String linked_sto) {
+        this.linked_sto = linked_sto;
     }
 }

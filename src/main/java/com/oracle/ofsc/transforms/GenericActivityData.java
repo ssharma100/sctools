@@ -43,6 +43,10 @@ public class GenericActivityData {
     private String      timezone;
     @DataField(pos=16)
     private String      timeSlot;
+    @DataField(pos=17)
+    private int         resourceCount;
+    @DataField(pos=18)
+    private String      allowedDOW;
 
     public GenericActivityData() {}
 
@@ -172,5 +176,21 @@ public class GenericActivityData {
 
     public void setStore(String store) {
         this.store = store;
+    }
+
+    public int getResourceCount() {
+        return resourceCount;
+    }
+
+    public void setResourceCount(int resourceCount) {
+        this.resourceCount = resourceCount;
+    }
+
+    public String getAllowedDOW() {
+        return allowedDOW;
+    }
+
+    public void setAllowedDOW(String allowedDOW) {
+        this.allowedDOW = allowedDOW;
     }
 }

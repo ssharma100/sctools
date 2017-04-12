@@ -3,11 +3,16 @@ package com.oracle.ofsc.routes;
 import com.oracle.ofsc.etadirect.camel.beans.AggregatorStrategy;
 import com.oracle.ofsc.etadirect.camel.beans.ArcBestBulk;
 import com.oracle.ofsc.etadirect.camel.beans.Resource;
+import com.oracle.ofsc.etadirect.rest.ResourceLocationResponse;
 import com.oracle.ofsc.geolocation.beans.DistanceAggregationStrategy;
 import com.oracle.ofsc.geolocation.beans.Location;
+import com.oracle.ofsc.geolocation.beans.ResourceLocationDataAggregationStrategy;
 import org.apache.camel.Exchange;
+import org.apache.camel.Predicate;
 import org.apache.camel.builder.RouteBuilder;
+import org.apache.camel.component.jackson.JacksonDataFormat;
 import org.apache.camel.dataformat.bindy.csv.BindyCsvDataFormat;
+import org.apache.camel.model.dataformat.JsonLibrary;
 import org.apache.camel.spi.DataFormat;
 
 import java.util.List;
@@ -21,6 +26,12 @@ public class ETAdirectCommonRoutes extends RouteBuilder {
     private static final String LOG_CLASS = "com.oracle.ofsc.routes.ETAdirectRoutes";
     private DataFormat routeReport = new BindyCsvDataFormat(com.oracle.ofsc.transforms.RouteReportData.class);
     private DataFormat locationsList = new BindyCsvDataFormat(com.oracle.ofsc.transforms.LocationListData.class);
+    private DataFormat resourceLocation = new BindyCsvDataFormat(com.oracle.ofsc.transforms.ResourceLocationData.class);
+
+    private JacksonDataFormat jacksonDataFormat = new JacksonDataFormat();
+
+
+
     @Override public void configure() throws Exception {
 
         from("direct://common/get/route")
@@ -60,8 +71,38 @@ public class ETAdirectCommonRoutes extends RouteBuilder {
                 .routeId("setLocations")
                 .unmarshal(locationsList)
                 .split(body())
-                    .bean(Location.class, "loadLocation")
+                    .bean(Location.class, "loadInsertLocation")
                     .to("direct://etadirectrest/setLocation")
+                .end();
+
+        from("direct://common/get/locations")
+                .routeId("getLocations")
+                .bean(Resource.class, "authOnly")
+                .to("direct://etadirectrest/getLocation");
+
+        // Performs Assignment Fetch
+        from("direct://common/get/assignedLocations")
+                .routeId("getAssignedLocations")
+                .unmarshal(resourceLocation)
+                .bean(Resource.class, "authOnly")
+                .setHeader("CamelJacksonUnmarshalType", constant("com.oracle.ofsc.etadirect.rest.ResourceLocationResponse"))
+                .split(body(), new ResourceLocationDataAggregationStrategy())
+                    .bean(Location.class, "extractResource")
+                    .to("direct://etadirectrest/getLocation")
+                    .unmarshal(jacksonDataFormat)
+                .end()
+                .bean(Location.class, "buildResourceLocationData")
+                .marshal(resourceLocation);
+
+
+        from("direct://common/get/assignLocations")
+                .routeId("applyLocationAssignment")
+                .unmarshal(resourceLocation)
+                .setHeader("CamelJacksonUnmarshalType", constant("com.oracle.ofsc.etadirect.rest.ResourceLocationResponse"))
+                .split(body())
+                    .bean(Location.class, "associateResourceLocations")
+                    .to("direct://etadirectrest/assignLocation")
+                    .unmarshal(jacksonDataFormat)
                 .end();
     }
 }

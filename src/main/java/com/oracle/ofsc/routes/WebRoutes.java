@@ -53,10 +53,10 @@ public class WebRoutes extends RouteBuilder {
                 .routeId("invokeGenResourceCall")
                 .to("log:" + LOG_CLASS + "?showAll=true&multiline=true&level=INFO")
                 .choice()
-                .when(isPost)
-                .to("direct://generic/resource/insert")
-                .otherwise()
-                .to("direct://generic/resource/get");
+                    .when(isPost)
+                        .to("direct://generic/resource/insert")
+                    .otherwise()
+                        .to("direct://generic/resource/get");
 
         // RESTful End Point For Generic User Management
         from("restlet:http://localhost:8085/sctool/v1/generic/user?restletMethods=post")
@@ -66,11 +66,24 @@ public class WebRoutes extends RouteBuilder {
 
         // Location Management Functions
         // Supports the ability to create a location within the OFSC
-        from("restlet:http://localhost:8085/sctool/v1/location?restletMethod=post")
+        from("restlet:http://localhost:8085/sctool/v1/location/{id}?restletMethods=post,get")
                 .routeId("locationUpload")
                 .to("log:" + LOG_CLASS + "?showAll=true&multiline=true&level=INFO")
-                .to("direct://common/set/locations")
-                .to("log:" + LOG_CLASS + "?showAll=true&multiline=true&level=DEBUG");
+                .choice()
+                    .when(isPost)
+                    .to("direct://common/set/locations")
+                .otherwise()
+                    .to("direct://common/get/locations");
+
+        from("restlet:http://localhost:8085/sctool/v1/fetchAssignLocation?restletMethod=post")
+                .routeId("assignmentFetch")
+                .to("log:" + LOG_CLASS + "?showAll=true&multiline=true&level=INFO")
+                .to("direct://common/get/assignedLocations");
+
+        from("restlet:http://localhost:8085/sctool/v1/applyAssignLocation?restletMethod=post")
+                .routeId("assignmentApply")
+                .to("log:" + LOG_CLASS + "?showAll=true&multiline=true&level=INFO")
+                .to("direct://common/get/assignLocations");
 
         // RESTful End Point For Activity
         // - Get Activity (Transportation)
