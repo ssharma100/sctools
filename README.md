@@ -66,7 +66,17 @@ http://localhost:8085/sctool/v1/acosta/schedule/continuity/reset/{weekstart_date
 The system is capable of generating the route plan for a given use. This takes the list of appointments for a given 
 day and converts the route to a DB table.  The DB table can then be used to integrate to other systems and/or provide
 reporting and analytic information on the route.
-The application takes a reosource_id and date, and looks for all jobs that were scheduled for the given day.  For the day,
+The application takes a resource_id and date, and looks for all jobs that were scheduled for the given day.  For the day,
 the jobs are copied to the route_plan table and given a sequence.
 The route table also provides for integration with Google, whereby we can populate drive time and address information
 (derived from Latitude/Longitude).
+
+To invoke the call, you need a list the has <route_day>,<resource_id>
+With this list, you can feed it in the Postman "Runner", where the Runner will read the file, and parse the CSV according
+ to the first line, and substituting the calls to the Tool with the date and resource id.  The typical manual invocation is:
+ 
+ For Impact Jobs:
+ http://localhost:8085/sctool/v1/acosta/route/impact/baseline/{route_date}/{resource_id}
+ 
+ For Continuity Jobs:
+ http://localhost:8085/sctool/v1/acosta/route/conty/baseline/{route_date}/{resource_id}
