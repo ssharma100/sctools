@@ -70,8 +70,15 @@ public class AcostaRoutes  extends RouteBuilder {
         from ("direct://buildImpactRouteForDay")
                 .routeId("BuildRouteImpact")
                 .setHeader("sequence", constant(0))
-                .setBody(constant("select ICD.*, STORE.LATITUDE as Latitude, STORE.LONGITUDE as Longitude from impact_actual_call_details AS ICD JOIN all_stores as STORE on STORE.acosta_no = ICD.acosta_no and STORE.STOREID = ICD.STOREID where ICD.started_by_employee_no = :?resource_id "
-                        + "and DATE(ICD.CALL_STARTED_LOCAL) = :?route_date " + "and ICD.STATUS = 'Completed'" + "ORDER BY ICD.CALL_STARTED_LOCAL asc"))
+                .setBody(constant(
+                        "select ICD.*, STORE.LATITUDE as Latitude, STORE.LONGITUDE as Longitude, ASSOC_INFO.LATITUDE as Home_Latitude, ASSOC_INFO.LONGITUDE as Home_Longitude "
+                                + "from impact_actual_call_details AS ICD "
+                                + "JOIN all_stores as STORE on STORE.acosta_no = ICD.acosta_no and STORE.STOREID = ICD.STOREID "
+                                + "JOIN associates_info as ASSOC_INFO ON ASSOC_INFO.EMPLOYEE_NO = ICD.started_by_employee_no "
+                                + "where ICD.completed_by_employee_no = :?resource_id "
+                                + "and DATE(ICD.CALL_STARTED_LOCAL) = :?route_date " + "and ICD.STATUS = 'Completed' "
+                                + "and ICD.Store NOT LIKE 'Wal%' "
+                                + "ORDER BY ICD.CALL_STARTED_LOCAL asc"))
                 .to("jdbc:acostaDS?useHeadersAsParameters=true&outputType=StreamList")
                 .split(body()).streaming()
                     .bean(AcostaFunctions.class, "insertRouteSql")
@@ -79,8 +86,9 @@ public class AcostaRoutes  extends RouteBuilder {
 
         // Performs the removal of the Route for the given user and the given day:
         from ("direct://deleteRouteForDay")
-            .setBody(constant("delete from route_plan where resource_id = :?resource_id and route_id = :?route_date"))
-            .to("jdbc:acostaDS?useHeadersAsParameters=true");
+          .setBody(constant(
+                        "delete from route_plan where resource_id = :?resource_id and route_day = :?route_date"))
+                .to("jdbc:acostaDS?useHeadersAsParameters=true");
 
         from("direct://handle/Resource/Patch/Response")
             .setBody(constant("Updated ${in.header[id]"));
