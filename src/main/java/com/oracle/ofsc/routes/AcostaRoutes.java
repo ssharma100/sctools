@@ -43,13 +43,22 @@ public class AcostaRoutes  extends RouteBuilder {
                 .routeId("invokeBuildBaseLineShifts")
                 .to("log:" + LOG_CLASS + "?showAll=true&multiline=true&level=INFO");
 
+
+        // Obtains the route list (ordered) for the given resource "id" on the given date
+        // Specifically for Acosta processing the the output will be put into the Acosta DB
+        // and targets the route_plan table.
+        from("restlet:http://localhost:8085/sctool/v1/acosta/route/{id}/{routeDay}?restletMethod=get")
+                .routeId("invokeRouteQueryToRoutePlan")
+                .to("log:" + LOG_CLASS + "?showAll=true&multiline=true&level=INFO")
+                .to("direct://common/get/route/route_plan");
+
+
         // Schedule Reseter: read all continuity resources from the DB.
         // For each one - set the Impactable Value if they have impact hours, and update remaining hours
         from ("direct://schedule/continuity/reset")
                 .routeId("RestContySchedules")
                 .setBody(constant("select Employee_No, POSITION_HRS, IMPACT_HOURS, IMPACT_SUN_SHIFT, IMPACT_MON_SHIFT, "
-                        + "IMPACT_TUES_SHIFT, IMPACT_WED_SHIFT, IMPACT_THURS_SHIFT, "
-                        + "IMPACT_FRI_SHIFT, IMPACT_SAT_SHIFT from continuity_associates_avail "
+                        + "IMPACT_TUES_SHIFT, IMPACT_WED_SHIFT, IMPACT_THURS_SHIFT, " + "IMPACT_FRI_SHIFT, IMPACT_SAT_SHIFT from continuity_associates_avail "
                         + "where CONTINUITY = 1"))
                 .to("jdbc:acostaDS?useHeadersAsParameters=true&outputType=StreamList")
                 .split(body()).streaming()

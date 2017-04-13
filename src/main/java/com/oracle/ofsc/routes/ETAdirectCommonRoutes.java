@@ -1,5 +1,6 @@
 package com.oracle.ofsc.routes;
 
+import com.oracle.ofsc.etadirect.camel.beans.AcostaFunctions;
 import com.oracle.ofsc.etadirect.camel.beans.AggregatorStrategy;
 import com.oracle.ofsc.etadirect.camel.beans.ArcBestBulk;
 import com.oracle.ofsc.etadirect.camel.beans.Resource;
@@ -30,17 +31,24 @@ public class ETAdirectCommonRoutes extends RouteBuilder {
 
     private JacksonDataFormat jacksonDataFormat = new JacksonDataFormat();
 
-
-
     @Override public void configure() throws Exception {
 
         from("direct://common/get/route")
                 .routeId("etaDirectRouteGet")
                 .bean(Resource.class, "authOnly")
-                .to("log:" + LOG_CLASS + "?level=INFO")
                 .to("direct://etadirectrest/getRoute")
                 .bean(Resource.class, "extractRoutes")
                 .marshal(routeReport);
+
+        // Queries For Route And Loads In The DB Table
+        from("direct://common/get/route/route_plan")
+                .routeId("etaDirectRouteGetForRoutePlan")
+                .bean(Resource.class, "authOnly")
+                .setHeader("CamelJacksonUnmarshalType", constant("com.oracle.ofsc.etadirect.rest.RouteList"))
+                .to("direct://etadirectrest/getRoute")
+                .unmarshal(jacksonDataFormat)
+                .bean(AcostaFunctions.class, "extractRoutesToSQL")
+                .to("jdbc:acostaDS?useHeadersAsParameters=true&outputType=StreamList");
 
         // Configured specifically for the bulk extraction of routes for the given day
         from("direct://common/get/route/bulk")

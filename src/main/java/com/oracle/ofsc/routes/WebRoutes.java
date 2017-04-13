@@ -111,7 +111,9 @@ public class WebRoutes extends RouteBuilder {
         // Obtains the route list (ordered) for the given resource "id"
         // Output will be formatted in a CSV
         from("restlet:http://localhost:8085/sctool/v1/route/{id}/{routeDay}?restletMethod=get")
-                .routeId("invokeRouteQueryCall").to("log:" + LOG_CLASS + "?showAll=true&multiline=true&level=INFO").to("direct://common/get/route");
+                .routeId("invokeRouteQueryCall")
+                .to("log:" + LOG_CLASS + "?showAll=true&multiline=true&level=INFO")
+                .to("direct://common/get/route");
 
         // Specific to ABT - Due To The Fact That The Locations Were Just Hard Coded
         // Generates A Listing of All Routes For A Given Office/DC To Show The Whole Route For All Resources
