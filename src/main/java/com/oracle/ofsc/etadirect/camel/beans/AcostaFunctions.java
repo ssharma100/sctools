@@ -3,7 +3,6 @@ package com.oracle.ofsc.etadirect.camel.beans;
 import com.oracle.ofsc.etadirect.rest.RouteInfo;
 import com.oracle.ofsc.etadirect.rest.RouteList;
 import org.apache.camel.Exchange;
-import org.apache.commons.lang3.StringUtils;
 import org.joda.time.DateTime;
 import org.joda.time.Period;
 import org.joda.time.format.DateTimeFormat;
@@ -162,6 +161,18 @@ public class AcostaFunctions {
         exchange.getIn().setBody(insertStmt.toString());
     }
 
+    public void prepareResourceUpdate(Exchange exchange) {
+        LOGGER.info("Prepare Resource Update For  Route Day={}", exchange.getIn().getHeader("routeDay"));
+        String id = (String )exchange.getIn().getHeader("id");
+        String routeDay = (String )exchange.getIn().getHeader("routeDay");
+        Integer hoursImpact = Integer.parseInt("0");
+        try {
+            hoursImpact = getImpactHoursWorked(id, routeDay);
+        } catch (SQLException e) {
+            LOGGER.error("Cannot Obtain Hours For Resource: {}, RouteDay={}", id, routeDay);
+        }
+        exchange.getIn().setHeader("impact_used_hours", hoursImpact);
+    }
     /**
      * Based on a DB entry of a Resource, this method will store
      * the record information in the Exchange and make the follow on call
@@ -173,7 +184,6 @@ public class AcostaFunctions {
         // The routeDay - as required by the route_plan is already in place:
         LOGGER.info("Using Header Value Of Route Day={}", exchange.getIn().getHeader("routeDay"));
         // Store The Response Object In Case We Need It Later:
-        exchange.setProperty("resource_info", exchange.getIn().getBody());
 
         HashMap<String, Object> resultFields = (HashMap<String, Object> )exchange.getIn().getBody();
         // Need To Store the RouteID From the table:
@@ -184,6 +194,12 @@ public class AcostaFunctions {
         exchange.getIn().setBody(null);
     }
 
+    /**
+     * Query The DB for the resource's home location
+     * @param resourceId
+     * @return
+     * @throws SQLException
+     */
     private HomeLocation getHomeLocation(String resourceId) throws SQLException {
         Connection conn =
                 DriverManager.getConnection(
@@ -203,5 +219,25 @@ public class AcostaFunctions {
         stmt.close();
         conn.close();
         return home;
+    }
+
+    public int getImpactHoursWorked(String resourceId, String routeDay) throws SQLException {
+        Connection conn =
+                DriverManager.getConnection(
+                        "jdbc:mysql://acosta.c4ury24fv0lk.us-west-2.rds.amazonaws.com:3306/acosta",
+                        "root", "etadirect123");
+        Statement stmt = conn.createStatement();
+        String sql = "select sum(ofsc_est_work) AS ImpactHours from route_plan where resource_id = '" + resourceId
+                + "' and route_day='" + routeDay + "' and appoint_id  like 'ImpA%'";
+        ResultSet rs = stmt.executeQuery(sql);
+        rs.next();
+        int hours = rs.getInt("ImpactHours");
+
+        LOGGER.info("Resource {} Has {} Impact Work Hours On {}", resourceId, hours, routeDay);
+
+        rs.close();
+        stmt.close();
+        conn.close();
+        return hours;
     }
 }

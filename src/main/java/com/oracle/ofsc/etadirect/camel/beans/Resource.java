@@ -1,9 +1,13 @@
 package com.oracle.ofsc.etadirect.camel.beans;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
+import com.oracle.ofsc.etadirect.rest.Recurrence;
 import com.oracle.ofsc.etadirect.rest.RouteInfo;
 import com.oracle.ofsc.etadirect.rest.RouteList;
+import com.oracle.ofsc.etadirect.rest.WorkSchedule;
 import com.oracle.ofsc.etadirect.soap.*;
 import com.oracle.ofsc.etadirect.utils.OfscTimeZone;
 import com.oracle.ofsc.transforms.GenericResourceData;
@@ -12,6 +16,10 @@ import com.oracle.ofsc.transforms.TransportResourceData;
 import com.oracle.ofsc.transforms.TransportationActivityData;
 import org.apache.camel.Exchange;
 import org.apache.commons.lang3.StringUtils;
+import org.joda.time.DateTime;
+import org.joda.time.DateTimeConstants;
+import org.joda.time.Days;
+import org.joda.time.Period;
 import org.joda.time.format.DateTimeFormat;
 import org.joda.time.format.DateTimeFormatter;
 import org.slf4j.Logger;
@@ -101,8 +109,64 @@ public class Resource {
         exchange.getIn().setHeader("username", username);
         exchange.getIn().setHeader("passwd", passwd);
         exchange.getIn().setHeader(Exchange.CONTENT_TYPE, "application/json");
+        exchange.setProperty("CamelHttpQuery", exchange.getIn().getHeader("CamelHttpQuery"));
         exchange.getIn().setBody(restBody);
 
+    }
+    /**
+     * For a given day, will set up a 9-5 schedule for the whole week (7days out)
+     * Works on the basis of a 7 day work week, starting on Sunday and going to Saturday
+     */
+    public void resetShiftsForWeek (Exchange exchange) {
+        // Verify That The Date Is Sunday
+        DateTimeFormatter dtf = DateTimeFormat.forPattern("yyyy-MM-dd");
+        String resetForDay  = (String )exchange.getIn().getHeader("routeDay");
+        String resourceId = (String )exchange.getIn().getHeader("id");
+
+        DateTime resetDate = dtf.parseDateTime(resetForDay);
+        Preconditions.checkArgument(DateTimeConstants.SUNDAY == resetDate.getDayOfWeek(), "Reset Must Be Done For Sunday");
+
+        // Build The Message For Calendar Assignment
+        LOGGER.info("Generate Body For Resource Schedule Reset Resource ID: {} On {}",  resourceId, resetForDay);
+        HashMap<String, String> authInfo =
+                Security.extractAuthInfo((String) exchange.getProperty("CamelHttpQuery"));
+        String username = authInfo.get("user") + "@" + authInfo.get("company");
+        String passwd =   authInfo.get("passwd");
+
+        WorkSchedule workSchedule = new WorkSchedule();
+
+        workSchedule.setRecordType("working");
+        workSchedule.setStartDate(resetForDay);
+        int dayOffset = 6;
+        workSchedule.setEndDate(dtf.print(resetDate.plus(Period.days(dayOffset))));
+        workSchedule.setShiftType("regular");
+        workSchedule.setWorkTimeStart("09:00:00");
+        workSchedule.setWorkTimeEnd("17:00:00");
+        Recurrence recurrence = new Recurrence();
+        recurrence.setRecurrenceType("daily");
+        recurrence.setRecurrEvery(1);
+        workSchedule.setRecurrence(recurrence);
+
+        // Set Values For HTTP4:
+        exchange.getIn().setHeader("id", resourceId);
+        exchange.getIn().setHeader("username", username);
+        exchange.getIn().setHeader("passwd", passwd);
+        exchange.getIn().setHeader(Exchange.CONTENT_TYPE, "application/json");
+
+        // Skip The Pos In Route - Default To Unordered.
+        String restBody = null;
+        try {
+            restBody = resourceMapper.writeValueAsString(workSchedule);
+        } catch (JsonProcessingException e) {
+            LOGGER.error("Failed To Marshal JSON Object: {}", e.getMessage());
+        }
+        exchange.getIn().setBody(restBody);
+
+    }
+
+    private int getEndOfWeekDays(DateTime resetDate) {
+        int dow = resetDate.getDayOfWeek();
+        return DateTimeConstants.SATURDAY - dow;
     }
 
     private String generateImpactiblePatch(Integer impactHours) {
@@ -110,13 +174,15 @@ public class Resource {
         if (impactHours == 0) {
             return "{"
                     + " \"XA_IMPACTABLE\": \"0\", "
-                    + " \"impact_hours\": 0 "
+                    + " \"impact_hours\": 0, "
+                    + " \"impact_worked\": 0"
                     + "}";
         }
         else {
             return "{\n"
-                    + "     \"XA_IMPACTABLE\": \"1\",\n"
-                    + "     \"impact_hours\": " + impactHours
+                    + " \"XA_IMPACTABLE\": \"1\",\n"
+                    + " \"impact_hours\": " + impactHours + ", "
+                    + " \"impact_worked\": 0"
                     + "}";
         }
     }

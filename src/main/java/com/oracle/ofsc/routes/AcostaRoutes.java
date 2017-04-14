@@ -17,11 +17,9 @@ public class AcostaRoutes  extends RouteBuilder {
 
     @Override public void configure() throws Exception {
 
-        // Web End-Point: Generates routes for the given day and resource ID by doing a
-        // DB query to the Acosta information for IMPACT and translating these into a complete route that is stored
-        // in the route_plan table, bookended by the stat/end locations
+        // Web End-Point
         from("restlet:http://localhost:8085/sctool/v1/acosta/route/impact/baseline/{route_date}/{resource_id}?restletMethods=get,delete")
-            .routeId("invokeBuildBaseLineAcostaImp")
+            .routeId("invokeBuildBaseLineAcosta")
             .to("log:" + LOG_CLASS + "?showAll=true&multiline=true&level=INFO")
             .choice()
                 .when(isGet)
@@ -29,20 +27,6 @@ public class AcostaRoutes  extends RouteBuilder {
                 .when(isDelete)
                     .to("direct://deleteRouteForDay")
                 .end();
-
-        // Web End-Point: Generates routes for the given day and resource ID by doing a
-        // DB query to the Acosta information for IMPACT and translating these into a complete route that is stored
-        // in the route_plan table, bookended by the stat/end locations
-        from("restlet:http://localhost:8085/sctool/v1/acosta/route/conty/baseline/{route_date}/{resource_id}?restletMethods=get,delete")
-                .routeId("invokeBuildBaseLineAcostaConty")
-                .to("log:" + LOG_CLASS + "?showAll=true&multiline=true&level=INFO")
-                .choice()
-                .when(isGet)
-                .to("direct://buildContyRouteForDay")
-                .when(isDelete)
-                .to("direct://deleteRouteForDay")
-                .end();
-
 
         // Web End-Point
         // Perform Reset For A Given Weekly Schedule (All Resources)
@@ -67,17 +51,18 @@ public class AcostaRoutes  extends RouteBuilder {
         // Will populate the route_plan table for the given DOW and then use that information
         // to sum the number of impact hours spent for that given day.
         from("direct://schedule/continuity/update")
+                .routeId("scheduleExtractUpdate")
                 .setBody(constant("select Employee_No, POSITION_HRS, IMPACT_HOURS, IMPACT_SUN_SHIFT, IMPACT_MON_SHIFT, "
                         + "IMPACT_TUES_SHIFT, IMPACT_WED_SHIFT, IMPACT_THURS_SHIFT, " + "IMPACT_FRI_SHIFT, IMPACT_SAT_SHIFT "
-                        + "from continuity_associates_avail "
-                        + "where CONTINUITY = 1 and TEAM NOT LIKE 'Wal%' and Employee_No ='992212292'"))
+                        + "from continuity_associates_avail " + "where CONTINUITY = 1 and TEAM NOT LIKE 'Wal%' and Employee_No ='992309237'"))
                 .to("jdbc:acostaDS?useHeadersAsParameters=true&outputType=StreamList")
                 .split(body()).streaming()
+                    .setProperty("resource_info", simple("${in.body}"))
                     .bean(AcostaFunctions.class, "prepForRouteExtract")
                     .to("direct://common/get/route/route_plan")
                     .choice()
                         .when(routesFound)
-                            .to("log:" + LOG_CLASS + "?showAll=true&multiline=true&level=INFO")
+                            .bean(AcostaFunctions.class, "prepareResourceUpdate")
                     .endChoice().end();
 
         // Schedule Reseter: read all continuity resources from the DB.
@@ -85,13 +70,18 @@ public class AcostaRoutes  extends RouteBuilder {
         from ("direct://schedule/continuity/reset")
                 .routeId("RestContySchedules")
                 .setBody(constant("select Employee_No, POSITION_HRS, IMPACT_HOURS, IMPACT_SUN_SHIFT, IMPACT_MON_SHIFT, "
-                        + "IMPACT_TUES_SHIFT, IMPACT_WED_SHIFT, IMPACT_THURS_SHIFT, " + "IMPACT_FRI_SHIFT, IMPACT_SAT_SHIFT "
+                        + "IMPACT_TUES_SHIFT, IMPACT_WED_SHIFT, IMPACT_THURS_SHIFT, "
+                        + "IMPACT_FRI_SHIFT, IMPACT_SAT_SHIFT,  CONTY_MON_SHIFT, CONTY_TUES_SHIFT, CONTY_WED_SHIFT, CONTY_THURS_SHIFT, "
+                        + "CONTY_FRI_SHIFT, CONTY_SAT_SHIFT, CONTY_SUN_SHIFT "
                         + "from continuity_associates_avail "
-                        + "where CONTINUITY = 1 and TEAM NOT LIKE 'Wal%'"))
+                        + "where CONTINUITY = 1 and TEAM NOT LIKE 'Wal%' and Employee_No = '992310046'"))
                 .to("jdbc:acostaDS?useHeadersAsParameters=true&outputType=StreamList")
                 .split(body()).streaming()
+                    .setProperty("employee_info", simple("${in.body}"))
                     .bean(Resource.class, "updateImpactible")
                     .to("direct://etadirectrest/resource/update")
+                    .bean(Resource.class, "resetShiftsForWeek")
+
                     .to("direct://handle/Resource/Patch/Response")
                 .end();
 
@@ -112,30 +102,11 @@ public class AcostaRoutes  extends RouteBuilder {
                     .bean(AcostaFunctions.class, "insertRouteSql")
                     .to("jdbc:acostaDS?useHeadersAsParameters=false");
 
-        from ("direct://buildContyRouteForDay")
-                .routeId("BuildRouteConty")
-                .setHeader("sequence", constant(0))
-                .setBody(constant(
-                        "select ICD.*, STORE.LATITUDE as Latitude, STORE.LONGITUDE as Longitude, ASSOC_INFO.LATITUDE as Home_Latitude, ASSOC_INFO.LONGITUDE as Home_Longitude "
-                                + "from continuity_actual_call_details AS ICD "
-                                + "JOIN all_stores as STORE on STORE.acosta_no = ICD.acosta_no and STORE.STOREID = ICD.STOREID "
-                                + "JOIN associates_info as ASSOC_INFO ON ASSOC_INFO.EMPLOYEE_NO = ICD.started_by_employee_no "
-                                + "where ICD.completed_by_employee_no = :?resource_id "
-                                + "and DATE(ICD.CALL_STARTED_LOCAL) = :?route_date " + "and ICD.CALL_STATUS = 'Completed' "
-                                + "and ICD.Store NOT LIKE 'Wal%' "
-                                + "ORDER BY ICD.CALL_STARTED_LOCAL asc"))
-                .to("jdbc:acostaDS?useHeadersAsParameters=true&outputType=StreamList")
-                .split(body()).streaming()
-                    .bean(AcostaFunctions.class, "insertRouteSql")
-                    .to("jdbc:acostaDS?useHeadersAsParameters=false")
-                .end()
-                .setBody(simple("${in.header[route_date]},${in.header[route_date]},Inserted route_plan Records"));
-
         // Performs the removal of the Route for the given user and the given day:
         from ("direct://deleteRouteForDay")
-          .setBody(constant("delete from route_plan where resource_id = :?resource_id and route_day = :?route_date"))
-                .to("jdbc:acostaDS?useHeadersAsParameters=true")
-                .setBody(simple("${in.header[route_date]},${in.header[route_date]},Removed route_plan Records"));;
+          .setBody(constant(
+                        "delete from route_plan where resource_id = :?resource_id and route_day = :?route_date"))
+                .to("jdbc:acostaDS?useHeadersAsParameters=true");
 
         from("direct://handle/Resource/Patch/Response")
             .setBody(constant("Updated ${in.header[id]"));

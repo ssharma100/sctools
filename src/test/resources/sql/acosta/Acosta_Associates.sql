@@ -132,3 +132,10 @@ select * from mixed_resources_upload;
 drop view mixed_resources_upload;
 
 select EMPLOYEE_NO from associates_info;
+
+select * from associates_info where employee_no = '992314042';
+select * from continuity_associates_avail where employee_no = '992310046' and CONTINUITY = 1 and TEAM NOT LIKE 'Wal%';
+select * from continuity_associates_avail limit 2;
+
+INSERT INTO `acosta`.`continuity_associates_avail` (`ASSOCIATE_NAME`, `EMPLOYEE_NO`, `EMPLOYEE_TYPE`, `POSITION_HRS`, `TEAM`, `CONTINUITY`, `CONTINUITY_VM`, `IMPACT_HOURS`, `IMPACT_MON_SHIFT`, `IMPACT_TUES_SHIFT`, `IMPACT_Wed_SHIFT`, `IMPACT_THURS_SHIFT`, `IMPACT_FRI_SHIFT`) 
+VALUES ('Bueno, Jorge, M', '992209524', 'Full Time', '40', 'Grocery', '1', '0', '40', '1', '1', '1', '1', '11');
