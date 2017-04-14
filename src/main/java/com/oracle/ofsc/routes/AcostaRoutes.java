@@ -13,6 +13,7 @@ public class AcostaRoutes  extends RouteBuilder {
     private Predicate isGet = header("CamelHttpMethod").isEqualTo("GET");
     private Predicate isDelete = header("CamelHttpMethod").isEqualTo("DELETE");
     private Predicate isPost = header("CamelHttpMethod").isEqualTo("POST");
+    private Predicate routesFound = header("route_count").isGreaterThan(0);
 
     @Override public void configure() throws Exception {
 
@@ -29,20 +30,14 @@ public class AcostaRoutes  extends RouteBuilder {
 
         // Web End-Point
         // Perform Reset For A Given Weekly Schedule (All Resources)
-        from ("restlet:http://localhost:8085/sctool/v1/acosta/schedule/continuity/reset_impact/{weekstart_date}?restletMethods=post,get")
+        from ("restlet:http://localhost:8085/sctool/v1/acosta/schedule/continuity/schedule/{routeDay}?restletMethods=post,get")
             .routeId("invokeContyScheduleReset")
             .choice()
                 .when(isGet)
-                    .to("log:" + LOG_CLASS + "?showAll=true&multiline=true&level=INFO")
+                    .to("direct://schedule/continuity/update")
                 .when(isPost)
                     .to("direct://schedule/continuity/reset")
             .end();
-
-        // Web End Point For Resource Update
-        from("restlet:http://localhost:8085/sctool/v1/acosta/schedule/continuity/init/{weekstart_date}?restletMethod=get")
-                .routeId("invokeBuildBaseLineShifts")
-                .to("log:" + LOG_CLASS + "?showAll=true&multiline=true&level=INFO");
-
 
         // Obtains the route list (ordered) for the given resource "id" on the given date
         // Specifically for Acosta processing the the output will be put into the Acosta DB
@@ -52,14 +47,31 @@ public class AcostaRoutes  extends RouteBuilder {
                 .to("log:" + LOG_CLASS + "?showAll=true&multiline=true&level=INFO")
                 .to("direct://common/get/route/route_plan");
 
+        // Performs DOW route extraction and shift updates.
+        // Will populate the route_plan table for the given DOW and then use that information
+        // to sum the number of impact hours spent for that given day.
+        from("direct://schedule/continuity/update")
+                .setBody(constant("select Employee_No, POSITION_HRS, IMPACT_HOURS, IMPACT_SUN_SHIFT, IMPACT_MON_SHIFT, "
+                        + "IMPACT_TUES_SHIFT, IMPACT_WED_SHIFT, IMPACT_THURS_SHIFT, " + "IMPACT_FRI_SHIFT, IMPACT_SAT_SHIFT "
+                        + "from continuity_associates_avail "
+                        + "where CONTINUITY = 1 and TEAM NOT LIKE 'Wal%' and Employee_No ='992212292'"))
+                .to("jdbc:acostaDS?useHeadersAsParameters=true&outputType=StreamList")
+                .split(body()).streaming()
+                    .bean(AcostaFunctions.class, "prepForRouteExtract")
+                    .to("direct://common/get/route/route_plan")
+                    .choice()
+                        .when(routesFound)
+                            .to("log:" + LOG_CLASS + "?showAll=true&multiline=true&level=INFO")
+                    .endChoice().end();
 
         // Schedule Reseter: read all continuity resources from the DB.
         // For each one - set the Impactable Value if they have impact hours, and update remaining hours
         from ("direct://schedule/continuity/reset")
                 .routeId("RestContySchedules")
                 .setBody(constant("select Employee_No, POSITION_HRS, IMPACT_HOURS, IMPACT_SUN_SHIFT, IMPACT_MON_SHIFT, "
-                        + "IMPACT_TUES_SHIFT, IMPACT_WED_SHIFT, IMPACT_THURS_SHIFT, " + "IMPACT_FRI_SHIFT, IMPACT_SAT_SHIFT from continuity_associates_avail "
-                        + "where CONTINUITY = 1"))
+                        + "IMPACT_TUES_SHIFT, IMPACT_WED_SHIFT, IMPACT_THURS_SHIFT, " + "IMPACT_FRI_SHIFT, IMPACT_SAT_SHIFT "
+                        + "from continuity_associates_avail "
+                        + "where CONTINUITY = 1 and TEAM NOT LIKE 'Wal%'"))
                 .to("jdbc:acostaDS?useHeadersAsParameters=true&outputType=StreamList")
                 .split(body()).streaming()
                     .bean(Resource.class, "updateImpactible")

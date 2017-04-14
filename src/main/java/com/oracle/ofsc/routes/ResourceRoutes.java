@@ -58,8 +58,28 @@ public class ResourceRoutes extends RouteBuilder {
                 .setHeader(Exchange.HTTP_METHOD, constant(org.apache.camel.component.http4.HttpMethods.GET))
                 .setHeader("CamelHttpQuery", constant(null))
 
-                .toD("https4:api.etadirect.com/rest/ofscCore/v1/resources/${in.header[id]}/routes/${in.header[routeDay]}?bridgeEndpoint=true&throwExceptionOnFailure=false&authenticationPreemptive=true&authUsername=${in.header[username]}&authPassword=${in.header[passwd]}")
+                .toD("https4:api.etadirect.com/rest/ofscCore/v1/resources/${in.header[id]}/routes/${in.header[routeDay]}"
+                        + "?bridgeEndpoint=true&throwExceptionOnFailure=false&authenticationPreemptive=true"
+                        + "&authUsername=${in.header[username]}&authPassword=${in.header[passwd]}")
                 .to("log:" + LOG_CLASS + "?level=INFO");
+
+        from("direct://etadirectrest/getResourceChildren")
+                .to("log:" + LOG_CLASS + "?level=INFO")
+                .onException(Exception.class)
+                    .to("log:" + LOG_CLASS + "?showAll=true&multiline=true&level=ERROR")
+                    .log(LoggingLevel.ERROR, LOG_CLASS, exceptionMessage().toString())
+                    .handled(true)
+                .end()
+
+                // Send actual request to endpoint of Web Service.
+                .setHeader(Exchange.HTTP_METHOD, constant(org.apache.camel.component.http4.HttpMethods.GET))
+                .setHeader("CamelHttpQuery", constant(null))
+
+                .toD("https4:api.etadirect.com/rest/ofscCore/v1/resources/${in.header[root]}/children/?offset=0&limit=800?"
+                        + "?bridgeEndpoint=true&throwExceptionOnFailure=false&authenticationPreemptive=true"
+                        + "&authUsername=${in.header[username]}&authPassword=${in.header[passwd]}")
+                .to("log:" + LOG_CLASS + "?level=INFO");
+
     }
 }
 

@@ -39,5 +39,9 @@ AND
 ICD.Store NOT LIKE 'Wal%'
 AND ICD.RESOURCE_NUMBER=1;
 
+-- Loading All Impact Distinct Day/Resource Combinations For Jobs
 select distinct OriginalStartDate as route_date, ReqResource as resource_id from impact_activity_24;
+
+-- Loading All Conitnuity Jobs (None Category)
+select distinct OriginalStartDate as route_date, ReqResource as resource_id from continuity_activity_None;
 

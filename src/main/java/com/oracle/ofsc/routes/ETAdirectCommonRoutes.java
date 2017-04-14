@@ -112,5 +112,10 @@ public class ETAdirectCommonRoutes extends RouteBuilder {
                     .to("direct://etadirectrest/assignLocation")
                     .unmarshal(jacksonDataFormat)
                 .end();
+
+        from("direct://common/get/resource/children")
+                .routeId("getResourceChildren")
+                .to("direct://etadirectrest/getResourceChildren");
+
     }
 }
