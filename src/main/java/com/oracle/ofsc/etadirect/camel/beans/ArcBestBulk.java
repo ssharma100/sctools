@@ -28,6 +28,12 @@ public class ArcBestBulk {
                 LOGGER.error("Processing Station: St Joseph, KS");
                 resourceList= ImmutableList.of("STJOE20192", "STJOE20193");
                 break;
+
+            case "137":
+                LOGGER.error("Processing Station: Onxard, CA");
+                resourceList= ImmutableList.of("OXNA3011", "OXNA3012", "OXNA3013", "OXNA3014");
+                break;
+
             case "189":
                 LOGGER.error("Processing Station: Bockton, MA");
                 resourceList= ImmutableList.of(
