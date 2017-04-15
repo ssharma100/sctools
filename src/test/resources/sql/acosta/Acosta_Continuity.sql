@@ -256,3 +256,13 @@ select distinct CALL_TYPE_CODE from continuity_actual_call_details where CALL_ST
 
 select * 
 from continuity_activity_2PerMo order by activityKey and StartDate;
+
+-- Build Assignment Query From The View.
+select View.ActivityKey, View.ReqResource, ETA.a_id from continuity_activity_1PerMo as View JOIN eta_activities as ETA on ETA.activity_key = View.ActivityKey;	
+select View.ActivityKey, View.ReqResource, ETA.a_id from continuity_activity_1PerQ as View JOIN eta_activities as ETA on ETA.activity_key = View.ActivityKey;	
+
+select View.ActivityKey, View.ReqResource, ETA.a_id from continuity_activity_2PerMo as View JOIN eta_activities as ETA on ETA.activity_key = View.ActivityKey;
+select View.ActivityKey, View.ReqResource, ETA.a_id from continuity_activity_2PerQ as View JOIN eta_activities as ETA on ETA.activity_key = View.ActivityKey;	
+select View.ActivityKey, View.ReqResource, ETA.a_id from continuity_activity_None as View JOIN eta_activities as ETA on ETA.activity_key = View.ActivityKey;	
+
+

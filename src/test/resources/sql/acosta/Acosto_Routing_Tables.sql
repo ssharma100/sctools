@@ -56,3 +56,27 @@ delete from route_plan;
 select * from route_plan order by route_day, resource_id, route_order;
 
 select * from impact_actual_call_details where COMPLETED_BY_EMPLOYEE_NO = '992372942' and actual_callid='A000-1905-3755C487' order by COMPLETED_ON_LOCAL;
+
+select * from route_plan limit 100;
+select * from route_plan where ofsc_est_work is not null limit 100;
+select * from route_plan where resource_id = '992316544';
+select count(*) from route_plan;
+
+select * from continuity_actual_call_details where COMPLETED_BY_EMPLOYEE_NO = '992316544';
+select longitude, Latitude from associates_info where Employee_no ='992212292';
+select * from route_plan where appoint_id  like 'ImpA%' limit 100;
+select * from route_plan where resource_id = '992212292' and route_day='2017-06-19' order by route_day, route_order;
+select * from route_plan where appoint_id like '%N421-8048-5323C118' and resource_id = '992212292';
+
+select * from route_plan where resource_id = '992309237' and route_day='2017-06-19' order by route_day, route_order;
+delete from route_plan where resource_id = '992309237' and route_day = '2017-06-19';
+
+select * from route_plan where resource_id = '992212292' order by route_day, route_order;
+select sum(ofsc_est_work) from route_plan where resource_id = '992212292' and route_day='2017-06-19';
+delete from route_plan where resource_id = '992212292' and route_day='2017-06-19';
+
+select count(*) from route_plan;
+
+select * from route_plan where resource_id = '992352257' and route_day = '2017-01-06' order by route_day, route_order;
+delete from route_plan where resource_id = '992352257' and route_day = '2017-06-19' limit 2;
+

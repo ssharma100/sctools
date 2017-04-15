@@ -57,9 +57,10 @@ public class Resource {
 
     /**
      * Generates body for resource "get" request
-     *
+     * SOAP call no longer used.
      * @param exchange
      */
+    @Deprecated
     public void mapToGetRequest(Exchange exchange) {
         String externalId = (String) exchange.getIn().getHeader("id");
 
@@ -91,18 +92,17 @@ public class Resource {
 
     public void updateImpactible(Exchange exchange) {
 
-        Map resourceInfo = (Map )exchange.getIn().getBody();
-
-        String resourceId = (String )resourceInfo.get("Employee_No");
+        Map resourceInfo = (Map )exchange.getProperty("employee_info");
+        String resourceId = (String) resourceInfo.get("Employee_No");
         Integer impactHours = (Integer )resourceInfo.get("IMPACT_HOURS");
 
         LOGGER.info("Generate Body For Resource Update Resource ID: {} For {} Impact Hours",  resourceId, impactHours);
         HashMap<String, String> authInfo =
-                Security.extractAuthInfo((String )exchange.getIn().getHeader("CamelHttpQuery"));
+                Security.extractAuthInfo((String )exchange.getProperty("original_headers"));
         String username = authInfo.get("user") + "@" + authInfo.get("company");
         String passwd =   authInfo.get("passwd");
 
-        String restBody = generateImpactiblePatch(impactHours);
+        String restBody = generateImpactiblePatch(impactHours, 0);
 
         // Set Values For HTTP4:
         exchange.getIn().setHeader("id", resourceId);
@@ -169,9 +169,9 @@ public class Resource {
         return DateTimeConstants.SATURDAY - dow;
     }
 
-    private String generateImpactiblePatch(Integer impactHours) {
+    private String generateImpactiblePatch(Integer allowableImpactHours, Integer workedImpactHours) {
 
-        if (impactHours == 0) {
+        if (allowableImpactHours == 0) {
             return "{"
                     + " \"XA_IMPACTABLE\": \"0\", "
                     + " \"impact_hours\": 0, "
@@ -181,7 +181,7 @@ public class Resource {
         else {
             return "{\n"
                     + " \"XA_IMPACTABLE\": \"1\",\n"
-                    + " \"impact_hours\": " + impactHours + ", "
+                    + " \"impact_hours\": " + allowableImpactHours + ", "
                     + " \"impact_worked\": 0"
                     + "}";
         }

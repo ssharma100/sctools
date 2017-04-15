@@ -22,16 +22,11 @@ public class ETAdirectGenericRoutes extends RouteBuilder {
 
         from("direct://generic/resource/get")
                 .routeId("etaDirectGenResourceGet")
-                .to("log:" + LOG_CLASS + "?level=INFO")
-                .bean(Resource.class, "mapToGetRequest")
-                .to("direct://etadirectsoap/resource");
+                .to("direct://etadirectrest/resource/get");
 
         from("direct://generic/resource/insert")
                 .routeId("etaDirectGenResourceInsert")
-                .unmarshal(resourceInsert)
-                .split(body())
-                .to("log:" + LOG_CLASS + "?level=INFO")
-                .setHeader("resource_category", constant("generic"))
+                .unmarshal(resourceInsert).split(body()).to("log:" + LOG_CLASS + "?level=INFO").setHeader("resource_category", constant("generic"))
                 .bean(Resource.class, "mapToInsertResource")
                 .to("direct://etadirectsoap/resource");
 

@@ -67,21 +67,27 @@ public class AcostaRoutes  extends RouteBuilder {
 
         // Schedule Reseter: read all continuity resources from the DB.
         // For each one - set the Impactable Value if they have impact hours, and update remaining hours
-        from ("direct://schedule/continuity/reset")
+        from("direct://schedule/continuity/reset")
                 .routeId("RestContySchedules")
+                .setProperty("original_headers", simple("${in.header[CamelHttpQuery]}"))
                 .setBody(constant("select Employee_No, POSITION_HRS, IMPACT_HOURS, IMPACT_SUN_SHIFT, IMPACT_MON_SHIFT, "
                         + "IMPACT_TUES_SHIFT, IMPACT_WED_SHIFT, IMPACT_THURS_SHIFT, "
                         + "IMPACT_FRI_SHIFT, IMPACT_SAT_SHIFT,  CONTY_MON_SHIFT, CONTY_TUES_SHIFT, CONTY_WED_SHIFT, CONTY_THURS_SHIFT, "
-                        + "CONTY_FRI_SHIFT, CONTY_SAT_SHIFT, CONTY_SUN_SHIFT "
-                        + "from continuity_associates_avail "
+                        + "CONTY_FRI_SHIFT, CONTY_SAT_SHIFT, CONTY_SUN_SHIFT " + "from continuity_associates_avail "
                         + "where CONTINUITY = 1 and TEAM NOT LIKE 'Wal%' and Employee_No = '992310046'"))
                 .to("jdbc:acostaDS?useHeadersAsParameters=true&outputType=StreamList")
-                .split(body()).streaming()
+                .split(body())
                     .setProperty("employee_info", simple("${in.body}"))
+
+                    .setHeader("id", simple("${in.body[Employee_No]}"))
+                    .setBody(constant(null))
+                    // Get The Resource Record
+                    .bean(Resource.class, "authOnly")
+                    .to("direct://generic/resource/get")
                     .bean(Resource.class, "updateImpactible")
                     .to("direct://etadirectrest/resource/update")
                     .bean(Resource.class, "resetShiftsForWeek")
-
+                    .to("direct://etadirectrest/resource/schedule")
                     .to("direct://handle/Resource/Patch/Response")
                 .end();
 

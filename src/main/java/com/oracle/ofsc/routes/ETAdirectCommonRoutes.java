@@ -113,6 +113,10 @@ public class ETAdirectCommonRoutes extends RouteBuilder {
                     .unmarshal(jacksonDataFormat)
                 .end();
 
+        /**
+         * Makes a request to get all children resources under the given root.
+         * Note that this is broken and may not work.  Also limited to 100 responses.
+         */
         from("direct://common/get/resource/children")
                 .routeId("getResourceChildren")
                 .to("direct://etadirectrest/getResourceChildren");

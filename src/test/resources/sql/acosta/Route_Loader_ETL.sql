@@ -44,4 +44,8 @@ select distinct OriginalStartDate as route_date, ReqResource as resource_id from
 
 -- Loading All Conitnuity Jobs (None Category)
 select distinct OriginalStartDate as route_date, ReqResource as resource_id from continuity_activity_None;
+select distinct OriginalStartDate as route_date, ReqResource as resource_id from continuity_activity_1PerMo;
+select distinct OriginalStartDate as route_date, ReqResource as resource_id from continuity_activity_2PerMo;
+select distinct OriginalStartDate as route_date, ReqResource as resource_id from continuity_activity_1PerQ;
+select distinct OriginalStartDate as route_date, ReqResource as resource_id from continuity_activity_2PerQ;
 
