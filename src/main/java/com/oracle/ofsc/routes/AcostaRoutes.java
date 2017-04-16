@@ -1,9 +1,13 @@
 package com.oracle.ofsc.routes;
 
 import com.oracle.ofsc.etadirect.camel.beans.AcostaFunctions;
+import com.oracle.ofsc.etadirect.camel.beans.DebugOnly;
 import com.oracle.ofsc.etadirect.camel.beans.Resource;
+import com.oracle.ofsc.etadirect.camel.beans.ResourceAdjustAggregationStrategy;
 import org.apache.camel.Predicate;
 import org.apache.camel.builder.RouteBuilder;
+import org.apache.camel.component.jackson.JacksonDataFormat;
+import org.restlet.data.Status;
 
 /**
  * Contains Acosta Routes That Address Route Plan Building
@@ -14,11 +18,14 @@ public class AcostaRoutes  extends RouteBuilder {
     private Predicate isDelete = header("CamelHttpMethod").isEqualTo("DELETE");
     private Predicate isPost = header("CamelHttpMethod").isEqualTo("POST");
     private Predicate routesFound = header("route_count").isGreaterThan(0);
+    private Predicate resource_exists = header("ofsc_resource_exists").isEqualTo(true);
+
+    private JacksonDataFormat jacksonDataFormat = new JacksonDataFormat();
 
     @Override public void configure() throws Exception {
 
         // Web End-Point
-        from("restlet:http://localhost:8085/sctool/v1/acosta/route/impact/baseline/{route_date}/{resource_id}?restletMethods=get,delete")
+        from("restlet:http://localhost:8085/sctool/v1/acosta/route/impact/baseline/{routeDay}/{resource_id}?restletMethods=get,delete")
             .routeId("invokeBuildBaseLineAcosta")
             .to("log:" + LOG_CLASS + "?showAll=true&multiline=true&level=INFO")
             .choice()
@@ -37,7 +44,7 @@ public class AcostaRoutes  extends RouteBuilder {
                     .to("direct://schedule/continuity/update")
                 .when(isPost)
                     .to("direct://schedule/continuity/reset")
-            .end();
+                    .to("direct://processAggregationResults").end();
 
         // Obtains the route list (ordered) for the given resource "id" on the given date
         // Specifically for Acosta processing the the output will be put into the Acosta DB
@@ -67,29 +74,38 @@ public class AcostaRoutes  extends RouteBuilder {
 
         // Schedule Reseter: read all continuity resources from the DB.
         // For each one - set the Impactable Value if they have impact hours, and update remaining hours
-        from("direct://schedule/continuity/reset")
-                .routeId("RestContySchedules")
+        from("direct://schedule/continuity/reset").routeId("RestContySchedules")
                 .setProperty("original_headers", simple("${in.header[CamelHttpQuery]}"))
                 .setBody(constant("select Employee_No, POSITION_HRS, IMPACT_HOURS, IMPACT_SUN_SHIFT, IMPACT_MON_SHIFT, "
                         + "IMPACT_TUES_SHIFT, IMPACT_WED_SHIFT, IMPACT_THURS_SHIFT, "
                         + "IMPACT_FRI_SHIFT, IMPACT_SAT_SHIFT,  CONTY_MON_SHIFT, CONTY_TUES_SHIFT, CONTY_WED_SHIFT, CONTY_THURS_SHIFT, "
                         + "CONTY_FRI_SHIFT, CONTY_SAT_SHIFT, CONTY_SUN_SHIFT " + "from continuity_associates_avail "
-                        + "where CONTINUITY = 1 and TEAM NOT LIKE 'Wal%' and Employee_No = '992310046'"))
+                        + "where CONTINUITY = 1 and TEAM NOT LIKE 'Wal%'"))
                 .to("jdbc:acostaDS?useHeadersAsParameters=true&outputType=StreamList")
-                .split(body())
-                    .setProperty("employee_info", simple("${in.body}"))
+                .split(body(), new ResourceAdjustAggregationStrategy())
+                .setProperty("employee_info", simple("${in.body}"))
+                .setHeader("id", simple("${in.body[Employee_No]}")).setBody(constant(null))
 
-                    .setHeader("id", simple("${in.body[Employee_No]}"))
-                    .setBody(constant(null))
                     // Get The Resource Record
-                    .bean(Resource.class, "authOnly")
-                    .to("direct://generic/resource/get")
-                    .bean(Resource.class, "updateImpactible")
-                    .to("direct://etadirectrest/resource/update")
-                    .bean(Resource.class, "resetShiftsForWeek")
-                    .to("direct://etadirectrest/resource/schedule")
-                    .to("direct://handle/Resource/Patch/Response")
+                .bean(Resource.class, "authOnly")
+                .to("direct://generic/resource/get")
+                .setHeader("CamelJacksonUnmarshalType", constant("com.oracle.ofsc.etadirect.rest.ResourceJson"))
+                .unmarshal(jacksonDataFormat).setProperty("ofsc_resource", simple("${in.body}"))
+                .bean(Resource.class, "checkOfscResponse").choice()
+                .when(resource_exists)
+
+                        // Extract The Resource Record
+
+                            // First Do The Shift Reset (Also Checks For Reset Run On Sunday)
+                .bean(Resource.class, "resetShiftsForWeek").to("direct://etadirectrest/resource/schedule")
+
+                            // Update The Resource With The Reset Impactable Fields
+                .bean(Resource.class, "updateImpactible").to("direct://etadirectrest/resource/update")
+                        .endChoice()
+                        .otherwise().setHeader("errorMsg", constant("No Resource In OFSC"))
+
                 .end();
+
 
         from ("direct://buildImpactRouteForDay")
                 .routeId("BuildRouteImpact")
@@ -100,7 +116,7 @@ public class AcostaRoutes  extends RouteBuilder {
                                 + "JOIN all_stores as STORE on STORE.acosta_no = ICD.acosta_no and STORE.STOREID = ICD.STOREID "
                                 + "JOIN associates_info as ASSOC_INFO ON ASSOC_INFO.EMPLOYEE_NO = ICD.started_by_employee_no "
                                 + "where ICD.completed_by_employee_no = :?resource_id "
-                                + "and DATE(ICD.CALL_STARTED_LOCAL) = :?route_date " + "and ICD.STATUS = 'Completed' "
+                                + "and DATE(ICD.CALL_STARTED_LOCAL) = :?routeDay " + "and ICD.STATUS = 'Completed' "
                                 + "and ICD.Store NOT LIKE 'Wal%' "
                                 + "ORDER BY ICD.CALL_STARTED_LOCAL asc"))
                 .to("jdbc:acostaDS?useHeadersAsParameters=true&outputType=StreamList")
@@ -111,10 +127,12 @@ public class AcostaRoutes  extends RouteBuilder {
         // Performs the removal of the Route for the given user and the given day:
         from ("direct://deleteRouteForDay")
           .setBody(constant(
-                        "delete from route_plan where resource_id = :?resource_id and route_day = :?route_date"))
-                .to("jdbc:acostaDS?useHeadersAsParameters=true");
+                        "delete from route_plan where resource_id = :?resource_id and route_day = :?routeDay"))
+          .to("jdbc:acostaDS?useHeadersAsParameters=true");
 
-        from("direct://handle/Resource/Patch/Response")
-            .setBody(constant("Updated ${in.header[id]"));
+        from("direct://processAggregationResults")
+            .setBody(simple("${exchangeProperty.aggregate_data}"))
+                .bean(DebugOnly.class, "checkStatus")
+            .marshal(jacksonDataFormat);
     }
 }

@@ -9,14 +9,14 @@ import com.fasterxml.jackson.databind.annotation.JsonSerialize;
 public class Recurrence {
 
     private String recurrenceType;
-    private Integer recurrEvery;
+    private Integer recurEvery;
 
-    public Integer getRecurrEvery() {
-        return recurrEvery;
+    public Integer getRecurEvery() {
+        return recurEvery;
     }
 
-    public void setRecurrEvery(Integer recurrEvery) {
-        this.recurrEvery = recurrEvery;
+    public void setRecurEvery(Integer recurEvery) {
+        this.recurEvery = recurEvery;
     }
 
     public String getRecurrenceType() {

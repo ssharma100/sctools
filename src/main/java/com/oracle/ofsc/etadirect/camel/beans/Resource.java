@@ -5,6 +5,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
 import com.oracle.ofsc.etadirect.rest.Recurrence;
+import com.oracle.ofsc.etadirect.rest.ResourceJson;
 import com.oracle.ofsc.etadirect.rest.RouteInfo;
 import com.oracle.ofsc.etadirect.rest.RouteList;
 import com.oracle.ofsc.etadirect.rest.WorkSchedule;
@@ -13,18 +14,16 @@ import com.oracle.ofsc.etadirect.utils.OfscTimeZone;
 import com.oracle.ofsc.transforms.GenericResourceData;
 import com.oracle.ofsc.transforms.RouteReportData;
 import com.oracle.ofsc.transforms.TransportResourceData;
-import com.oracle.ofsc.transforms.TransportationActivityData;
 import org.apache.camel.Exchange;
 import org.apache.commons.lang3.StringUtils;
 import org.joda.time.DateTime;
 import org.joda.time.DateTimeConstants;
-import org.joda.time.Days;
 import org.joda.time.Period;
 import org.joda.time.format.DateTimeFormat;
 import org.joda.time.format.DateTimeFormatter;
+import org.restlet.data.Status;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import sun.security.provider.MD5;
 
 import javax.xml.bind.JAXBContext;
 import javax.xml.bind.JAXBException;
@@ -90,11 +89,24 @@ public class Resource {
         exchange.getIn().setBody(sb.toString());
     }
 
+    /**
+     * Handles updates for Resets or Adjustments.  If this is invoked on the Sunday
+     * it performs a reset.
+     * Any other day of the week will check the total hours, worked and update the
+     * values.
+     *
+     * @param exchange
+     */
     public void updateImpactible(Exchange exchange) {
 
         Map resourceInfo = (Map )exchange.getProperty("employee_info");
         String resourceId = (String) resourceInfo.get("Employee_No");
         Integer impactHours = (Integer )resourceInfo.get("IMPACT_HOURS");
+        DateTimeFormatter dtf = DateTimeFormat.forPattern("yyyy-MM-dd");
+        String resetForDay  = (String )exchange.getIn().getHeader("routeDay");
+
+        DateTime resetDate = dtf.parseDateTime(resetForDay);
+        int dow = resetDate.getDayOfWeek();
 
         LOGGER.info("Generate Body For Resource Update Resource ID: {} For {} Impact Hours",  resourceId, impactHours);
         HashMap<String, String> authInfo =
@@ -102,7 +114,13 @@ public class Resource {
         String username = authInfo.get("user") + "@" + authInfo.get("company");
         String passwd =   authInfo.get("passwd");
 
-        String restBody = generateImpactiblePatch(impactHours, 0);
+        String restBody = null;
+        if (dow == DateTimeConstants.SUNDAY) {
+            restBody = generateImpactibleReset(impactHours, 0);
+        }
+        else {
+            // TODO: Call the adjustment function based on the number of hours worked.
+        }
 
         // Set Values For HTTP4:
         exchange.getIn().setHeader("id", resourceId);
@@ -129,7 +147,7 @@ public class Resource {
         // Build The Message For Calendar Assignment
         LOGGER.info("Generate Body For Resource Schedule Reset Resource ID: {} On {}",  resourceId, resetForDay);
         HashMap<String, String> authInfo =
-                Security.extractAuthInfo((String) exchange.getProperty("CamelHttpQuery"));
+                Security.extractAuthInfo((String) exchange.getProperty("original_headers"));
         String username = authInfo.get("user") + "@" + authInfo.get("company");
         String passwd =   authInfo.get("passwd");
 
@@ -144,7 +162,7 @@ public class Resource {
         workSchedule.setWorkTimeEnd("17:00:00");
         Recurrence recurrence = new Recurrence();
         recurrence.setRecurrenceType("daily");
-        recurrence.setRecurrEvery(1);
+        recurrence.setRecurEvery(1);
         workSchedule.setRecurrence(recurrence);
 
         // Set Values For HTTP4:
@@ -153,7 +171,6 @@ public class Resource {
         exchange.getIn().setHeader("passwd", passwd);
         exchange.getIn().setHeader(Exchange.CONTENT_TYPE, "application/json");
 
-        // Skip The Pos In Route - Default To Unordered.
         String restBody = null;
         try {
             restBody = resourceMapper.writeValueAsString(workSchedule);
@@ -164,26 +181,44 @@ public class Resource {
 
     }
 
+    public void checkOfscResponse(Exchange exchange) {
+        org.restlet.engine.adapter.HttpResponse response =
+                (org.restlet.engine.adapter.HttpResponse) exchange.getIn().getHeader("CamelRestletResponse");
+
+        ResourceJson resource = (ResourceJson )exchange.getIn().getBody();
+        if (response != null && response.getStatus().equals(Status.SUCCESS_OK)) {
+          if (resource.getStatus() != null && resource.getStatus().equals("active")) {
+              exchange.getIn().setHeader("ofsc_resource_exists", true);
+          }
+            else {
+              exchange.getIn().setHeader("ofsc_resource_exists", false);
+          }
+        }
+        else {
+            exchange.getIn().setHeader("ofsc_resource_exists", false);
+        }
+    }
+
     private int getEndOfWeekDays(DateTime resetDate) {
         int dow = resetDate.getDayOfWeek();
         return DateTimeConstants.SATURDAY - dow;
     }
 
-    private String generateImpactiblePatch(Integer allowableImpactHours, Integer workedImpactHours) {
+    private String generateImpactibleReset(Integer allowableImpactHours, Integer workedImpactHours) {
 
         if (allowableImpactHours == 0) {
             return "{"
                     + " \"XA_IMPACTABLE\": \"0\", "
                     + " \"impact_hours\": 0, "
                     + " \"impact_worked\": 0"
-                    + "}";
+                    + "\n}";
         }
         else {
             return "{\n"
                     + " \"XA_IMPACTABLE\": \"1\",\n"
                     + " \"impact_hours\": " + allowableImpactHours + ", "
                     + " \"impact_worked\": 0"
-                    + "}";
+                    + "\n}";
         }
     }
 
