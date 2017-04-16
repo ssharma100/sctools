@@ -136,10 +136,16 @@ public class Resource {
      * Works on the basis of a 7 day work week, starting on Sunday and going to Saturday
      */
     public void resetShiftsForWeek (Exchange exchange) {
+        Map resourceInfo = (Map )exchange.getProperty("employee_info");
         // Verify That The Date Is Sunday
         DateTimeFormatter dtf = DateTimeFormat.forPattern("yyyy-MM-dd");
+        DateTimeFormatter tf = DateTimeFormat.forPattern("HH:mm:SS");
         String resetForDay  = (String )exchange.getIn().getHeader("routeDay");
         String resourceId = (String )exchange.getIn().getHeader("id");
+        Integer continuity_hours = (Integer )resourceInfo.get("POSITION_HRS");
+        // Compute The Hours Worked For The Schedule
+        int hoursPerDay = Math.round(continuity_hours / 5);
+        LOGGER.info("Resource Can Work {} Hours Per Day", hoursPerDay);
 
         DateTime resetDate = dtf.parseDateTime(resetForDay);
         Preconditions.checkArgument(DateTimeConstants.SUNDAY == resetDate.getDayOfWeek(), "Reset Must Be Done For Sunday");
@@ -152,14 +158,14 @@ public class Resource {
         String passwd =   authInfo.get("passwd");
 
         WorkSchedule workSchedule = new WorkSchedule();
-
+        DateTime startTime = new DateTime(2017, 01, 01, 9, 0, 0);
         workSchedule.setRecordType("working");
-        workSchedule.setStartDate(resetForDay);
-        int dayOffset = 6;
+        workSchedule.setStartDate(dtf.print(resetDate.plus(Period.days(1))));
+        int dayOffset = 5;
         workSchedule.setEndDate(dtf.print(resetDate.plus(Period.days(dayOffset))));
         workSchedule.setShiftType("regular");
-        workSchedule.setWorkTimeStart("09:00:00");
-        workSchedule.setWorkTimeEnd("17:00:00");
+        workSchedule.setWorkTimeStart(tf.print(startTime));
+        workSchedule.setWorkTimeEnd(tf.print(startTime.plus(Period.hours(hoursPerDay))));
         Recurrence recurrence = new Recurrence();
         recurrence.setRecurrenceType("daily");
         recurrence.setRecurEvery(1);
@@ -181,6 +187,13 @@ public class Resource {
 
     }
 
+    /**
+     * evaluates if the response from the OFSC for a Get Resource was
+     * successful or not.
+     * Populates the Exchange Header: ofsc_resource_exists
+     *
+     * @param exchange
+     */
     public void checkOfscResponse(Exchange exchange) {
         org.restlet.engine.adapter.HttpResponse response =
                 (org.restlet.engine.adapter.HttpResponse) exchange.getIn().getHeader("CamelRestletResponse");

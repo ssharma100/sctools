@@ -1,4 +1,4 @@
-select * from continuity_associates_avail;
+select * from continuity_associates_avail limit 200;
 
 DROP TABLE continuity_associates_avail;
 
@@ -31,7 +31,6 @@ CREATE TABLE `continuity_associates_avail` (
 
 desc continuity_associates_avail;
 
-
 -- Load From CSV Export
 --
 
@@ -41,6 +40,8 @@ FIELDS TERMINATED BY ',' ENCLOSED BY '"'
 LINES TERMINATED BY '\n' 
 IGNORE 1 LINES;
 
+alter table `continuity_associates_avail` 
+CHANGE `POSITION_HRS` `POSITION_HRS` tinyint(5) NOT NULL DEFAULT 0;
 
 select * from continuity_associates_avail;
 select CONTY_MON_SHIFT, count(*) from continuity_associates_avail group by CONTY_MON_SHIFT;

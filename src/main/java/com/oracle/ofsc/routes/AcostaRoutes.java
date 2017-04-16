@@ -80,7 +80,8 @@ public class AcostaRoutes  extends RouteBuilder {
                         + "IMPACT_TUES_SHIFT, IMPACT_WED_SHIFT, IMPACT_THURS_SHIFT, "
                         + "IMPACT_FRI_SHIFT, IMPACT_SAT_SHIFT,  CONTY_MON_SHIFT, CONTY_TUES_SHIFT, CONTY_WED_SHIFT, CONTY_THURS_SHIFT, "
                         + "CONTY_FRI_SHIFT, CONTY_SAT_SHIFT, CONTY_SUN_SHIFT " + "from continuity_associates_avail "
-                        + "where CONTINUITY = 1 and TEAM NOT LIKE 'Wal%'"))
+                        + "where CONTINUITY = 1 and TEAM NOT LIKE 'Wal%' AND Employee_No = '992354910'"))
+
                 .to("jdbc:acostaDS?useHeadersAsParameters=true&outputType=StreamList")
                 .split(body(), new ResourceAdjustAggregationStrategy())
                 .setProperty("employee_info", simple("${in.body}"))
