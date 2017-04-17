@@ -4,6 +4,7 @@ import com.oracle.ofsc.etadirect.camel.beans.AcostaFunctions;
 import com.oracle.ofsc.etadirect.camel.beans.DebugOnly;
 import com.oracle.ofsc.etadirect.camel.beans.Resource;
 import com.oracle.ofsc.etadirect.camel.beans.ResourceAdjustAggregationStrategy;
+import org.apache.camel.LoggingLevel;
 import org.apache.camel.Predicate;
 import org.apache.camel.builder.RouteBuilder;
 import org.apache.camel.component.jackson.JacksonDataFormat;
@@ -19,6 +20,8 @@ public class AcostaRoutes  extends RouteBuilder {
     private Predicate isPost = header("CamelHttpMethod").isEqualTo("POST");
     private Predicate routesFound = header("route_count").isGreaterThan(0);
     private Predicate resource_exists = header("ofsc_resource_exists").isEqualTo(true);
+    private Predicate sunday_route = exchangeProperty("has_sunday_shift").isNotNull();
+    private Predicate saturday_route = exchangeProperty("has_saturday_shift").isNotNull();
 
     private JacksonDataFormat jacksonDataFormat = new JacksonDataFormat();
 
@@ -74,36 +77,60 @@ public class AcostaRoutes  extends RouteBuilder {
 
         // Schedule Reseter: read all continuity resources from the DB.
         // For each one - set the Impactable Value if they have impact hours, and update remaining hours
-        from("direct://schedule/continuity/reset").routeId("RestContySchedules")
+        from("direct://schedule/continuity/reset")
+                .routeId("RestContySchedules")
                 .setProperty("original_headers", simple("${in.header[CamelHttpQuery]}"))
                 .setBody(constant("select Employee_No, POSITION_HRS, IMPACT_HOURS, IMPACT_SUN_SHIFT, IMPACT_MON_SHIFT, "
                         + "IMPACT_TUES_SHIFT, IMPACT_WED_SHIFT, IMPACT_THURS_SHIFT, "
                         + "IMPACT_FRI_SHIFT, IMPACT_SAT_SHIFT,  CONTY_MON_SHIFT, CONTY_TUES_SHIFT, CONTY_WED_SHIFT, CONTY_THURS_SHIFT, "
                         + "CONTY_FRI_SHIFT, CONTY_SAT_SHIFT, CONTY_SUN_SHIFT " + "from continuity_associates_avail "
-                        + "where CONTINUITY = 1 and TEAM NOT LIKE 'Wal%'"))
+                        + "where CONTINUITY = 1 and TEAM NOT LIKE 'Wal%' and Employee_No = '992283048'"))
 
                 .to("jdbc:acostaDS?useHeadersAsParameters=true&outputType=StreamList")
                 .split(body(), new ResourceAdjustAggregationStrategy())
                 .setProperty("employee_info", simple("${in.body}"))
                 .setHeader("id", simple("${in.body[Employee_No]}")).setBody(constant(null))
 
-                    // Get The Resource Record
+                // Get The Resource Record
                 .bean(Resource.class, "authOnly")
                 .to("direct://generic/resource/get")
                 .setHeader("CamelJacksonUnmarshalType", constant("com.oracle.ofsc.etadirect.rest.ResourceJson"))
                 .unmarshal(jacksonDataFormat).setProperty("ofsc_resource", simple("${in.body}"))
-                .bean(Resource.class, "checkOfscResponse").choice()
+                .bean(Resource.class, "checkOfscResponse")
+                .choice()
                 .when(resource_exists)
 
-                        // Extract The Resource Record
+                // Extract The Resource Record
+                // First Do The Shift Reset (Also Checks For Reset Run On Sunday)
+                .bean(Resource.class, "resetShiftsForWeek")
+                .to("direct://etadirectrest/resource/schedule")
 
-                            // First Do The Shift Reset (Also Checks For Reset Run On Sunday)
-                .bean(Resource.class, "resetShiftsForWeek").to("direct://etadirectrest/resource/schedule")
+                // Only Process Sundays When A Sunday Is Provided
+                .choice()
+                .when(sunday_route)
+                    .bean(Resource.class, "resetSundayShift")
+                    .to("direct://etadirectrest/resource/schedule")
+                .otherwise()
+                    .log(LoggingLevel.INFO, "Skipping Sunday - No Schedule For Continuity Associate")
+                .endChoice()
 
-                            // Update The Resource With The Reset Impactable Fields
-                .bean(Resource.class, "updateImpactible").to("direct://etadirectrest/resource/update")
-                        .endChoice()
-                        .otherwise().setHeader("errorMsg", constant("No Resource In OFSC"))
+                // Only Process Sundays When A Sunday Is Provided
+                .choice()
+                .when(saturday_route)
+                .bean(Resource.class, "resetSaturdayShift")
+                .to("direct://etadirectrest/resource/schedule")
+                .otherwise()
+                .log(LoggingLevel.INFO, "Skipping Saturday - No Schedule For Continuity Associate")
+                .endChoice()
+
+
+                // Update The Resource With The Reset Impactable Fields
+                .bean(Resource.class, "updateImpactible")
+                .to("direct://etadirectrest/resource/update")
+
+                .endChoice()
+                .otherwise()
+                .setHeader("errorMsg", constant("No Resource In OFSC"))
 
                 .end();
 
