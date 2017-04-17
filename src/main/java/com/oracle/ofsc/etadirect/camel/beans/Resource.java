@@ -235,8 +235,11 @@ public class Resource {
      */
     public void resetShiftsForWeek (Exchange exchange) {
         Map resourceInfo = (Map )exchange.getProperty("employee_info");
-        exchange.setProperty("has_sunday_shift", resourceInfo.get("CONTY_SUN_SHIFT"));
-        exchange.setProperty("has_saturday_shift", resourceInfo.get("CONTY_SAT_SHIFT"));
+        String sundayShift = StringUtils.trim((String )resourceInfo.get("CONTY_SUN_SHIFT"));
+        String saturdayShift = StringUtils.trim((String )resourceInfo.get("CONTY_SAT_SHIFT"));
+
+        exchange.setProperty("has_sunday_shift", StringUtils.isBlank(sundayShift) ? null : sundayShift);
+        exchange.setProperty("has_saturday_shift", StringUtils.isBlank(saturdayShift) ? null : saturdayShift);
 
         // Verify That The Date Is Sunday
         DateTimeFormatter dtf = DateTimeFormat.forPattern("yyyy-MM-dd");
