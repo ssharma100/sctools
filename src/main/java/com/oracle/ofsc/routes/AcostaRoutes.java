@@ -64,7 +64,7 @@ public class AcostaRoutes  extends RouteBuilder {
                 .routeId("scheduleExtractUpdate")
                 .setBody(constant("select Employee_No, POSITION_HRS, IMPACT_HOURS, IMPACT_SUN_SHIFT, IMPACT_MON_SHIFT, "
                         + "IMPACT_TUES_SHIFT, IMPACT_WED_SHIFT, IMPACT_THURS_SHIFT, " + "IMPACT_FRI_SHIFT, IMPACT_SAT_SHIFT "
-                        + "from continuity_associates_avail " + "where CONTINUITY = 1 and TEAM NOT LIKE 'Wal%' and Employee_No ='992309237'"))
+                        + "from continuity_associates_avail " + "where CONTINUITY = 1"))
                 .to("jdbc:acostaDS?useHeadersAsParameters=true&outputType=StreamList")
                 .split(body()).streaming()
                     .setProperty("resource_info", simple("${in.body}"))
@@ -84,7 +84,7 @@ public class AcostaRoutes  extends RouteBuilder {
                         + "IMPACT_TUES_SHIFT, IMPACT_WED_SHIFT, IMPACT_THURS_SHIFT, "
                         + "IMPACT_FRI_SHIFT, IMPACT_SAT_SHIFT,  CONTY_MON_SHIFT, CONTY_TUES_SHIFT, CONTY_WED_SHIFT, CONTY_THURS_SHIFT, "
                         + "CONTY_FRI_SHIFT, CONTY_SAT_SHIFT, CONTY_SUN_SHIFT " + "from continuity_associates_avail "
-                        + "where CONTINUITY = 1 and TEAM NOT LIKE 'Wal%'"))
+                        + "where CONTINUITY = 1"))
 
                 .to("jdbc:acostaDS?useHeadersAsParameters=true&outputType=StreamList")
                 .split(body(), new ResourceAdjustAggregationStrategy())
