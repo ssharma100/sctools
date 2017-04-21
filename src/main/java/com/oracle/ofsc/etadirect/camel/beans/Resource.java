@@ -131,12 +131,116 @@ public class Resource {
         exchange.getIn().setBody(restBody);
 
     }
+    public void resetSundayShift(Exchange exchange) {
+        String resourceId = (String )exchange.getIn().getHeader("id");
+        String resetForWeekStarting  = (String )exchange.getIn().getHeader("routeDay");
+        String shift = (String )exchange.getProperty("has_sunday_shift");
+        LOGGER.info("Processing Schedule For Weekend (Sunday) Continuity Resource ID {} Resetting Week Starting {}", resourceId, resetForWeekStarting);
+
+        HashMap<String, String> authInfo =
+                Security.extractAuthInfo((String) exchange.getProperty("original_headers"));
+        String username = authInfo.get("user") + "@" + authInfo.get("company");
+        String passwd =   authInfo.get("passwd");
+
+        // Set Values For HTTP4:
+        exchange.getIn().setHeader("id", resourceId);
+        exchange.getIn().setHeader("username", username);
+        exchange.getIn().setHeader("passwd", passwd);
+        exchange.getIn().setHeader(Exchange.CONTENT_TYPE, "application/json");
+        // Must Always Trim As The Data Has /r and control characters in it:
+        String restBody = null;
+        try {
+            restBody = resourceMapper.writeValueAsString(generateWorkScheduleForDay(resetForWeekStarting, StringUtils.trim(shift)));
+        } catch (JsonProcessingException e) {
+            LOGGER.error("Failed To Marshal JSON Object: {}", e.getMessage());
+        }
+        exchange.getIn().setBody(restBody);
+    }
+
+    public void resetSaturdayShift(Exchange exchange) {
+        String resourceId = (String )exchange.getIn().getHeader("id");
+        String resetForWeekStarting  = (String )exchange.getIn().getHeader("routeDay");
+        String shift = (String )exchange.getProperty("has_saturday_shift");
+        DateTimeFormatter dtf = DateTimeFormat.forPattern("yyyy-MM-dd");
+        DateTime saturday = dtf.parseDateTime(resetForWeekStarting).plus(Period.days(6));
+        LOGGER.info("Processing Schedule For Weekend (Saturday) Continuity Resource ID {} Resetting Week Starting {}", resourceId, resetForWeekStarting);
+
+        HashMap<String, String> authInfo =
+                Security.extractAuthInfo((String) exchange.getProperty("original_headers"));
+        String username = authInfo.get("user") + "@" + authInfo.get("company");
+        String passwd =   authInfo.get("passwd");
+
+        // Set Values For HTTP4:
+        exchange.getIn().setHeader("id", resourceId);
+        exchange.getIn().setHeader("username", username);
+        exchange.getIn().setHeader("passwd", passwd);
+        exchange.getIn().setHeader(Exchange.CONTENT_TYPE, "application/json");
+        // Must Always Trim As The Data Has /r and control characters in it:
+
+        String restBody = null;
+        try {
+            restBody = resourceMapper.writeValueAsString(generateWorkScheduleForDay(dtf.print(saturday), StringUtils.trim(shift)));
+        } catch (JsonProcessingException e) {
+            LOGGER.error("Failed To Marshal JSON Object: {}", e.getMessage());
+        }
+        exchange.getIn().setBody(restBody);
+
+    }
+    private WorkSchedule generateWorkScheduleForDay(String day, String shift) {
+        DateTimeFormatter dtf = DateTimeFormat.forPattern("yyyy-MM-dd");
+        DateTimeFormatter tf = DateTimeFormat.forPattern("HH:mm:SS");
+
+        // Parse The Shift
+        String[] timerange = StringUtils.split(shift, "-");
+        LOGGER.info("Using Start Time: {}, End Time: {} For Shift", timerange[0], timerange[1]);
+        // Adjust Times To Clock Hours (note that there are no minutes
+        DateTime startTime = convertAmPmTo24Hr(timerange[0]);
+        DateTime endTime = convertAmPmTo24Hr(timerange[1]);
+
+        WorkSchedule workSchedule = new WorkSchedule();
+        workSchedule.setRecordType("working");
+        workSchedule.setStartDate(day);
+        workSchedule.setEndDate(workSchedule.getStartDate());
+        workSchedule.setShiftType("regular");
+        workSchedule.setWorkTimeStart(tf.print(startTime));
+        workSchedule.setWorkTimeEnd(tf.print(endTime));
+        Recurrence recurrence = new Recurrence();
+        recurrence.setRecurrenceType("daily");
+        recurrence.setRecurEvery(1);
+        workSchedule.setRecurrence(recurrence);
+
+        return workSchedule;
+    }
+
+    private DateTime convertAmPmTo24Hr(String hour) {
+        Integer effectiveHour;
+        if (StringUtils.endsWithIgnoreCase(hour, "am")) {
+            effectiveHour = Integer.parseInt(StringUtils.removeEndIgnoreCase(hour, "am"));
+        }
+        else {
+            Integer hour24 = Integer.parseInt(StringUtils.removeEndIgnoreCase(hour, "pm"));
+            if (12 == hour24) {
+                effectiveHour = hour24;
+            }
+            else {
+                effectiveHour = hour24 + 12;
+            }
+        }
+        return DateTime.now().withTimeAtStartOfDay().plus(Period.hours(effectiveHour));
+    }
+
     /**
      * For a given day, will set up a 9-5 schedule for the whole week (7days out)
      * Works on the basis of a 7 day work week, starting on Sunday and going to Saturday
      */
     public void resetShiftsForWeek (Exchange exchange) {
         Map resourceInfo = (Map )exchange.getProperty("employee_info");
+        String sundayShift = StringUtils.trim((String )resourceInfo.get("CONTY_SUN_SHIFT"));
+        String saturdayShift = StringUtils.trim((String )resourceInfo.get("CONTY_SAT_SHIFT"));
+
+        exchange.setProperty("has_sunday_shift", StringUtils.isBlank(sundayShift) ? null : sundayShift);
+        exchange.setProperty("has_saturday_shift", StringUtils.isBlank(saturdayShift) ? null : saturdayShift);
+
         // Verify That The Date Is Sunday
         DateTimeFormatter dtf = DateTimeFormat.forPattern("yyyy-MM-dd");
         DateTimeFormatter tf = DateTimeFormat.forPattern("HH:mm:SS");
