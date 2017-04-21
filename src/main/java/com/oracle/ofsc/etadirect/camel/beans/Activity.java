@@ -55,7 +55,7 @@ public class Activity {
 
         LOGGER.info("Generate Assignment For a_id {} With Resource ID {}" , ra.getEtaId(), ra.getRequiredResource());
         HashMap<String, String> authInfo =
-                Security.extractAuthInfo((String )exchange.getIn().getHeader("CamelHttpQuery"));
+                Security.extractURLInfo((String )exchange.getIn().getHeader("CamelHttpQuery"));
 
         String username = authInfo.get("user") + "@" + authInfo.get("company");
         String passwd =   authInfo.get("passwd");
@@ -169,7 +169,7 @@ public class Activity {
 
         LOGGER.info("Generate Auth Only For");
 
-        HashMap<String, String> authInfo = Security.extractAuthInfo((String) exchange.getIn().getHeader("CamelHttpQuery"));
+        HashMap<String, String> authInfo = Security.extractURLInfo((String) exchange.getIn().getHeader("CamelHttpQuery"));
 
         String username = authInfo.get("user") + "@" + authInfo.get("company");
         String passwd = authInfo.get("passwd");

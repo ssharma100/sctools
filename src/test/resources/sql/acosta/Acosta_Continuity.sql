@@ -252,7 +252,7 @@ concat('Conty_', CCD.ACTUAL_CALLID) as ActivityKey,
 DATE(CCD.CALL_STARTED_LOCAL) as OriginalStartDate, 
 F.Cycle,
 DATE_ADD(DATE(CCD.CALL_STARTED_LOCAL), INTERVAL 275 DAY) as StartDate,
-DATE_ADD(DATE(CCD.CALL_ENDED_LOCAL), INTERVAL 275 DAY) as EndDate,
+DATE_ADD(DATE(CCD.COMPLETED_ON_LOCAL), INTERVAL 275 DAY) as EndDate,
 'bucket' as ExternalID, 
 CCD.CALL_TYPE_CODE as ActivityType,
 STORE.LATITUDE as Latitude, STORE.LONGITUDE as Longitude,
@@ -276,13 +276,12 @@ F.name = 'None'
 AND 
 STORE.ACOSTA_NO = CCD.ACOSTA_NO and STORE.STOREID = CCD.STOREID
 AND
-CCD.CALL_STATUS_DETAILS = 'Successful'
-AND 
-CCD.Store NOT LIKE 'Wal%'; 
+CCD.CALL_STATUS_DETAILS = 'Successful'; 
 
-drop view continuity_activity_None;
-select count(*) from continuity_activity_None;
-
+drop view continuity_activity_october;
+select * from continuity_activity_october order by startdate limit 10;
+select count(*) from continuity_activity_october;
+select ActivityKey, ReqResource as ResourceId, activitytype, startdate, enddate, Latitude, Longitude, PlannedDuration as Duration, StartTime, EndTime, Store, city as City, state as State, zip as Zip, 'Eastern' as Timezone, TimeSlot as TimeSlot, Resource_No , DOW from continuity_activity_october;
 
 --
 -- Loaders

@@ -63,7 +63,7 @@ public class WebRoutes extends RouteBuilder {
                 .routeId("invokeWebResAssign")
                 .to("direct://common/set/assignResource");
 
-        // RESTful End Point For Generic User Management
+        // RESTful End Point For Generic User Creation/Insert
         from("restlet:http://localhost:8085/sctool/v1/generic/user?restletMethods=post")
                 .routeId("invokeGenUserPostCall")
                 .to("log:" + LOG_CLASS + "?showAll=true&multiline=true&level=INFO")
