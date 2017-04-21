@@ -7,7 +7,6 @@ import com.oracle.ofsc.etadirect.soap.Property;
 import com.oracle.ofsc.etadirect.soap.User;
 import com.oracle.ofsc.transforms.GenericActivityData;
 import com.oracle.ofsc.transforms.TransportationActivityData;
-import org.apache.camel.Body;
 import org.apache.camel.Exchange;
 import org.apache.commons.lang3.StringUtils;
 import org.joda.time.DateTime;
@@ -134,20 +133,21 @@ public class Activity {
 
         String category = (String) exchange.getIn().getHeader("activity_category");
         HashMap<String, String> authInfo =
-                Security.extractAuthInfo((String )exchange.getIn().getHeader("CamelHttpQuery"));
+                Security.extractURLInfo((String) exchange.getIn().getHeader("CamelHttpQuery"));
 
         String username = authInfo.get("user") + "@" + authInfo.get("company");
         String passwd =   authInfo.get("passwd");
 
+        Boolean isSLA = new Boolean(authInfo.get("SLA"));
         com.oracle.ofsc.etadirect.rest.InsertActivity activityIns = null;
         switch (category) {
         case "transportation":
-            LOGGER.debug("Generating Activity Request From Transportation Activity");
+            LOGGER.info("Generating Activity Request From Transportation Activity");
             activityIns = this.generateTransportationActivity(exchange.getIn().getBody(), bucketId);
             break;
         case "generic":
-            LOGGER.debug("Generating Activity Request From Generic Activity");
-            activityIns = this.generateGenericActivity(exchange.getIn().getBody(), bucketId);
+            LOGGER.info("Generating Activity Request From Generic Activity");
+            activityIns = this.generateGenericActivity(exchange.getIn().getBody(), bucketId, isSLA);
             break;
         default:
             LOGGER.error("Unrecognized Requesting Endpoint {} - No Activity Generator Found", category);
@@ -224,7 +224,7 @@ public class Activity {
      * @param bucketId
      * @return
      */
-    private com.oracle.ofsc.etadirect.rest.InsertActivity generateGenericActivity(Object inObject, String bucketId) {
+    private com.oracle.ofsc.etadirect.rest.InsertActivity generateGenericActivity(Object inObject, String bucketId, boolean isSLA) {
         GenericActivityData activityData = (GenericActivityData)inObject;
         com.oracle.ofsc.etadirect.rest.InsertActivity activityIns = new com.oracle.ofsc.etadirect.rest.InsertActivity();
 
@@ -242,8 +242,15 @@ public class Activity {
         activityIns.setStateProvince(activityData.getState());
 
         activityIns.setTimeSlot(activityData.getTimeSlot());
-        activityIns.setSlaWindowStart(activityData.getActivityStartDate() + " " + activityData.getActivityStartTime());
-        activityIns.setSlaWindowEnd(activityData.getActivityEndDate() + " " + activityData.getActivityEndTime());
+        if (isSLA) {
+            LOGGER.info("Using SLA Of Appointment For Loader");
+            activityIns.setSlaWindowStart(activityData.getActivityStartDate() + " " + activityData.getActivityStartTime());
+            activityIns.setSlaWindowEnd(activityData.getActivityEndDate() + " " + activityData.getActivityEndTime());
+        }
+        else {
+            LOGGER.info("Using Day Of Appointment For Loader");
+            activityIns.setDate(activityData.getActivityStartDate());
+        }
 
         // Map The Days of The Week
         activityIns.setImpact_allowable_days(extractDOW(activityData.getAllowedDOW()));

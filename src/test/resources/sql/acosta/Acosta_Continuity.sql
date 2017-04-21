@@ -240,8 +240,53 @@ CCD.Store NOT LIKE 'Wal%';
 
 drop view continuity_activity_None;
 select count(*) from continuity_activity_None;
--- Loaders
 
+drop view continuity_activity_2PerMo;
+select * from continuity_activity_2PerMo order by originalstartdate, cycle;
+
+--
+-- Project Jobs Forward Into October (Keeping Same Day)
+create view continuity_activity_october as 
+SELECT 
+concat('Conty_', CCD.ACTUAL_CALLID) as ActivityKey,
+DATE(CCD.CALL_STARTED_LOCAL) as OriginalStartDate, 
+F.Cycle,
+DATE_ADD(DATE(CCD.CALL_STARTED_LOCAL), INTERVAL 275 DAY) as StartDate,
+DATE_ADD(DATE(CCD.CALL_ENDED_LOCAL), INTERVAL 275 DAY) as EndDate,
+'bucket' as ExternalID, 
+CCD.CALL_TYPE_CODE as ActivityType,
+STORE.LATITUDE as Latitude, STORE.LONGITUDE as Longitude,
+'all-day' as 'timeslot',
+CCD.STARTED_BY_EMPLOYEE_NO as 'ReqResource',
+STORE.acosta_no as 'StoreID',
+STORE.address as 'Address', STORE.city as 'City', STORE.State as 'State', STORE.ZIPCODE as 'Zip',
+ALLCALL.DEFAULTCALLDURATION as 'DefaultCallDuration',
+CCD.EXECUTION_DURATION_MINUTES as 'PlannedDuration',
+'08:00:00' as 'StartTime',
+'17:00:00' as 'EndTime',
+CCD.STORE as Store,
+'1' as Resource_No,
+'1|1|1|1|1|1|1' as DOW
+FROM frequency as F
+join all_stores as STORE on  STORE.FREQUENCY = F.name
+join continuity_actual_call_details as CCD on F.name = STORE.frequency
+JOIN all_call_types as ALLCALL on ALLCALL.CallType_Code = CCD.CALL_TYPE_CODE
+where 
+F.name = 'None'
+AND 
+STORE.ACOSTA_NO = CCD.ACOSTA_NO and STORE.STOREID = CCD.STOREID
+AND
+CCD.CALL_STATUS_DETAILS = 'Successful'
+AND 
+CCD.Store NOT LIKE 'Wal%'; 
+
+drop view continuity_activity_None;
+select count(*) from continuity_activity_None;
+
+
+--
+-- Loaders
+--
 select ActivityKey, ReqResource as ResourceId, activitytype, startdate, enddate, Latitude, Longitude, PlannedDuration as Duration, StartTime, EndTime, Store, city as City, state as State, zip as Zip, 'Eastern' as Timezone, TimeSlot as TimeSlot, Resource_No , DOW from continuity_activity_1PerMo;
 
 select ActivityKey, ReqResource as ResourceId, activitytype, startdate, enddate, Latitude, Longitude, PlannedDuration as Duration, StartTime, EndTime, Store, city as City, state as State, zip as Zip, 'Eastern' as Timezone, TimeSlot as TimeSlot, Resource_No , DOW from continuity_activity_2PerMo;

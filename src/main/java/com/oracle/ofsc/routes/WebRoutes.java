@@ -85,7 +85,7 @@ public class WebRoutes extends RouteBuilder {
                 .to("log:" + LOG_CLASS + "?showAll=true&multiline=true&level=INFO")
                 .to("direct://common/get/assignLocations");
 
-        // RESTful End Point For Activity
+        // RESTful End Point For Activity (ABT Specific - Transportation)
         // - Get Activity (Transportation)
         // - Insert Activity (Transportation)
         from("restlet:http://localhost:8085/sctool/v1/transportation/activity/{id}?restletMethods=post,get")
