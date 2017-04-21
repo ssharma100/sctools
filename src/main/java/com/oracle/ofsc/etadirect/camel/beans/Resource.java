@@ -138,7 +138,7 @@ public class Resource {
         LOGGER.info("Processing Schedule For Weekend (Sunday) Continuity Resource ID {} Resetting Week Starting {}", resourceId, resetForWeekStarting);
 
         HashMap<String, String> authInfo =
-                Security.extractAuthInfo((String) exchange.getProperty("original_headers"));
+                Security.extractURLInfo((String) exchange.getProperty("original_headers"));
         String username = authInfo.get("user") + "@" + authInfo.get("company");
         String passwd =   authInfo.get("passwd");
 
@@ -166,7 +166,7 @@ public class Resource {
         LOGGER.info("Processing Schedule For Weekend (Saturday) Continuity Resource ID {} Resetting Week Starting {}", resourceId, resetForWeekStarting);
 
         HashMap<String, String> authInfo =
-                Security.extractAuthInfo((String) exchange.getProperty("original_headers"));
+                Security.extractURLInfo((String) exchange.getProperty("original_headers"));
         String username = authInfo.get("user") + "@" + authInfo.get("company");
         String passwd =   authInfo.get("passwd");
 
