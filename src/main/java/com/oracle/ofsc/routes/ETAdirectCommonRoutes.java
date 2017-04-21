@@ -1,5 +1,6 @@
 package com.oracle.ofsc.routes;
 
+import com.oracle.ofsc.etadirect.camel.beans.Activity;
 import com.oracle.ofsc.etadirect.camel.beans.AcostaFunctions;
 import com.oracle.ofsc.etadirect.camel.beans.AggregatorStrategy;
 import com.oracle.ofsc.etadirect.camel.beans.ArcBestBulk;
@@ -28,6 +29,7 @@ public class ETAdirectCommonRoutes extends RouteBuilder {
     private DataFormat routeReport = new BindyCsvDataFormat(com.oracle.ofsc.transforms.RouteReportData.class);
     private DataFormat locationsList = new BindyCsvDataFormat(com.oracle.ofsc.transforms.LocationListData.class);
     private DataFormat resourceLocation = new BindyCsvDataFormat(com.oracle.ofsc.transforms.ResourceLocationData.class);
+    private DataFormat resourceAssignment = new BindyCsvDataFormat(com.oracle.ofsc.transforms.ResourceAssignment.class);
 
     private JacksonDataFormat jacksonDataFormat = new JacksonDataFormat();
 
@@ -113,6 +115,14 @@ public class ETAdirectCommonRoutes extends RouteBuilder {
                     .unmarshal(jacksonDataFormat)
                 .end();
 
+        from("direct://common/set/assignResource")
+                .routeId("assignResToActivity")
+                .unmarshal(resourceAssignment)
+                .split(body())
+                    .bean(Activity.class, "assignResource")
+                    .to("direct://etadirectrest/assignResource")
+                .end();
+      
         /**
          * Makes a request to get all children resources under the given root.
          * Note that this is broken and may not work.  Also limited to 100 responses.

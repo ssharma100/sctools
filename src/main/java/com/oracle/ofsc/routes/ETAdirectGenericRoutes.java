@@ -57,6 +57,11 @@ public class ETAdirectGenericRoutes extends RouteBuilder {
                 .bean(Activity.class, "mapToInsertRestRequest")
                 .to("direct://etadirectrest/activity")
                 .bean(ResponseHandler.class, "restResponse");
+
+        from("direct://generic/activity/search/appNumber")
+                .routeId("etaSearchActivity")
+                .bean(Activity.class, "authOnly")
+                .to("direct://etadirectrest/activity/search/apptNumber");
     }
 
 }
