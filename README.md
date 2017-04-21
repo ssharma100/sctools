@@ -50,11 +50,54 @@ Loading of resource supports:
 - Generic Resources: A normal/basic resource
 - Truck/Transportation Based Resource - resources that have weight and cargo capacity
 
-The loader will take the input file of the format, depending on what loader you are using (loader must match format of uploaded data)
+The loader will take the input file of the format, depending on what loader you are using (loader must match format of uploaded data), POST to:
 
-http://localhost:8085/sctool/v1/generic/resource/{id}
-Where {id} is the external resource ID of the parent under which the new resource will be added.
+    http://localhost:8085/sctool/v1/generic/resource/{id}
 
+Where {id} is the external resource ID of the parent (folder or group) under which the new resource will be added.
+THe format for the input body should be:
+
+    Name, ResourceID, WorkSkillList, Latitude, Longitude, Address, City, State, Zip, TIME_ZONE, HoursPerWeek, Affiliation, Login, Password
+    Handy, Douglas, A, 992200220, continuity, 28.3088, -81.4193, 1938 Cattleya Dr, Kissimmee, Florida, 34741-3124, America/New_York, 33, Walmart Purple Consortium, acosta_992200220, test123
+
+### Loading A User:
+The latest version of the scheduler need a valid user to be added to each resource in order for the resource to be considered in routing.
+ Performing a POST to the upload path for the users is:
+ 
+    http://localhost:8085/sctool/v1/generic/user
+
+This will take the same formatted CSV input as the resource loader (the user information is already included in each line):
+
+    Name, ResourceID, WorkSkillList, Latitude, Longitude, Address, City, State, Zip, TIME_ZONE, HoursPerWeek, Affiliation, Login, Password
+    Handy, Douglas, A, 992200220, continuity, 28.3088, -81.4193, 1938 Cattleya Dr, Kissimmee, Florida, 34741-3124, America/New_York, 33, Walmart Purple Consortium, acosta_992200220, test123
 
 _Location Loading_
 http://localhost:8085/sctool/v1/location?user=SOAPUPLOAD&company=securitaselectro1.test&passwd=Test123
+
+
+_Reset Of Schedules_
+http://localhost:8085/sctool/v1/acosta/schedule/continuity/reset/{weekstart_date}
+
+### Generating A Route (Customer Specific)
+The system is capable of generating the route plan for a given use. This takes the list of appointments for a given 
+day and converts the route to a DB table.  The DB table can then be used to integrate to other systems and/or provide
+reporting and analytic information on the route.
+The application takes a resource_id and date, and looks for all jobs that were scheduled for the given day.  For the day,
+the jobs are copied to the route_plan table and given a sequence.
+The route table also provides for integration with Google, whereby we can populate drive time and address information
+(derived from Latitude/Longitude).
+
+To invoke the call, you need a list the has <route_day>,<resource_id>
+With this list, you can feed it in the Postman "Runner", where the Runner will read the file, and parse the CSV according
+ to the first line, and substituting the calls to the Tool with the date and resource id.  The typical manual invocation is:
+ 
+ For Impact Jobs:
+ http://localhost:8085/sctool/v1/acosta/route/impact/baseline/{route_date}/{resource_id}
+ 
+ For Continuity Jobs:
+ http://localhost:8085/sctool/v1/acosta/route/conty/baseline/{route_date}/{resource_id}
+ 
+ ### Adding Activities
+ The system will support the upload of activities.  The activity can be setup for the day of the activity or be SLA based.  To change
+ this provide a SLA=true or SLA=false on the query path of the URL.  Note that not providing any SLA query parameter will default
+ the loader to use NO SLA

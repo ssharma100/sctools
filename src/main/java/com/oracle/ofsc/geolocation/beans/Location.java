@@ -6,12 +6,10 @@ import com.oracle.ofsc.etadirect.camel.beans.Security;
 import com.oracle.ofsc.etadirect.rest.Assignment;
 import com.oracle.ofsc.etadirect.rest.InsertLocation;
 import com.oracle.ofsc.etadirect.rest.LocationAssignment;
-import com.oracle.ofsc.etadirect.rest.RouteList;
 import com.oracle.ofsc.geolocation.transforms.google.DistanceJson;
 import com.oracle.ofsc.transforms.LocationListData;
 import com.oracle.ofsc.transforms.ResourceLocationData;
 import com.oracle.ofsc.transforms.RouteReportData;
-import com.oracle.ofsc.transforms.TransportationActivityData;
 import org.apache.camel.Exchange;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -99,7 +97,7 @@ public class Location {
         ResourceLocationData rld = exchange.getIn().getBody(ResourceLocationData.class);
         // Set Values For HTTP Call And Authentication To ETAdirect
         HashMap<String, String> authInfo =
-                Security.extractAuthInfo((String )exchange.getIn().getHeader("CamelHttpQuery"));
+                Security.extractURLInfo((String) exchange.getIn().getHeader("CamelHttpQuery"));
         String username = authInfo.get("user") + "@" + authInfo.get("company");
         String passwd =   authInfo.get("passwd");
         exchange.getIn().setHeader("username", username);
@@ -185,7 +183,7 @@ public class Location {
 
         // Set Values For HTTP Call And Authentication To ETAdirect
         HashMap<String, String> authInfo =
-                Security.extractAuthInfo((String )exchange.getIn().getHeader("CamelHttpQuery"));
+                Security.extractURLInfo((String) exchange.getIn().getHeader("CamelHttpQuery"));
         String username = authInfo.get("user") + "@" + authInfo.get("company");
         String passwd =   authInfo.get("passwd");
         exchange.getIn().setHeader("id", location.getExternalId());

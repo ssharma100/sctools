@@ -5,10 +5,12 @@ import org.apache.camel.LoggingLevel;
 import org.apache.camel.builder.RouteBuilder;
 
 /**
+ * Contains routes for Activity functionality
  * Created by Samir on 10/9/2016.
  */
 public class ActivityRoutes extends RouteBuilder {
     private static final String LOG_CLASS = "com.oracle.ofsc.routes.ActivityRoutes";
+
     @Override
     public void configure() throws Exception {
 

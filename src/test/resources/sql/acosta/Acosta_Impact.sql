@@ -57,7 +57,7 @@ IGNORE 1 LINES;
 -- 24 Weeks Ahead
 create view impact_activity_24 as 
 SELECT 
-concat('BLine1_', ICD.ACTUAL_CALLID) as ActivityKey,
+concat('ImpA_', ICD.ACTUAL_CALLID) as ActivityKey,
 DATE(ICD.CALL_STARTED_LOCAL) as OriginalStartDate, 
 DATE(date_add(ICD.DATE_PLANNED, INTERVAL +24 WEEK)) as StartDate,
 DATE(DATE_ADD(date_add(ICD.DATE_PLANNED, INTERVAL +24 WEEK), INTERVAL ICD.DURATION_PLANNED_MINUTES MINUTE)) as EndDate,
@@ -178,3 +178,10 @@ select * from impact_call_requirements where Service_order_number = '21362' and 
 select earliest_visit_date, LATEST_VISIT_DATE from impact_call_requirements where Service_order_number = '21362' and acosta_no = '667327' order by EARLIEST_VISIT_DATE desc;
 select * from all_call_types where CALLTYPE_CODE='imp30';
 select * from all_stores where acosta_no='551450';
+
+select count(*) from impact_actual_call_details as ICD
+WHERE
+ICD.CALL_STATUS_DETAILS = 'Successful'
+AND 
+ICD.Store NOT LIKE 'Wal%'
+AND ICD.RESOURCE_NUMBER=1;

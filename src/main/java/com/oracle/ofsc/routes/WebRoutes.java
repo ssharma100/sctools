@@ -90,7 +90,7 @@ public class WebRoutes extends RouteBuilder {
                 .to("log:" + LOG_CLASS + "?showAll=true&multiline=true&level=INFO")
                 .to("direct://common/get/assignLocations");
 
-        // RESTful End Point For Activity
+        // RESTful End Point For Activity (ABT Specific - Transportation)
         // - Get Activity (Transportation)
         // - Insert Activity (Transportation)
         from("restlet:http://localhost:8085/sctool/v1/transportation/activity/{id}?restletMethods=post,get")
@@ -117,12 +117,22 @@ public class WebRoutes extends RouteBuilder {
         from("restlet:http://localhost:8085/sctool/v1/activity/{apptNumber}?restletMethod=get")
                 .routeId("invokeGetActivityAppNumber")
                 .to("direct://generic/activity/search/appNumber");
+      
+        // Search (PassThroughQuery)
+        from("restlet:http://localhost:8085/sctool/v1/generic/activity/search/{apptNumber}?restletMethods=get")
+                .routeId("invokeSearchGenericActivity")
+                .to("log:" + LOG_CLASS + "?showAll=true&multiline=true&level=INFO");
 
         // Obtains the route list (ordered) for the given resource "id"
         // Output will be formatted in a CSV
-        from("restlet:http://localhost:8085/sctool/v1/route/{id}/{routeDay}?restletMethod=get").routeId("invokeRouteQueryCall")
+        from("restlet:http://localhost:8085/sctool/v1/route/{id}/{routeDay}?restletMethod=get")
+                .routeId("invokeWebQueryCall")
                 .to("log:" + LOG_CLASS + "?showAll=true&multiline=true&level=INFO")
                 .to("direct://common/get/route");
+
+        from("restlet:http://localhost:8085/sctool/v1/generic/{root}/resources?restletMethod=get")
+                .routeId("invokeWebResourceList")
+                .to("direct://common/get/resource/children");
 
         // Specific to ABT - Due To The Fact That The Locations Were Just Hard Coded
         // Generates A Listing of All Routes For A Given Office/DC To Show The Whole Route For All Resources

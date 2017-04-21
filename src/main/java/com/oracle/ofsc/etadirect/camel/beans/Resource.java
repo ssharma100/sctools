@@ -1,22 +1,29 @@
 package com.oracle.ofsc.etadirect.camel.beans;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
+import com.oracle.ofsc.etadirect.rest.Recurrence;
+import com.oracle.ofsc.etadirect.rest.ResourceJson;
 import com.oracle.ofsc.etadirect.rest.RouteInfo;
 import com.oracle.ofsc.etadirect.rest.RouteList;
+import com.oracle.ofsc.etadirect.rest.WorkSchedule;
 import com.oracle.ofsc.etadirect.soap.*;
 import com.oracle.ofsc.etadirect.utils.OfscTimeZone;
 import com.oracle.ofsc.transforms.GenericResourceData;
 import com.oracle.ofsc.transforms.RouteReportData;
 import com.oracle.ofsc.transforms.TransportResourceData;
-import com.oracle.ofsc.transforms.TransportationActivityData;
 import org.apache.camel.Exchange;
 import org.apache.commons.lang3.StringUtils;
+import org.joda.time.DateTime;
+import org.joda.time.DateTimeConstants;
+import org.joda.time.Period;
 import org.joda.time.format.DateTimeFormat;
 import org.joda.time.format.DateTimeFormatter;
+import org.restlet.data.Status;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import sun.security.provider.MD5;
 
 import javax.xml.bind.JAXBContext;
 import javax.xml.bind.JAXBException;
@@ -28,6 +35,7 @@ import java.security.NoSuchAlgorithmException;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 /**
  * Provides mapping of the current request to the required XML that should be
@@ -43,16 +51,15 @@ public class Resource {
                     "   <soapenv:Body>";
 
     private static final String SOAP_WRAPPER_FOOTER = "   </soapenv:Body>\n" + "</soapenv:Envelope>";
-
     private static final boolean USE_MD5 = true;
-
     private static final ObjectMapper resourceMapper = new ObjectMapper();
 
     /**
      * Generates body for resource "get" request
-     *
+     * SOAP call no longer used.
      * @param exchange
      */
+    @Deprecated
     public void mapToGetRequest(Exchange exchange) {
         String externalId = (String) exchange.getIn().getHeader("id");
 
@@ -80,6 +87,256 @@ public class Resource {
         StringBuffer sb = new StringBuffer();
         sb.append(SOAP_WRAPPER_HEADER).append(body).append(SOAP_WRAPPER_FOOTER);
         exchange.getIn().setBody(sb.toString());
+    }
+
+    /**
+     * Handles updates for Resets or Adjustments.  If this is invoked on the Sunday
+     * it performs a reset.
+     * Any other day of the week will check the total hours, worked and update the
+     * values.
+     *
+     * @param exchange
+     */
+    public void updateImpactible(Exchange exchange) {
+
+        Map resourceInfo = (Map )exchange.getProperty("employee_info");
+        String resourceId = (String) resourceInfo.get("Employee_No");
+        Integer impactHours = (Integer )resourceInfo.get("IMPACT_HOURS");
+        DateTimeFormatter dtf = DateTimeFormat.forPattern("yyyy-MM-dd");
+        String resetForDay  = (String )exchange.getIn().getHeader("routeDay");
+
+        DateTime resetDate = dtf.parseDateTime(resetForDay);
+        int dow = resetDate.getDayOfWeek();
+
+        LOGGER.info("Generate Body For Resource Update Resource ID: {} For {} Impact Hours",  resourceId, impactHours);
+        HashMap<String, String> authInfo =
+                Security.extractURLInfo((String) exchange.getProperty("original_headers"));
+        String username = authInfo.get("user") + "@" + authInfo.get("company");
+        String passwd =   authInfo.get("passwd");
+
+        String restBody = null;
+        if (dow == DateTimeConstants.SUNDAY) {
+            restBody = generateImpactibleReset(impactHours, 0);
+        }
+        else {
+            // TODO: Call the adjustment function based on the number of hours worked.
+        }
+
+        // Set Values For HTTP4:
+        exchange.getIn().setHeader("id", resourceId);
+        exchange.getIn().setHeader("username", username);
+        exchange.getIn().setHeader("passwd", passwd);
+        exchange.getIn().setHeader(Exchange.CONTENT_TYPE, "application/json");
+        exchange.setProperty("CamelHttpQuery", exchange.getIn().getHeader("CamelHttpQuery"));
+        exchange.getIn().setBody(restBody);
+
+    }
+    public void resetSundayShift(Exchange exchange) {
+        String resourceId = (String )exchange.getIn().getHeader("id");
+        String resetForWeekStarting  = (String )exchange.getIn().getHeader("routeDay");
+        String shift = (String )exchange.getProperty("has_sunday_shift");
+        LOGGER.info("Processing Schedule For Weekend (Sunday) Continuity Resource ID {} Resetting Week Starting {}", resourceId, resetForWeekStarting);
+
+        HashMap<String, String> authInfo =
+                Security.extractURLInfo((String) exchange.getProperty("original_headers"));
+        String username = authInfo.get("user") + "@" + authInfo.get("company");
+        String passwd =   authInfo.get("passwd");
+
+        // Set Values For HTTP4:
+        exchange.getIn().setHeader("id", resourceId);
+        exchange.getIn().setHeader("username", username);
+        exchange.getIn().setHeader("passwd", passwd);
+        exchange.getIn().setHeader(Exchange.CONTENT_TYPE, "application/json");
+        // Must Always Trim As The Data Has /r and control characters in it:
+        String restBody = null;
+        try {
+            restBody = resourceMapper.writeValueAsString(generateWorkScheduleForDay(resetForWeekStarting, StringUtils.trim(shift)));
+        } catch (JsonProcessingException e) {
+            LOGGER.error("Failed To Marshal JSON Object: {}", e.getMessage());
+        }
+        exchange.getIn().setBody(restBody);
+    }
+
+    public void resetSaturdayShift(Exchange exchange) {
+        String resourceId = (String )exchange.getIn().getHeader("id");
+        String resetForWeekStarting  = (String )exchange.getIn().getHeader("routeDay");
+        String shift = (String )exchange.getProperty("has_saturday_shift");
+        DateTimeFormatter dtf = DateTimeFormat.forPattern("yyyy-MM-dd");
+        DateTime saturday = dtf.parseDateTime(resetForWeekStarting).plus(Period.days(6));
+        LOGGER.info("Processing Schedule For Weekend (Saturday) Continuity Resource ID {} Resetting Week Starting {}", resourceId, resetForWeekStarting);
+
+        HashMap<String, String> authInfo =
+                Security.extractURLInfo((String) exchange.getProperty("original_headers"));
+        String username = authInfo.get("user") + "@" + authInfo.get("company");
+        String passwd =   authInfo.get("passwd");
+
+        // Set Values For HTTP4:
+        exchange.getIn().setHeader("id", resourceId);
+        exchange.getIn().setHeader("username", username);
+        exchange.getIn().setHeader("passwd", passwd);
+        exchange.getIn().setHeader(Exchange.CONTENT_TYPE, "application/json");
+        // Must Always Trim As The Data Has /r and control characters in it:
+
+        String restBody = null;
+        try {
+            restBody = resourceMapper.writeValueAsString(generateWorkScheduleForDay(dtf.print(saturday), StringUtils.trim(shift)));
+        } catch (JsonProcessingException e) {
+            LOGGER.error("Failed To Marshal JSON Object: {}", e.getMessage());
+        }
+        exchange.getIn().setBody(restBody);
+
+    }
+    private WorkSchedule generateWorkScheduleForDay(String day, String shift) {
+        DateTimeFormatter dtf = DateTimeFormat.forPattern("yyyy-MM-dd");
+        DateTimeFormatter tf = DateTimeFormat.forPattern("HH:mm:SS");
+
+        // Parse The Shift
+        String[] timerange = StringUtils.split(shift, "-");
+        LOGGER.info("Using Start Time: {}, End Time: {} For Shift", timerange[0], timerange[1]);
+        // Adjust Times To Clock Hours (note that there are no minutes
+        DateTime startTime = convertAmPmTo24Hr(timerange[0]);
+        DateTime endTime = convertAmPmTo24Hr(timerange[1]);
+
+        WorkSchedule workSchedule = new WorkSchedule();
+        workSchedule.setRecordType("working");
+        workSchedule.setStartDate(day);
+        workSchedule.setEndDate(workSchedule.getStartDate());
+        workSchedule.setShiftType("regular");
+        workSchedule.setWorkTimeStart(tf.print(startTime));
+        workSchedule.setWorkTimeEnd(tf.print(endTime));
+        Recurrence recurrence = new Recurrence();
+        recurrence.setRecurrenceType("daily");
+        recurrence.setRecurEvery(1);
+        workSchedule.setRecurrence(recurrence);
+
+        return workSchedule;
+    }
+
+    private DateTime convertAmPmTo24Hr(String hour) {
+        Integer effectiveHour;
+        if (StringUtils.endsWithIgnoreCase(hour, "am")) {
+            effectiveHour = Integer.parseInt(StringUtils.removeEndIgnoreCase(hour, "am"));
+        }
+        else {
+            Integer hour24 = Integer.parseInt(StringUtils.removeEndIgnoreCase(hour, "pm"));
+            if (12 == hour24) {
+                effectiveHour = hour24;
+            }
+            else {
+                effectiveHour = hour24 + 12;
+            }
+        }
+        return DateTime.now().withTimeAtStartOfDay().plus(Period.hours(effectiveHour));
+    }
+
+    /**
+     * For a given day, will set up a 9-5 schedule for the whole week (7days out)
+     * Works on the basis of a 7 day work week, starting on Sunday and going to Saturday
+     */
+    public void resetShiftsForWeek (Exchange exchange) {
+        Map resourceInfo = (Map )exchange.getProperty("employee_info");
+        String sundayShift = StringUtils.trim((String )resourceInfo.get("CONTY_SUN_SHIFT"));
+        String saturdayShift = StringUtils.trim((String )resourceInfo.get("CONTY_SAT_SHIFT"));
+
+        exchange.setProperty("has_sunday_shift", StringUtils.isBlank(sundayShift) ? null : sundayShift);
+        exchange.setProperty("has_saturday_shift", StringUtils.isBlank(saturdayShift) ? null : saturdayShift);
+
+        // Verify That The Date Is Sunday
+        DateTimeFormatter dtf = DateTimeFormat.forPattern("yyyy-MM-dd");
+        DateTimeFormatter tf = DateTimeFormat.forPattern("HH:mm:SS");
+        String resetForDay  = (String )exchange.getIn().getHeader("routeDay");
+        String resourceId = (String )exchange.getIn().getHeader("id");
+        Integer continuity_hours = (Integer )resourceInfo.get("POSITION_HRS");
+        // Compute The Hours Worked For The Schedule
+        int hoursPerDay = Math.round(continuity_hours / 5);
+        LOGGER.info("Resource Can Work {} Hours Per Day", hoursPerDay);
+
+        DateTime resetDate = dtf.parseDateTime(resetForDay);
+        Preconditions.checkArgument(DateTimeConstants.SUNDAY == resetDate.getDayOfWeek(), "Reset Must Be Done For Sunday");
+
+        // Build The Message For Calendar Assignment
+        LOGGER.info("Generate Body For Resource Schedule Reset Resource ID: {} On {}",  resourceId, resetForDay);
+        HashMap<String, String> authInfo =
+                Security.extractURLInfo((String) exchange.getProperty("original_headers"));
+        String username = authInfo.get("user") + "@" + authInfo.get("company");
+        String passwd =   authInfo.get("passwd");
+
+        WorkSchedule workSchedule = new WorkSchedule();
+        DateTime startTime = new DateTime(2017, 01, 01, 9, 0, 0);
+        workSchedule.setRecordType("working");
+        workSchedule.setStartDate(dtf.print(resetDate.plus(Period.days(1))));
+        int dayOffset = 5;
+        workSchedule.setEndDate(dtf.print(resetDate.plus(Period.days(dayOffset))));
+        workSchedule.setShiftType("regular");
+        workSchedule.setWorkTimeStart(tf.print(startTime));
+        workSchedule.setWorkTimeEnd(tf.print(startTime.plus(Period.hours(hoursPerDay))));
+        Recurrence recurrence = new Recurrence();
+        recurrence.setRecurrenceType("daily");
+        recurrence.setRecurEvery(1);
+        workSchedule.setRecurrence(recurrence);
+
+        // Set Values For HTTP4:
+        exchange.getIn().setHeader("id", resourceId);
+        exchange.getIn().setHeader("username", username);
+        exchange.getIn().setHeader("passwd", passwd);
+        exchange.getIn().setHeader(Exchange.CONTENT_TYPE, "application/json");
+
+        String restBody = null;
+        try {
+            restBody = resourceMapper.writeValueAsString(workSchedule);
+        } catch (JsonProcessingException e) {
+            LOGGER.error("Failed To Marshal JSON Object: {}", e.getMessage());
+        }
+        exchange.getIn().setBody(restBody);
+
+    }
+
+    /**
+     * evaluates if the response from the OFSC for a Get Resource was
+     * successful or not.
+     * Populates the Exchange Header: ofsc_resource_exists
+     *
+     * @param exchange
+     */
+    public void checkOfscResponse(Exchange exchange) {
+        org.restlet.engine.adapter.HttpResponse response =
+                (org.restlet.engine.adapter.HttpResponse) exchange.getIn().getHeader("CamelRestletResponse");
+
+        ResourceJson resource = (ResourceJson )exchange.getIn().getBody();
+        if (response != null && response.getStatus().equals(Status.SUCCESS_OK)) {
+          if (resource.getStatus() != null && resource.getStatus().equals("active")) {
+              exchange.getIn().setHeader("ofsc_resource_exists", true);
+          }
+            else {
+              exchange.getIn().setHeader("ofsc_resource_exists", false);
+          }
+        }
+        else {
+            exchange.getIn().setHeader("ofsc_resource_exists", false);
+        }
+    }
+
+    private int getEndOfWeekDays(DateTime resetDate) {
+        int dow = resetDate.getDayOfWeek();
+        return DateTimeConstants.SATURDAY - dow;
+    }
+
+    private String generateImpactibleReset(Integer allowableImpactHours, Integer workedImpactHours) {
+
+        if (allowableImpactHours == 0) {
+            return "{"
+                    + " \"XA_IMPACTABLE\": \"0\", "
+                    + " \"impact_hours\": 0, "
+                    + " \"impact_worked\": 0"
+                    + "\n}";
+        }
+        else {
+            return "{\n"
+                    + " \"XA_IMPACTABLE\": \"1\",\n"
+                    + " \"impact_hours\": " + allowableImpactHours + ", "
+                    + " \"impact_worked\": 0"
+                    + "\n}";
+        }
     }
 
     public void mapToInsertUser(Exchange exchange) {
@@ -287,7 +544,7 @@ public class Resource {
         String bucketId = (String) exchange.getIn().getHeader("id");
         LOGGER.info("Generate Auth Only For ResourceId: {}", bucketId);
 
-        HashMap<String, String> authInfo = Security.extractAuthInfo((String) exchange.getIn().getHeader("CamelHttpQuery"));
+        HashMap<String, String> authInfo = Security.extractURLInfo((String) exchange.getIn().getHeader("CamelHttpQuery"));
 
         String username = authInfo.get("user") + "@" + authInfo.get("company");
         String passwd = authInfo.get("passwd");

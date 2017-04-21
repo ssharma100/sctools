@@ -103,8 +103,35 @@ select * from continuity_only_resources_upload;
 
 drop view continuity_only_resources_upload;
 
+-- View for Continuity Associates (Walmart Specific)
+-- Have Continuity Skill Only, Are Part Of Team WalMart
+-- Not Hired In Feb of 2017
+create view continuity_walmart_resources_upload as 
+SELECT  AI.ASSOCIATE_NAME as Name,
+	AI.EMPLOYEE_NO as ResourceID,
+    'continuity' as 'WorkSkillList',
+	round(AI.LATITUDE,4) as 'Latitude',
+    round(AI.LONGITUDE, 4) as 'Longitude',
+	AI.ADDRESS_1_PRIM as 'Address',
+    AI.CITY_PRIM as 'City',
+    AI.STATE_PROV_PRIM as 'State',
+    AI.ZIP_CODE_PRIM as 'Zip',
+    AI.TIME_ZONE,
+    AI.HOURS_PER_WEEK as 'HoursPerWeek',
+    AI.Team as 'Affiliation',
+    CONCAT('acosta_', AI.EMPLOYEE_NO) as Login,
+    'test123' as Password
+FROM associates_info as AI
+WHERE (AI.CONTINUITY='1' and AI.IMPACT='0')
+AND AI.Team  like 'Walmart%'
+AND AI.ZIP_CODE_PRIM <> ''
+AND AI.HIREDATE < '2017-02-01 00:00:00';
+
+select count(*) from continuity_walmart_resources_upload;
+select * from continuity_walmart_resources_upload;
+
 -- View for Mixed Associates
--- Have Impact Skill Only, Not Part Of Team WalMart
+-- Have Impact Skill AND Continuity, Not Part Of Team WalMart
 -- Not Hired In Feb of 2017
 create view mixed_resources_upload as 
 SELECT  AI.ASSOCIATE_NAME as Name,
@@ -132,3 +159,11 @@ select * from mixed_resources_upload;
 drop view mixed_resources_upload;
 
 select EMPLOYEE_NO from associates_info;
+
+select * from associates_info where employee_no = '992314042';
+select * from continuity_associates_avail where employee_no = '992309237' and CONTINUITY = 1 and TEAM NOT LIKE 'Wal%';
+select * from continuity_associates_avail limit 2;
+
+INSERT INTO `acosta`.`continuity_associates_avail` (`ASSOCIATE_NAME`, `EMPLOYEE_NO`, `EMPLOYEE_TYPE`, `POSITION_HRS`, `TEAM`, `CONTINUITY`, `CONTINUITY_VM`, `IMPACT_HOURS`, `IMPACT_MON_SHIFT`, `IMPACT_TUES_SHIFT`, `IMPACT_Wed_SHIFT`, `IMPACT_THURS_SHIFT`, `IMPACT_FRI_SHIFT`) 
+VALUES ('Butler, Anita, G', '992281311', 'Full Time', '40', 'Grocery', '1', '0', '40', '1', '1', '1', '1', '1');
+
