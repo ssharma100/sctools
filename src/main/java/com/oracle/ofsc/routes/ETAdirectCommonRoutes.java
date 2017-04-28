@@ -5,24 +5,16 @@ import com.oracle.ofsc.etadirect.camel.beans.AcostaFunctions;
 import com.oracle.ofsc.etadirect.camel.beans.AggregatorStrategy;
 import com.oracle.ofsc.etadirect.camel.beans.ArcBestBulk;
 import com.oracle.ofsc.etadirect.camel.beans.Resource;
-import com.oracle.ofsc.etadirect.rest.ResourceLocationResponse;
 import com.oracle.ofsc.geolocation.beans.DistanceAggregationStrategy;
 import com.oracle.ofsc.geolocation.beans.Location;
 import com.oracle.ofsc.geolocation.beans.ResourceLocationDataAggregationStrategy;
 import org.apache.camel.Exchange;
-import org.apache.camel.Predicate;
 import org.apache.camel.builder.RouteBuilder;
 import org.apache.camel.component.jackson.JacksonDataFormat;
 import org.apache.camel.dataformat.bindy.csv.BindyCsvDataFormat;
-import org.apache.camel.model.dataformat.JsonLibrary;
 import org.apache.camel.spi.DataFormat;
 
-import java.util.List;
-import java.util.Map;
 
-/**
- * Created by ssharma on 10/20/16.
- */
 public class ETAdirectCommonRoutes extends RouteBuilder {
 
     private static final String LOG_CLASS = "com.oracle.ofsc.routes.ETAdirectRoutes";
@@ -122,7 +114,7 @@ public class ETAdirectCommonRoutes extends RouteBuilder {
                     .bean(Activity.class, "assignResource")
                     .to("direct://etadirectrest/assignResource")
                 .end();
-      
+
         /**
          * Makes a request to get all children resources under the given root.
          * Note that this is broken and may not work.  Also limited to 100 responses.

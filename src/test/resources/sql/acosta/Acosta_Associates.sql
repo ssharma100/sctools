@@ -50,7 +50,7 @@ select * from impact_only_resources_upload;
 drop view impact_only_resources_upload;
 
 -- 
--- View For Resource Home Locations
+-- View For Resource Home Locations (Non-Walmart)
 --
 create view resource_homeloc as
 SELECT
@@ -74,6 +74,44 @@ AND AI.HIREDATE < '2017-02-01 00:00:00';
 Select * from resource_homeloc;
 Select * from resource_homeloc where resourceid='992290033';
 drop view resource_homeloc;
+
+-- 
+-- View For Resource Home Locations (WalMart)
+--
+create view resource_homeloc_walmart as
+SELECT
+AI.Employee_NO as ResourceID,
+Concat('PRIMARY_', AI.Employee_No) as Name,
+AI.Address_1_PRIM as Street,
+AI.City_PRIM as City,
+AI.State_PROV_PRIM as State,
+LEFT(AI.Zip_code_PRIM,5) as Zip,
+AI.Country as Country,
+'5555657788' as Phone,
+'5555651122' as Pager,
+concat(AI.EMPLOYEE_NO, '@acosta.com') as email,
+AI.LONGITUDE as Longitude,
+AI.LATITUDE as Latitude
+FROM associates_info as AI
+WHERE AI.Team like 'Walmart%'
+AND AI.ZIP_CODE_PRIM <> ''
+AND AI.HIREDATE < '2017-02-01 00:00:00';
+
+select * from resource_homeloc_walmart;
+select resourceId, '' as Locations,
+'' as MonStart, '' as MonEnd, '' As MonHome,
+'' as TuesStart, '' as TuesEnd, '' As TuesHome,
+'' as WedStart, '' as WedEnd, '' As WedHome,
+'' as ThrStart, '' as ThuEnd, '' As ThuHome,
+'' as FriStart, '' as FriEnd, '' As FriHome,
+'' as SatStart, '' as SatEnd, '' As SatHome,
+'' as SunStart, '' as SunEnd, '' As SunHome
+from 
+resource_homeloc_walmart;
+
+select * from continuity_walmart_resources_upload where resourceID = '992346064';
+select * from continuity_associates_avail where EMPLOYEE_NO = '992346064';
+
 
 -- View for Continuity Associates
 -- Have Impact Skill Only, Not Part Of Team WalMart

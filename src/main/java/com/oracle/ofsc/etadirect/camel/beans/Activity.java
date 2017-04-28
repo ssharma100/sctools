@@ -2,6 +2,8 @@ package com.oracle.ofsc.etadirect.camel.beans;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.oracle.ofsc.etadirect.rest.ActivityItem;
+import com.oracle.ofsc.etadirect.rest.ActivitySearchResponse;
 import com.oracle.ofsc.etadirect.rest.ResourceAssignmentItem;
 import com.oracle.ofsc.etadirect.rest.ResourceAssignmentItems;
 import com.oracle.ofsc.etadirect.soap.GetActivity;
@@ -21,6 +23,8 @@ import org.slf4j.LoggerFactory;
 import javax.xml.bind.JAXBContext;
 import javax.xml.bind.JAXBException;
 import javax.xml.bind.Marshaller;
+import java.io.IOException;
+import java.io.InputStream;
 import java.io.StringWriter;
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -49,6 +53,7 @@ public class Activity {
      * Method supporting the generation of a call to assign a resource to an activity
      * @param exchange
      */
+    @SuppressWarnings("unused")
     public void assignResource(Exchange exchange) {
 
         ResourceAssignment ra = (ResourceAssignment )exchange.getIn().getBody();
@@ -83,6 +88,61 @@ public class Activity {
         exchange.getIn().setHeader(Exchange.CONTENT_TYPE, "application/json");
         exchange.getIn().setBody(restBody);
     }
+
+    /**
+     * Method supporting the generation of a call to assign a resource to an activity
+     * @param exchange
+     */
+    @SuppressWarnings("unused")
+    public void assignResourceFromActivityResponse(Exchange exchange) {
+        LOGGER.info("Converting OFSC Activity Response To Assignment");
+
+        ResourceAssignment ra = new ResourceAssignment();
+
+        // Body Should Contain Json Response:
+        String restBody = null;
+        try {
+            ActivitySearchResponse response =
+                    activityMapper.readValue((InputStream) exchange.getIn().getBody(), ActivitySearchResponse.class);
+            ActivityItem item = response.getItems().get(0);
+            ra.setRequiredResource((String )exchange.getProperty("resourceId"));
+            ra.setActivityKey((String )exchange.getProperty("activityKey"));
+            ra.setEtaId(item.getActivityId());
+        } catch (IOException e) {
+            LOGGER.error("Failed To UnMarshal JSON Object: {}", e.getMessage());
+        }
+
+        exchange.getIn().setBody(ra);
+        exchange.getIn().setHeader("CamelHttpQuery", exchange.getProperty("authInfo"));
+        this.assignResource(exchange);
+    }
+    /**
+     * Based on a record from the standard Activity "list" (from Bindy Unmarshal)
+     * will extract the WO information and date range needed to do a query
+     * @param exchange
+     */
+    @SuppressWarnings("unused")
+    public void mapToWOSearch (Exchange exchange) {
+        GenericActivityData activityData = (GenericActivityData )exchange.getIn().getBody();
+        LOGGER.info("Generate W/O Search For Activity Key {} With Resource ID {}" , activityData.getActivityKey(), activityData.getResourceId());
+        HashMap<String, String> authInfo =
+                Security.extractURLInfo((String )exchange.getIn().getHeader("CamelHttpQuery"));
+
+        String username = authInfo.get("user") + "@" + authInfo.get("company");
+        String passwd =   authInfo.get("passwd");
+
+        exchange.getIn().setHeader("username", username);
+        exchange.getIn().setHeader("passwd", passwd);
+        exchange.getIn().setHeader("apptNumber", activityData.getActivityKey());
+        exchange.getIn().setHeader("dateFrom", activityData.getActivityStartDate());
+        exchange.getIn().setHeader("dateTo", activityData.getActivityStartDate());
+        exchange.setProperty("resourceId", activityData.getResourceId());
+        exchange.setProperty("activityKey", activityData.getActivityKey());
+        exchange.setProperty("authInfo", exchange.getIn().getHeader("CamelHttpQuery"));
+
+        exchange.getIn().setBody(null);
+    }
+
     /**
      * Generates body for resource "get" request
      * @param exchange

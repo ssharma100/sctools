@@ -62,6 +62,16 @@ public class ETAdirectGenericRoutes extends RouteBuilder {
                 .routeId("etaSearchActivity")
                 .bean(Activity.class, "authOnly")
                 .to("direct://etadirectrest/activity/search/apptNumber");
+
+        from("direct://common/get/patchAssignedResource")
+                .routeId("patchAssignedResources")
+                .unmarshal(activityInsert)
+                .split(body())
+                    .bean(Activity.class, "mapToWOSearch")
+                    .to("direct://etadirectrest/activity/search/apptNumber")
+                    .bean(Activity.class, "assignResourceFromActivityResponse")
+                    .to("direct://etadirectrest/assignResource");
+
     }
 
 }

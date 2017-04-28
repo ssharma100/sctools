@@ -14,7 +14,7 @@ public class ResourceAssignment {
     @DataField(pos=2)
     private String requiredResource;
     @DataField(pos=3)
-    private int etaId;
+    private Long etaId;
 
 
     public String getActivityKey() {
@@ -25,11 +25,11 @@ public class ResourceAssignment {
         this.activityKey = activityKey;
     }
 
-    public int getEtaId() {
+    public Long getEtaId() {
         return etaId;
     }
 
-    public void setEtaId(int etaId) {
+    public void setEtaId(Long etaId) {
         this.etaId = etaId;
     }
 

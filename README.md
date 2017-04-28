@@ -100,4 +100,17 @@ With this list, you can feed it in the Postman "Runner", where the Runner will r
  ### Adding Activities
  The system will support the upload of activities.  The activity can be setup for the day of the activity or be SLA based.  To change
  this provide a SLA=true or SLA=false on the query path of the URL.  Note that not providing any SLA query parameter will default
- the loader to use NO SLA
+ the loader to use NO SLA and create a "due day" activity. 
+ 
+ #### Example: Loading Impact Activities:
+ The format for the impact activities is:
+ 
+ \# ActivityKey, ResourceId, ActivityType, StartDate, EndDate, Latitude, Longitude, Duration, StartTime, EndTime, Store, City, State, Zip, Timezone, TimeSlot, Resource_No, DOW
+ 
+ ImpB_A000-1895-4396C889, 992309862, imp330, 2017-08-22, 2017-08-22, 26.0523, -80.1384, 330, 07:00:00, 12:30:00, Winn Dixie 354, Dania, Florida, 33004, Eastern, S17, 1, 1|1|1|1|1|0|0
+ 
+ ImpB_A000-1895-4422C953, 992328945, imp330, 2017-08-15, 2017-08-15, 25.7502, -80.2460, 330, 07:00:00, 12:30:00, Winn Dixie 251, Miami, Florida, 33145, Eastern, S17, 1, 1|1|1|1|1|0|0
+ 
+ This content/file (raw data) needs to be sent to the application end point in order to load the rows (the request is done via POST).
+ When making this request the application will run through the provided data (the first line is skipped as the header).
+ 

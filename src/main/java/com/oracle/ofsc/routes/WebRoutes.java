@@ -58,10 +58,17 @@ public class WebRoutes extends RouteBuilder {
                     .otherwise()
                         .to("direct://generic/resource/get");
 
-        // EndPoint For Resource To EtaDirect Assignment To Activity
-        from("restlet:http://localhost:8085/sctool/v1/generic/assignresource?restletMethod=post")
+        // EndPoint For Resource To EtaDirect Assignment To Activity based on
+        // listing of activity IDs and resource mappings (post)
+        // or from existing Activity Structure (patch)
+        from("restlet:http://localhost:8085/sctool/v1/generic/assignresource?restletMethods=post,patch")
                 .routeId("invokeWebResAssign")
-                .to("direct://common/set/assignResource");
+                .choice()
+                .when(isPost)
+                    .to("direct://common/set/assignResource")
+                .otherwise()
+                    .to("direct://common/get/patchAssignedResource");
+
 
         // RESTful End Point For Generic User Creation/Insert
         from("restlet:http://localhost:8085/sctool/v1/generic/user?restletMethods=post")
@@ -110,10 +117,10 @@ public class WebRoutes extends RouteBuilder {
                 .choice()
                     .when(isPost)
                         .to("direct://generic/activity/insert")
-                    .otherwise()
-                        .to("direct://generic/activity/get");
+                    .otherwise().to("direct://generic/activity/get");
 
         // - Get Activity By Search Value
+        // The caller must provide date range for the search as query arguments
         from("restlet:http://localhost:8085/sctool/v1/activity/{apptNumber}?restletMethod=get")
                 .routeId("invokeGetActivityAppNumber")
                 .to("direct://generic/activity/search/appNumber");
@@ -149,7 +156,6 @@ public class WebRoutes extends RouteBuilder {
         from("restlet:http://localhost:8085/sctool/v1/route/enhance/distance/{googleKey}?restletMethod=post")
                 .routeId("routingEnhanceDistance")
                 .to("log:" + LOG_CLASS + "?showAll=true&multiline=true&level=INFO")
-                .to("direct://common/get/route/enhance/distance")
-                .to("log:" + LOG_CLASS + "?showAll=true&multiline=true&level=DEBUG");
+                .to("direct://common/get/route/enhance/distance");
     }
 }

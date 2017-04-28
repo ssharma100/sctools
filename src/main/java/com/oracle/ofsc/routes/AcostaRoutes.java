@@ -28,7 +28,7 @@ public class AcostaRoutes  extends RouteBuilder {
     @Override public void configure() throws Exception {
 
         // Web End-Point
-        from("restlet:http://localhost:8085/sctool/v1/acosta/route/impact/baseline/{routeDay}/{resource_id}?restletMethods=get,delete")
+        from("restlet:http://localhost:8085/sctool/v1/acosta/route/baseline/{routeDay}/{resource_id}?restletMethods=get,delete")
             .routeId("invokeBuildBaseLineAcosta")
             .to("log:" + LOG_CLASS + "?showAll=true&multiline=true&level=INFO")
             .choice()

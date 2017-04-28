@@ -86,9 +86,6 @@ ICD.Store NOT LIKE 'Wal%'
 AND ICD.RESOURCE_NUMBER=1;
 
 drop view impact_activity_24;
--- 29 Weeks Ahead
--- 34 Weeks Ahead
--- 39 Weeks Ahead
 
 select count(*) from impact_activity_24;
 select * from impact_activity_24 limit 100;
@@ -96,6 +93,51 @@ select * from impact_activity_24 order by StartDate asc limit 10;
 select * from impact_activity_24 where resource_No=2 limit 100;
 select * from impact_actual_call_details limit 100;
 select * from impact_call_requirements limit 100;
+
+--
+-- View For Calls Into October Time Frame
+--
+create view impact_activity_aug as 
+SELECT 
+concat('ImpB_', ICD.ACTUAL_CALLID) as ActivityKey,
+DATE(ICD.CALL_STARTED_LOCAL) as OriginalStartDate, 
+DATE(date_add(ICD.DATE_PLANNED, INTERVAL + 210 DAY)) as StartDate,
+DATE(DATE_ADD(date_add(ICD.DATE_PLANNED, INTERVAL + 210 DAY), INTERVAL ICD.DURATION_PLANNED_MINUTES MINUTE)) as EndDate,
+'bucket' as ExternalID,
+concat('imp', ICD.DURATION_PLANNED_MINUTES) as ActivityType,
+STORE.LATITUDE as Latitude, 
+STORE.LONGITUDE as Longitude,
+TS.OFSC_Label as 'timeslot',
+ICD.STARTED_BY_EMPLOYEE_NO as 'ReqResource',
+STORE.acosta_no as 'StoreID',
+STORE.address as 'Address', STORE.city as 'City', 
+STORE.State as 'State', 
+STORE.ZIPCODE as 'Zip',
+ICD.EXECUTION_DURATION_MINUTES as 'CallDuration', 
+ICD.DURATION_PLANNED_MINUTES as 'PlannedDuration',
+TIME(ICR.EARLIEST_VISIT_TIME) as 'StartTime', 
+TIME(ICR.LATEST_VISIT_TIME) as 'EndTime',
+ICD.STORE as Store,
+ICR.RESOURCE_NUMBER as Resource_No,
+CONCAT_WS('|', ICR.MONDAY, ICR.TUESDAY, ICR.WEDNESDAY, ICR.THURSDAY, ICR.FRIDAY, ICR.Saturday, ICR.Sunday) as DOW
+FROM 
+impact_actual_call_details as ICD
+JOIN all_stores as STORE on STORE.acosta_no = ICD.acosta_no and STORE.STOREID = ICD.STOREID
+JOIN all_call_types as ALLCALL on ALLCALL.CallType_Code = concat('imp', ICD.DURATION_PLANNED_MINUTES)
+JOIN impact_call_requirements as ICR on 
+ICR.SERVICE_ORDER_NUMBER = ICD.SERVICE_ORDER_NUMBER and ICR.ACOSTA_NO = ICD.ACOSTA_NO AND ICR.Visit_id = ICD.Visit_id
+JOIN time_slots as TS on (TS.Start_Time = TIME(ICR.EARLIEST_VISIT_TIME) AND TS.End_Time = TIME(ICR.LATEST_VISIT_TIME))
+WHERE
+ICD.CALL_STATUS_DETAILS = 'Successful'
+AND ICD.RESOURCE_NUMBER=1;
+
+drop view impact_activity_aug;
+
+-- Testing the view
+select count(*) from impact_activity_aug;
+select * from impact_activity_aug where resource_no = 2 limit 100;
+explain select * from impact_activity_aug  limit 100;
+
 
 select * from impact_call_requirements where RESOURCE_NUMBER=2;
 select * from impact_actual_call_details where ACOSTA_NO='561648';
@@ -159,11 +201,17 @@ select * from impact_activity_24 limit 10;
 select distinct (startdate) from impact_activity_24 limit 100;
 
 
--- Extraction Queries
+-- Extraction Queries (old)
 select ActivityKey, ReqResource as ResourceId, activitytype, startdate, enddate, Latitude, Longitude, PlannedDuration as Duration, StartTime, EndTime, Store, city as City, state as State, zip as Zip, 'Eastern' as Timezone, TimeSlot as TimeSlot, Resource_No , DOW from impact_activity_24 limit 2;
 select ActivityKey, ReqResource as ResourceId, activitytype, startdate, enddate, Latitude, Longitude, PlannedDuration as Duration, StartTime, EndTime, Store, city as City, state as State, zip as Zip, 'Eastern' as Timezone, TimeSlot as TimeSlot, Resource_No , DOW from impact_activity_24 where Resource_No=2;
 select ActivityKey, ReqResource as ResourceId, activitytype, startdate, enddate, Latitude, Longitude, PlannedDuration as Duration, StartTime, EndTime, Store, city as City, state as State, zip as Zip, 'Eastern' as Timezone, TimeSlot as TimeSlot, Resource_No , DOW from impact_activity_24 where startdate >= '2017-06-01' and startdate <= '2017-06-31';
 select ActivityKey, ReqResource as ResourceId, activitytype, startdate, enddate, Latitude, Longitude, PlannedDuration as Duration, StartTime, EndTime, Store, city as City, state as State, zip as Zip, 'Eastern' as Timezone, TimeSlot as TimeSlot, Resource_No , DOW from impact_activity_24 where startdate >= '2017-07-01' and startdate <= '2017-07-31';
+
+-- Extraction Queries (Aug)
+select ActivityKey, ReqResource as ResourceId, activitytype, startdate, enddate, Latitude, Longitude, PlannedDuration as Duration, StartTime, EndTime, Store, city as City, state as State, zip as Zip, 'Eastern' as Timezone, TimeSlot as TimeSlot, Resource_No , DOW from impact_activity_aug limit 2;
+select ActivityKey, ReqResource as ResourceId, activitytype, startdate, enddate, Latitude, Longitude, PlannedDuration as Duration, StartTime, EndTime, Store, city as City, state as State, zip as Zip, 'Eastern' as Timezone, TimeSlot as TimeSlot, Resource_No , DOW from impact_activity_aug where Resource_No=2;
+select ActivityKey, ReqResource as ResourceId, activitytype, startdate, enddate, Latitude, Longitude, PlannedDuration as Duration, StartTime, EndTime, Store, city as City, state as State, zip as Zip, 'Eastern' as Timezone, TimeSlot as TimeSlot, Resource_No , DOW from impact_activity_aug where startdate >= '2017-07-25' and startdate <= '2017-08-15';
+select ActivityKey, ReqResource as ResourceId, activitytype, startdate, enddate, Latitude, Longitude, PlannedDuration as Duration, StartTime, EndTime, Store, city as City, state as State, zip as Zip, 'Eastern' as Timezone, TimeSlot as TimeSlot, Resource_No , DOW from impact_activity_aug where startdate >= '2017-08-16' and startdate <= '2017-09-05';
 
 
 select * from all_stores limit 100;
@@ -185,3 +233,10 @@ ICD.CALL_STATUS_DETAILS = 'Successful'
 AND 
 ICD.Store NOT LIKE 'Wal%'
 AND ICD.RESOURCE_NUMBER=1;
+
+select * from impact_actual_call_details as ICD
+WHERE
+ICD.CALL_STATUS_DETAILS = 'Successful'
+AND 
+ICD.Store NOT LIKE 'Wal%'
+AND ICD.RESOURCE_NUMBER=1 limit 100;
