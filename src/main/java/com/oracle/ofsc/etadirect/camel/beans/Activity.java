@@ -108,6 +108,7 @@ public class Activity {
             ra.setRequiredResource((String )exchange.getProperty("resourceId"));
             ra.setActivityKey((String )exchange.getProperty("activityKey"));
             ra.setEtaId(item.getActivityId());
+            LOGGER.info("Mapped Work Order {} To A_ID {} For Resource {}", ra.getActivityKey(), ra.getActivityKey(), ra.getRequiredResource());
         } catch (IOException e) {
             LOGGER.error("Failed To UnMarshal JSON Object: {}", e.getMessage());
         }

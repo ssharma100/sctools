@@ -40,7 +40,7 @@ public class AcostaRoutes  extends RouteBuilder {
 
         // Web End-Point
         // Perform Reset For A Given Weekly Schedule (All Resources)
-        from ("restlet:http://localhost:8085/sctool/v1/acosta/schedule/continuity/schedule/{routeDay}?restletMethods=post,get")
+        from ("restlet:http://localhost:8085/sctool/v1/acosta/schedule/continuity/adjust/{routeDay}?restletMethods=post,get")
             .routeId("invokeContyScheduleReset")
             .choice()
                 .when(isGet)
