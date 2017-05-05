@@ -305,13 +305,16 @@ public class Resource {
         ResourceJson resource = (ResourceJson )exchange.getIn().getBody();
         if (response != null && response.getStatus().equals(Status.SUCCESS_OK)) {
           if (resource.getStatus() != null && resource.getStatus().equals("active")) {
+              LOGGER.warn("Active Resource Found In OFSC - Processing Reset");
               exchange.getIn().setHeader("ofsc_resource_exists", true);
           }
             else {
+              LOGGER.warn("Failed To Find Resource In OFSC - Resource Is Not Active");
               exchange.getIn().setHeader("ofsc_resource_exists", false);
           }
         }
         else {
+            LOGGER.warn("Failed To Find Resource In OFSC - Request Failed");
             exchange.getIn().setHeader("ofsc_resource_exists", false);
         }
     }
