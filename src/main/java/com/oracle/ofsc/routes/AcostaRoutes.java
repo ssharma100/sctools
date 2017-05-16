@@ -47,7 +47,8 @@ public class AcostaRoutes  extends RouteBuilder {
                     .to("direct://schedule/continuity/update")
                 .when(isPost)
                     .to("direct://schedule/continuity/reset")
-                    .to("direct://processAggregationResults").end();
+                    .to("direct://processAggregationResults")
+                .end();
 
         // Obtains the route list (ordered) for the given resource "id" on the given date
         // Specifically for Acosta processing the the output will be put into the Acosta DB
@@ -80,7 +81,7 @@ public class AcostaRoutes  extends RouteBuilder {
         from("direct://schedule/continuity/reset")
                 .routeId("RestContySchedules")
                 .setProperty("original_headers", simple("${in.header[CamelHttpQuery]}"))
-                .setBody(constant("select Employee_No, POSITION_HRS, IMPACT_HOURS, IMPACT_SUN_SHIFT, IMPACT_MON_SHIFT, "
+                .setBody(constant("select EMPLOYEE_NO, POSITION_HRS, IMPACT_HOURS, IMPACT_SUN_SHIFT, IMPACT_MON_SHIFT, "
                         + "IMPACT_TUES_SHIFT, IMPACT_WED_SHIFT, IMPACT_THURS_SHIFT, "
                         + "IMPACT_FRI_SHIFT, IMPACT_SAT_SHIFT,  CONTY_MON_SHIFT, CONTY_TUES_SHIFT, CONTY_WED_SHIFT, CONTY_THURS_SHIFT, "
                         + "CONTY_FRI_SHIFT, CONTY_SAT_SHIFT, CONTY_SUN_SHIFT " + "from continuity_associates_fullshifts "
@@ -89,7 +90,7 @@ public class AcostaRoutes  extends RouteBuilder {
                 .to("jdbc:acostaDS?useHeadersAsParameters=true&outputType=StreamList")
                 .split(body(), new ResourceAdjustAggregationStrategy())
                 .setProperty("employee_info", simple("${in.body}"))
-                .setHeader("id", simple("${in.body[Employee_No]}")).setBody(constant(null))
+                .setHeader("id", simple("${in.body[EMPLOYEE_NO]}")).setBody(constant(null))
 
                 // Get The Resource Record
                 .bean(Resource.class, "authOnly")
