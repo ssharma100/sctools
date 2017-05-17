@@ -1,6 +1,5 @@
 package com.oracle.ofsc.etadirect.camel.beans;
 
-import com.oracle.ofsc.etadirect.rest.ResourceJson;
 import com.oracle.ofsc.etadirect.rest.RouteInfo;
 import com.oracle.ofsc.etadirect.rest.RouteList;
 import org.apache.camel.Exchange;

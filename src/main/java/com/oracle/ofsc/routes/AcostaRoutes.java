@@ -17,6 +17,8 @@ public class AcostaRoutes  extends RouteBuilder {
     private static final String LOG_CLASS = "com.oracle.ofsc.routes.AcostaRoutes";
     private Predicate isGet = header("CamelHttpMethod").isEqualTo("GET");
     private Predicate isDelete = header("CamelHttpMethod").isEqualTo("DELETE");
+    private Predicate isImpact = header("type_key").isEqualTo("impact");
+    private Predicate isContinuity = header("type_key").isEqualTo("continuity");
     private Predicate isPost = header("CamelHttpMethod").isEqualTo("POST");
     private Predicate routesFound = header("route_count").isGreaterThan(0);
     private Predicate resource_exists = header("ofsc_resource_exists").isEqualTo(true);
@@ -28,14 +30,14 @@ public class AcostaRoutes  extends RouteBuilder {
     @Override public void configure() throws Exception {
 
         // Web End-Point
-        from("restlet:http://localhost:8085/sctool/v1/acosta/route/impact/baseline/{routeDay}/{resource_id}?restletMethods=get,delete")
+        from("restlet:http://localhost:8085/sctool/v1/acosta/route/baseline/{routeDay}/{type_key}/{resource_id}?restletMethods=get,delete")
             .routeId("invokeBuildBaseLineAcosta")
             .to("log:" + LOG_CLASS + "?showAll=true&multiline=true&level=INFO")
             .choice()
-                .when(isGet)
-                   .to("direct://buildImpactRouteForDay")
-                .when(isDelete)
-                    .to("direct://deleteRouteForDay")
+                .when(isImpact)
+                    .to("direct://handleImpactBaseline")
+                .when(isContinuity)
+                    .to("direct://handleContyBaseline")
                 .end();
 
         // Web End-Point
@@ -48,6 +50,42 @@ public class AcostaRoutes  extends RouteBuilder {
                 .when(isPost)
                     .to("direct://schedule/continuity/reset")
                     .to("direct://processAggregationResults")
+                .end();
+
+        // Handler for baseline build of existing Acosta activities under Continuity
+        from("direct://handleImpactBaseline")
+                .routeId("doImpactBaseline")
+                .choice()
+                .when(isGet)
+                .setBody(constant(
+                        "select ICD.*, STORE.LATITUDE as Latitude, STORE.LONGITUDE as Longitude, ASSOC_INFO.LATITUDE as Home_Latitude, ASSOC_INFO.LONGITUDE as Home_Longitude "
+                                + "from impact_actual_call_details AS ICD "
+                                + "JOIN all_stores as STORE on STORE.acosta_no = ICD.acosta_no and STORE.STOREID = ICD.STOREID "
+                                + "JOIN associates_info as ASSOC_INFO ON ASSOC_INFO.EMPLOYEE_NO = ICD.started_by_employee_no "
+                                + "where ICD.completed_by_employee_no = :?resource_id "
+                                + "and DATE(ICD.CALL_STARTED_LOCAL) = :?routeDay " + "and ICD.CALL_STATUS = 'Completed' "
+                                + "ORDER BY ICD.CALL_STARTED_LOCAL asc"))
+                    .to("direct://buildRouteForDay")
+                .when(isDelete)
+                    .to("direct://deleteRouteForDay")
+                .end();
+
+        // Handler for baseline build of existing Acosta activities under Continuity
+        from("direct://handleContyBaseline")
+                .routeId("doContyBaseline")
+                .choice()
+                .when(isGet)
+                    .setBody(constant(
+                        "select ICD.*, STORE.LATITUDE as Latitude, STORE.LONGITUDE as Longitude, ASSOC_INFO.LATITUDE as Home_Latitude, ASSOC_INFO.LONGITUDE as Home_Longitude "
+                                + "from continuity_actual_call_details AS ICD "
+                                + "JOIN all_stores as STORE on STORE.acosta_no = ICD.acosta_no and STORE.STOREID = ICD.STOREID "
+                                + "JOIN associates_info as ASSOC_INFO ON ASSOC_INFO.EMPLOYEE_NO = ICD.started_by_employee_no "
+                                + "where ICD.completed_by_employee_no = :?resource_id "
+                                + "and DATE(ICD.CALL_STARTED_LOCAL) = :?routeDay " + "and ICD.CALL_STATUS = 'Completed' "
+                                + "ORDER BY ICD.CALL_STARTED_LOCAL asc"))
+                    .to("direct://buildRouteForDay")
+                .when(isDelete)
+                    .to("direct://deleteRouteForDay")
                 .end();
 
         // Obtains the route list (ordered) for the given resource "id" on the given date
@@ -136,17 +174,10 @@ public class AcostaRoutes  extends RouteBuilder {
                 .end();
 
 
-        from ("direct://buildImpactRouteForDay")
+        from ("direct://buildRouteForDay")
                 .routeId("BuildRouteImpact")
                 .setHeader("sequence", constant(0))
-                .setBody(constant(
-                        "select ICD.*, STORE.LATITUDE as Latitude, STORE.LONGITUDE as Longitude, ASSOC_INFO.LATITUDE as Home_Latitude, ASSOC_INFO.LONGITUDE as Home_Longitude "
-                                + "from impact_actual_call_details AS ICD "
-                                + "JOIN all_stores as STORE on STORE.acosta_no = ICD.acosta_no and STORE.STOREID = ICD.STOREID "
-                                + "JOIN associates_info as ASSOC_INFO ON ASSOC_INFO.EMPLOYEE_NO = ICD.started_by_employee_no "
-                                + "where ICD.completed_by_employee_no = :?resource_id "
-                                + "and DATE(ICD.CALL_STARTED_LOCAL) = :?routeDay " + "and ICD.STATUS = 'Completed' "
-                                + "ORDER BY ICD.CALL_STARTED_LOCAL asc"))
+
                 .to("jdbc:acostaDS?useHeadersAsParameters=true&outputType=StreamList")
                 .split(body()).streaming()
                     .bean(AcostaFunctions.class, "insertRouteSql")
