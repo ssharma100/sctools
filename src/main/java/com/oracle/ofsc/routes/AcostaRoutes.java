@@ -28,7 +28,7 @@ public class AcostaRoutes  extends RouteBuilder {
     @Override public void configure() throws Exception {
 
         // Web End-Point
-        from("restlet:http://localhost:8085/sctool/v1/acosta/route/baseline/{routeDay}/{resource_id}?restletMethods=get,delete")
+        from("restlet:http://localhost:8085/sctool/v1/acosta/route/impact/baseline/{routeDay}/{resource_id}?restletMethods=get,delete")
             .routeId("invokeBuildBaseLineAcosta")
             .to("log:" + LOG_CLASS + "?showAll=true&multiline=true&level=INFO")
             .choice()
@@ -84,7 +84,7 @@ public class AcostaRoutes  extends RouteBuilder {
                 .setBody(constant("select EMPLOYEE_NO, POSITION_HRS, IMPACT_HOURS, IMPACT_SUN_SHIFT, IMPACT_MON_SHIFT, "
                         + "IMPACT_TUES_SHIFT, IMPACT_WED_SHIFT, IMPACT_THURS_SHIFT, "
                         + "IMPACT_FRI_SHIFT, IMPACT_SAT_SHIFT,  CONTY_MON_SHIFT, CONTY_TUES_SHIFT, CONTY_WED_SHIFT, CONTY_THURS_SHIFT, "
-                        + "CONTY_FRI_SHIFT, CONTY_SAT_SHIFT, CONTY_SUN_SHIFT " + "from continuity_associates_fullshifts "
+                        + "CONTY_FRI_SHIFT, CONTY_SAT_SHIFT, CONTY_SUN_SHIFT " + "from continuity_associates_fullhours "
                         + "where CONTINUITY = 1"))
 
                 .to("jdbc:acostaDS?useHeadersAsParameters=true&outputType=StreamList")
@@ -118,10 +118,10 @@ public class AcostaRoutes  extends RouteBuilder {
                 // Only Process Sundays When A Sunday Is Provided
                 .choice()
                 .when(saturday_route)
-                .bean(Resource.class, "resetSaturdayShift")
-                .to("direct://etadirectrest/resource/schedule")
+                    .bean(Resource.class, "resetSaturdayShift")
+                    .to("direct://etadirectrest/resource/schedule")
                 .otherwise()
-                .log(LoggingLevel.INFO, "Skipping Saturday - No Schedule For Continuity Associate")
+                    .log(LoggingLevel.INFO, "Skipping Saturday - No Schedule For Continuity Associate")
                 .endChoice()
 
 
@@ -146,7 +146,6 @@ public class AcostaRoutes  extends RouteBuilder {
                                 + "JOIN associates_info as ASSOC_INFO ON ASSOC_INFO.EMPLOYEE_NO = ICD.started_by_employee_no "
                                 + "where ICD.completed_by_employee_no = :?resource_id "
                                 + "and DATE(ICD.CALL_STARTED_LOCAL) = :?routeDay " + "and ICD.STATUS = 'Completed' "
-                                + "and ICD.Store NOT LIKE 'Wal%' "
                                 + "ORDER BY ICD.CALL_STARTED_LOCAL asc"))
                 .to("jdbc:acostaDS?useHeadersAsParameters=true&outputType=StreamList")
                 .split(body()).streaming()

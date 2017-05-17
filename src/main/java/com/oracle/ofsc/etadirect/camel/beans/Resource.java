@@ -53,6 +53,7 @@ public class Resource {
     private static final String SOAP_WRAPPER_FOOTER = "   </soapenv:Body>\n" + "</soapenv:Envelope>";
     private static final boolean USE_MD5 = true;
     private static final ObjectMapper resourceMapper = new ObjectMapper();
+    private static final int BREAK_HOURS = 1;
 
     /**
      * Generates body for resource "get" request
@@ -247,8 +248,11 @@ public class Resource {
         String resetForDay  = (String )exchange.getIn().getHeader("routeDay");
         String resourceId = (String )exchange.getIn().getHeader("id");
         Integer continuity_hours = (Integer )resourceInfo.get("POSITION_HRS");
-        // Compute The Hours Worked For The Schedule
+        // Compute The Hours Worked For The Schedule (Add One Hour For Breaks)
         int hoursPerDay = Math.round(continuity_hours / 5);
+        if (hoursPerDay >= 4) {
+            hoursPerDay = hoursPerDay + BREAK_HOURS;
+        }
         LOGGER.info("Resource Can Work {} Hours Per Day", hoursPerDay);
 
         DateTime resetDate = dtf.parseDateTime(resetForDay);
@@ -262,7 +266,7 @@ public class Resource {
         String passwd =   authInfo.get("passwd");
 
         WorkSchedule workSchedule = new WorkSchedule();
-        DateTime startTime = new DateTime(2017, 01, 01, 9, 0, 0);
+        DateTime startTime = new DateTime(2017, 01, 01, 8, 0, 0);
         workSchedule.setRecordType("working");
         workSchedule.setStartDate(dtf.print(resetDate.plus(Period.days(1))));
         int dayOffset = 5;
