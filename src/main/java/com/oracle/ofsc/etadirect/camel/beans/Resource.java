@@ -31,6 +31,7 @@ import javax.xml.bind.Marshaller;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.StringWriter;
+import java.math.BigInteger;
 import java.security.NoSuchAlgorithmException;
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -247,9 +248,9 @@ public class Resource {
         DateTimeFormatter tf = DateTimeFormat.forPattern("HH:mm:SS");
         String resetForDay  = (String )exchange.getIn().getHeader("routeDay");
         String resourceId = (String )exchange.getIn().getHeader("id");
-        Integer continuity_hours = (Integer )resourceInfo.get("POSITION_HRS");
+        BigInteger continuity_hours = (BigInteger )resourceInfo.get("POSITION_HRS");
         // Compute The Hours Worked For The Schedule (Add One Hour For Breaks)
-        int hoursPerDay = Math.round(continuity_hours / 5);
+        int hoursPerDay = Math.round(continuity_hours.intValue() / 5);
         if (hoursPerDay >= 4) {
             hoursPerDay = hoursPerDay + BREAK_HOURS;
         }
