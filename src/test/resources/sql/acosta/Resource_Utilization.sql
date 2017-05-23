@@ -1,6 +1,6 @@
 CREATE VIEW resource_utilization_week1
 AS
-select ReqResource, sum(PlannedDuration) as Total_PlannedDuration, sum(ExecutionDuration) as Total_ExecutionDuration, 
+select ReqResource, sum(PlannedDuration) as Total_PlannedDuration, sum(ExecutionDuration) as Total_ExecutionDuration,
 ceil((sum(ExecutionDuration)/60)/5) as Hours_Per_Day,
 ceil((sum(ExecutionDuration)/60)) as Hours_Per_Week
 from continuity_activity_may18 where startdate >= '2018-04-30' and startdate <= '2018-05-04' group by ReqResource order by ReqResource;
@@ -110,10 +110,11 @@ drop view continuity_assocaites_avail_sun;
 
 --
 -- Create Associate View For Specific "Full Schedule"
-SELECT wk1.ReqResource, wk1.HOURS_PER_WEEK, CSAT.CONTY_SAT_SHIFT, CSUN.CONTY_SUN_SHIFT
+SELECT wk1.ReqResource, wk1.HOURS_PER_WEEK, CONAV.IMPACT_HOURS, CSAT.CONTY_SAT_SHIFT, CSUN.CONTY_SUN_SHIFT
 from resource_utilization_week1 as wk1
 LEFT OUTER JOIN continuity_assocaites_avail_sat AS CSAT on CSAT.EMPLOYEE_NO = wk1.reqresource and CSAT.week = 1
-LEFT OUTER JOIN continuity_assocaites_avail_sun AS CSUN on CSUN.EMPLOYEE_NO = wk1.ReqResource and CSUN.week = 6;
+LEFT OUTER JOIN continuity_assocaites_avail_sun AS CSUN on CSUN.EMPLOYEE_NO = wk1.ReqResource and CSUN.week = 1
+LEFT OUTER JOIN continuity_associates_avail AS CONAV on CONAV.EMPLOYEE_NO = wk1.ReqResource;
 
 select count(*) from resource_utilization_week1;
 

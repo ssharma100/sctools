@@ -176,12 +176,13 @@ public class AcostaFunctions {
         String weekNo = (String )exchange.getIn().getHeader("week");
         LOGGER.info("Building Query For Utilization Week = 1");
         StringBuilder sb = new StringBuilder();
-        sb.append("select CAST(wk.ReqResource AS CHAR) AS 'ResourceId', CAST(wk.HOURS_PER_WEEK AS UNSIGNED) as HOURS_PER_WEEK, CSAT.CONTY_SAT_SHIFT, CSUN.CONTY_SUN_SHIFT")
+        sb.append("select CAST(wk.ReqResource AS CHAR) AS 'ResourceId', CAST(wk.HOURS_PER_WEEK AS UNSIGNED) as HOURS_PER_WEEK, CONAV.IMPACT_HOURS as IMPACT_HOURS, CSAT.CONTY_SAT_SHIFT, CSUN.CONTY_SUN_SHIFT")
                 .append(" FROM resource_utilization_week").append(weekNo).append(" AS wk")
                 .append(" LEFT OUTER JOIN continuity_assocaites_avail_sat AS CSAT on CSAT.EMPLOYEE_NO = wk.reqresource and CSAT.week = ")
                 .append(weekNo)
                 .append(" LEFT OUTER JOIN continuity_assocaites_avail_sun AS CSUN on CSUN.EMPLOYEE_NO = wk.ReqResource and CSUN.week = ")
-                .append(weekNo);
+                .append(weekNo)
+                .append(" LEFT OUTER JOIN continuity_associates_avail AS CONAV on CONAV.EMPLOYEE_NO = wk.ReqResource");
 
         LOGGER.debug("Query: {}", sb.toString());
         exchange.getIn().setBody(sb.toString());

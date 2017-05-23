@@ -102,7 +102,7 @@ public class Resource {
     public void updateImpactible(Exchange exchange) {
 
         Map resourceInfo = (Map )exchange.getProperty("employee_info");
-        String resourceId = (String) resourceInfo.get("Employee_No");
+        String resourceId = (String) resourceInfo.get("ResourceId");
         Integer impactHours = (Integer )resourceInfo.get("IMPACT_HOURS");
         DateTimeFormatter dtf = DateTimeFormat.forPattern("yyyy-MM-dd");
         String resetForDay  = (String )exchange.getIn().getHeader("routeDay");
@@ -339,7 +339,7 @@ public class Resource {
 
     private String generateImpactibleReset(Integer allowableImpactHours, Integer workedImpactHours) {
 
-        if (allowableImpactHours == 0) {
+        if (null == allowableImpactHours || allowableImpactHours == 0) {
             return "{"
                     + " \"XA_IMPACTABLE\": \"0\", "
                     + " \"impact_hours\": 0, "
