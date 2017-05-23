@@ -41,16 +41,17 @@ public class AcostaRoutes  extends RouteBuilder {
                 .end();
 
         // Web End-Point
-        // Perform Reset For A Given Weekly Schedule (All Resources)
-        from ("restlet:http://localhost:8085/sctool/v1/acosta/schedule/continuity/adjust/{routeDay}?restletMethods=post,get")
-            .routeId("invokeContyScheduleReset")
-            .choice()
-                .when(isGet)
-                    .to("direct://schedule/continuity/update")
-                .when(isPost)
-                    .to("direct://schedule/continuity/reset")
-                    .to("direct://processAggregationResults")
-                .end();
+        // Perform Adjustment For A Given Weekly Schedule (All Resources)
+        from("restlet:http://localhost:8085/sctool/v1/acosta/schedule/continuity/adjust/{routeDay}?restletMethods=get")
+                .routeId("invokeContyScheduleUpdate")
+                .to("direct://schedule/continuity/update")
+                .to("direct://processAggregationResults");
+        // Web End-Point
+        // Perform reset for a given week (1-5)
+        from("restlet:http://localhost:8085/sctool/v1/acosta/schedule/continuity/reset/{routeDay}/{week}?restletMethods=post")
+                .routeId("invokeContyScheduleReset")
+                .to("direct://schedule/continuity/reset")
+                .to("direct://processAggregationResults");
 
         // Handler for baseline build of existing Acosta activities under Continuity
         from("direct://handleImpactBaseline")
@@ -94,7 +95,7 @@ public class AcostaRoutes  extends RouteBuilder {
         from("restlet:http://localhost:8085/sctool/v1/acosta/route/{id}/{routeDay}?restletMethod=get")
                 .routeId("invokeRouteQueryToRoutePlan")
                 .to("log:" + LOG_CLASS + "?showAll=true&multiline=true&level=INFO")
-                .to("direct://common/get/route/route_plan");
+                .to("direct://common/get/route/route_plan/db_store");
 
         // Performs DOW route extraction and shift updates.
         // Will populate the route_plan table for the given DOW and then use that information
@@ -108,27 +109,25 @@ public class AcostaRoutes  extends RouteBuilder {
                 .split(body()).streaming()
                     .setProperty("resource_info", simple("${in.body}"))
                     .bean(AcostaFunctions.class, "prepForRouteExtract")
-                    .to("direct://common/get/route/route_plan")
+                    .to("direct://common/get/route/route_plan/db_store")
                     .choice()
                         .when(routesFound)
+                            .to("direct://generic/resource/get")
                             .bean(AcostaFunctions.class, "prepareResourceUpdate")
                     .endChoice().end();
 
-        // Schedule Reseter: read all continuity resources from the DB.
+        // Schedule Resetter: read all continuity resources from the DB.
         // For each one - set the Impactable Value if they have impact hours, and update remaining hours
         from("direct://schedule/continuity/reset")
-                .routeId("RestContySchedules")
+                .routeId("ResetContySchedules")
                 .setProperty("original_headers", simple("${in.header[CamelHttpQuery]}"))
-                .setBody(constant("select EMPLOYEE_NO, POSITION_HRS, IMPACT_HOURS, IMPACT_SUN_SHIFT, IMPACT_MON_SHIFT, "
-                        + "IMPACT_TUES_SHIFT, IMPACT_WED_SHIFT, IMPACT_THURS_SHIFT, "
-                        + "IMPACT_FRI_SHIFT, IMPACT_SAT_SHIFT,  CONTY_MON_SHIFT, CONTY_TUES_SHIFT, CONTY_WED_SHIFT, CONTY_THURS_SHIFT, "
-                        + "CONTY_FRI_SHIFT, CONTY_SAT_SHIFT, CONTY_SUN_SHIFT " + "from continuity_associates_fullhours "
-                        + "where CONTINUITY = 1"))
+                .bean(AcostaFunctions.class, "generateResourceUtilizationSQL")
 
                 .to("jdbc:acostaDS?useHeadersAsParameters=true&outputType=StreamList")
                 .split(body(), new ResourceAdjustAggregationStrategy())
                 .setProperty("employee_info", simple("${in.body}"))
-                .setHeader("id", simple("${in.body[EMPLOYEE_NO]}")).setBody(constant(null))
+                .setHeader("id", simple("${in.body[ResourceId]}"))
+                .setBody(constant(null))
 
                 // Get The Resource Record
                 .bean(Resource.class, "authOnly")
@@ -156,10 +155,10 @@ public class AcostaRoutes  extends RouteBuilder {
                 // Only Process Sundays When A Sunday Is Provided
                 .choice()
                 .when(saturday_route)
-                    .bean(Resource.class, "resetSaturdayShift")
-                    .to("direct://etadirectrest/resource/schedule")
+                .bean(Resource.class, "resetSaturdayShift")
+                .to("direct://etadirectrest/resource/schedule")
                 .otherwise()
-                    .log(LoggingLevel.INFO, "Skipping Saturday - No Schedule For Continuity Associate")
+                .log(LoggingLevel.INFO, "Skipping Saturday - No Schedule For Continuity Associate")
                 .endChoice()
 
 

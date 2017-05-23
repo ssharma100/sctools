@@ -35,12 +35,13 @@ public class ETAdirectCommonRoutes extends RouteBuilder {
                 .marshal(routeReport);
 
         // Queries For Route And Loads In The DB Table
-        from("direct://common/get/route/route_plan")
+        from("direct://common/get/route/route_plan/db_store")
                 .routeId("etaDirectRouteGetForRoutePlan")
                 .bean(Resource.class, "authOnly")
                 .setHeader("CamelJacksonUnmarshalType", constant("com.oracle.ofsc.etadirect.rest.RouteList"))
                 .to("direct://etadirectrest/getRoute")
                 .unmarshal(jacksonDataFormat)
+                .setProperty("routeListJson", simple("${in.body}"))
                 .bean(AcostaFunctions.class, "extractRoutesToSQL")
                 .to("jdbc:acostaDS?useHeadersAsParameters=true&outputType=StreamList");
 

@@ -95,7 +95,7 @@ select * from impact_actual_call_details limit 100;
 select * from impact_call_requirements limit 100;
 
 --
--- View For Calls Into October Time Frame
+-- View For Calls Into Aug Time Frame
 --
 create view impact_activity_aug as 
 SELECT 
@@ -133,6 +133,47 @@ AND ICD.RESOURCE_NUMBER=1;
 
 drop view impact_activity_aug;
 
+--
+-- View For Calls Into Aug Time Frame
+--
+create view impact_activity_jan17 as 
+SELECT 
+concat('ImpC_', ICD.ACTUAL_CALLID) as ActivityKey,
+DATE(ICD.CALL_STARTED_LOCAL) as OriginalStartDate, 
+DATE(date_add(ICD.DATE_PLANNED, INTERVAL + 364 DAY)) as StartDate,
+DATE(DATE_ADD(date_add(ICD.DATE_PLANNED, INTERVAL + 364 DAY), INTERVAL ICD.DURATION_PLANNED_MINUTES MINUTE)) as EndDate,
+'bucket' as ExternalID,
+concat('imp', ICD.DURATION_PLANNED_MINUTES) as ActivityType,
+STORE.LATITUDE as Latitude, 
+STORE.LONGITUDE as Longitude,
+TS.OFSC_Label as 'timeslot',
+ICD.STARTED_BY_EMPLOYEE_NO as 'ReqResource',
+STORE.acosta_no as 'StoreID',
+STORE.address as 'Address', STORE.city as 'City', 
+STORE.State as 'State', 
+STORE.ZIPCODE as 'Zip',
+ICD.EXECUTION_DURATION_MINUTES as 'CallDuration', 
+ICD.DURATION_PLANNED_MINUTES as 'PlannedDuration',
+TIME(ICR.EARLIEST_VISIT_TIME) as 'StartTime', 
+TIME(ICR.LATEST_VISIT_TIME) as 'EndTime',
+ICD.STORE as Store,
+ICR.RESOURCE_NUMBER as Resource_No,
+CONCAT_WS('|', ICR.MONDAY, ICR.TUESDAY, ICR.WEDNESDAY, ICR.THURSDAY, ICR.FRIDAY, ICR.Saturday, ICR.Sunday) as DOW
+FROM 
+impact_actual_call_details as ICD
+JOIN all_stores as STORE on STORE.acosta_no = ICD.acosta_no and STORE.STOREID = ICD.STOREID
+JOIN all_call_types as ALLCALL on ALLCALL.CallType_Code = concat('imp', ICD.DURATION_PLANNED_MINUTES)
+JOIN impact_call_requirements as ICR on 
+ICR.SERVICE_ORDER_NUMBER = ICD.SERVICE_ORDER_NUMBER and ICR.ACOSTA_NO = ICD.ACOSTA_NO AND ICR.Visit_id = ICD.Visit_id
+JOIN time_slots as TS on (TS.Start_Time = TIME(ICR.EARLIEST_VISIT_TIME) AND TS.End_Time = TIME(ICR.LATEST_VISIT_TIME))
+WHERE
+ICD.CALL_STATUS_DETAILS = 'Successful'
+AND ICD.RESOURCE_NUMBER=1;
+
+drop view impact_activity_jan17;
+
+
+
 -- Testing the view
 select count(*) from impact_activity_aug;
 select * from impact_activity_aug where resource_no = 2 limit 100;
@@ -162,9 +203,7 @@ select * from impact_call_requirements as ICR where ICR.SERVICE_ORDER_NUMBER = 2
 
 select distinct(ActivityType) from impact_activity;
 drop view impact_activity_24;
-drop view impact_activity_29;
-drop view impact_activity_34;
-drop view impact_activity_39;
+
 
 desc impact_activity;
 select * from impact_activity_24 limit 100;
@@ -212,6 +251,12 @@ select ActivityKey, ReqResource as ResourceId, activitytype, startdate, enddate,
 select ActivityKey, ReqResource as ResourceId, activitytype, startdate, enddate, Latitude, Longitude, PlannedDuration as Duration, StartTime, EndTime, Store, city as City, state as State, zip as Zip, 'Eastern' as Timezone, TimeSlot as TimeSlot, Resource_No , DOW from impact_activity_aug where Resource_No=2;
 select ActivityKey, ReqResource as ResourceId, activitytype, startdate, enddate, Latitude, Longitude, PlannedDuration as Duration, StartTime, EndTime, Store, city as City, state as State, zip as Zip, 'Eastern' as Timezone, TimeSlot as TimeSlot, Resource_No , DOW from impact_activity_aug where startdate >= '2017-07-25' and startdate <= '2017-08-15';
 select ActivityKey, ReqResource as ResourceId, activitytype, startdate, enddate, Latitude, Longitude, PlannedDuration as Duration, StartTime, EndTime, Store, city as City, state as State, zip as Zip, 'Eastern' as Timezone, TimeSlot as TimeSlot, Resource_No , DOW from impact_activity_aug where startdate >= '2017-08-16' and startdate <= '2017-09-05';
+
+-- Extraction Queries (Jan-2018)
+select ActivityKey, ReqResource as ResourceId, activitytype, startdate, enddate, Latitude, Longitude, PlannedDuration as Duration, StartTime, EndTime, Store, city as City, state as State, zip as Zip, 'Eastern' as Timezone, TimeSlot as TimeSlot, Resource_No , DOW from impact_activity_jan17 limit 2;
+select ActivityKey, ReqResource as ResourceId, activitytype, startdate, enddate, Latitude, Longitude, PlannedDuration as Duration, StartTime, EndTime, Store, city as City, state as State, zip as Zip, 'Eastern' as Timezone, TimeSlot as TimeSlot, Resource_No , DOW from impact_activity_jan17 where Resource_No=2;
+select ActivityKey, ReqResource as ResourceId, activitytype, startdate, enddate, Latitude, Longitude, PlannedDuration as Duration, StartTime, EndTime, Store, city as City, state as State, zip as Zip, 'Eastern' as Timezone, TimeSlot as TimeSlot, Resource_No , DOW from impact_activity_jan17 where startdate >= '2017-12-25' and startdate <= '2018-01-15';
+select ActivityKey, ReqResource as ResourceId, activitytype, startdate, enddate, Latitude, Longitude, PlannedDuration as Duration, StartTime, EndTime, Store, city as City, state as State, zip as Zip, 'Eastern' as Timezone, TimeSlot as TimeSlot, Resource_No , DOW from impact_activity_jan17 where startdate >= '2018-01-16' and startdate <= '2018-02-05';
 
 
 select * from all_stores limit 100;

@@ -1,5 +1,7 @@
 package com.oracle.ofsc.etadirect.camel.beans;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.oracle.ofsc.etadirect.rest.ResourceJson;
 import com.oracle.ofsc.etadirect.rest.RouteInfo;
 import com.oracle.ofsc.etadirect.rest.RouteList;
 import org.apache.camel.Exchange;
@@ -10,6 +12,8 @@ import org.joda.time.format.DateTimeFormatter;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.io.IOException;
+import java.io.InputStream;
 import java.math.BigDecimal;
 import java.sql.Connection;
 import java.sql.DriverManager;
@@ -24,6 +28,7 @@ import java.util.HashMap;
  */
 public class AcostaFunctions {
     private static final Logger LOGGER = LoggerFactory.getLogger(Activity.class.getName());
+    private static final ObjectMapper ofscMapper = new ObjectMapper();
 
     private class HomeLocation {
         protected BigDecimal longitude;
@@ -161,17 +166,51 @@ public class AcostaFunctions {
         exchange.getIn().setBody(insertStmt.toString());
     }
 
+    /**
+     * The caller should have provided the week that this utilization should be reset for.
+     * This query pulls all the utilization information for the given week.
+     *
+     * @param exchange
+     */
+    public void generateResourceUtilizationSQL(Exchange exchange) {
+        String weekNo = (String )exchange.getIn().getHeader("week");
+        LOGGER.info("Building Query For Utilization Week = 1");
+        StringBuilder sb = new StringBuilder();
+        sb.append("select CAST(wk.ReqResource AS CHAR) AS 'ResourceId', CAST(wk.HOURS_PER_WEEK AS UNSIGNED) as HOURS_PER_WEEK, CSAT.CONTY_SAT_SHIFT, CSUN.CONTY_SUN_SHIFT")
+                .append(" FROM resource_utilization_week").append(weekNo).append(" AS wk")
+                .append(" LEFT OUTER JOIN continuity_assocaites_avail_sat AS CSAT on CSAT.EMPLOYEE_NO = wk.reqresource and CSAT.week = ")
+                .append(weekNo)
+                .append(" LEFT OUTER JOIN continuity_assocaites_avail_sun AS CSUN on CSUN.EMPLOYEE_NO = wk.ReqResource and CSUN.week = ")
+                .append(weekNo);
+
+        LOGGER.debug("Query: {}", sb.toString());
+        exchange.getIn().setBody(sb.toString());
+    }
+
     public void prepareResourceUpdate(Exchange exchange) {
         LOGGER.info("Prepare Resource Update For  Route Day={}", exchange.getIn().getHeader("routeDay"));
         String id = (String )exchange.getIn().getHeader("id");
         String routeDay = (String )exchange.getIn().getHeader("routeDay");
-        Integer hoursImpact = Integer.parseInt("0");
+        Integer impactHoursAllowed;
+        Integer impactHoursWorked;
+
         try {
-            hoursImpact = getImpactHoursWorked(id, routeDay);
-        } catch (SQLException e) {
-            LOGGER.error("Cannot Obtain Hours For Resource: {}, RouteDay={}", id, routeDay);
+            ResourceJson response =
+                    ofscMapper.readValue((InputStream) exchange.getIn().getBody(), ResourceJson.class);
+
+            LOGGER.info("Resource Currently Has: ResourceID {} Name {} For XA Impactable {}, Impact Hours Worked {}", response.getResourceId(),
+                    response.getName(), response.getXaImpactable(), response.getImpact_worked());
+            impactHoursAllowed = response.getImpact_hours();
+            impactHoursWorked  = response.getImpact_worked();
+            // Compute The Total Number Of Impact Hours Worked
+            // TODO - Resume work here!
+            //int daysImpactHours = extractImpactHoursFromRoute();
+
+        } catch (IOException e) {
+            LOGGER.error("Failed To UnMarshal OFSC Resource JSON Object: {}", e.getMessage());
+            return;
         }
-        exchange.getIn().setHeader("impact_used_hours", hoursImpact);
+        exchange.getIn().setHeader("impact_used_hours", impactHoursWorked);
     }
     /**
      * Based on a DB entry of a Resource, this method will store
@@ -221,7 +260,7 @@ public class AcostaFunctions {
         return home;
     }
 
-    public int getImpactHoursWorked(String resourceId, String routeDay) throws SQLException {
+    public int getImpactHoursWorkedFromDB(String resourceId, String routeDay) throws SQLException {
         Connection conn =
                 DriverManager.getConnection(
                         "jdbc:mysql://acosta.c4ury24fv0lk.us-west-2.rds.amazonaws.com:3306/acosta",

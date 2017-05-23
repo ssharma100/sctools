@@ -248,12 +248,20 @@ public class Resource {
         DateTimeFormatter tf = DateTimeFormat.forPattern("HH:mm:SS");
         String resetForDay  = (String )exchange.getIn().getHeader("routeDay");
         String resourceId = (String )exchange.getIn().getHeader("id");
-        BigInteger continuity_hours = (BigInteger )resourceInfo.get("POSITION_HRS");
-        // Compute The Hours Worked For The Schedule (Add One Hour For Breaks)
-        int hoursPerDay = Math.round(continuity_hours.intValue() / 5);
-        if (hoursPerDay >= 4) {
-            hoursPerDay = hoursPerDay + BREAK_HOURS;
+        BigInteger continuityHours = (BigInteger )resourceInfo.get("HOURS_PER_WEEK");
+        int weeklyHours = continuityHours.intValue();
+
+        // When resetting just ensure that they are working more than 8 hours a week and start
+        // by loading a standard 9 hours work day (includes the break).
+        // For the case of less that 8 hours, all days should just have a shift that covers their hours
+        int hoursPerDay =0;
+        if (weeklyHours >= 8) {
+            hoursPerDay = 8 + BREAK_HOURS;
         }
+        else {
+            hoursPerDay = weeklyHours + BREAK_HOURS;
+        }
+
         LOGGER.info("Resource Can Work {} Hours Per Day", hoursPerDay);
 
         DateTime resetDate = dtf.parseDateTime(resetForDay);

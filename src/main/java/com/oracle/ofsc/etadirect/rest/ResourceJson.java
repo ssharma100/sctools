@@ -20,8 +20,8 @@ public class ResourceJson {
     private String work_hours;
     @JsonProperty("XA_IMPACTABLE")
     private String xaImpactable;
-    private String impact_hours;
-    private String impact_worked;
+    private Integer impact_hours;
+    private Integer impact_worked;
 
     public String getResourceId() {
         return resourceId;
@@ -87,19 +87,19 @@ public class ResourceJson {
         this.xaImpactable = xaImpactable;
     }
 
-    public String getImpact_hours() {
+    public Integer getImpact_hours() {
         return impact_hours;
     }
 
-    public void setImpact_hours(String impact_hours) {
+    public void setImpact_hours(Integer impact_hours) {
         this.impact_hours = impact_hours;
     }
 
-    public String getImpact_worked() {
+    public Integer getImpact_worked() {
         return impact_worked;
     }
 
-    public void setImpact_worked(String impact_worked) {
+    public void setImpact_worked(Integer impact_worked) {
         this.impact_worked = impact_worked;
     }
 }
