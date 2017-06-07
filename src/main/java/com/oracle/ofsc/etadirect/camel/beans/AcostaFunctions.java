@@ -4,7 +4,9 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.oracle.ofsc.etadirect.rest.ResourceJson;
 import com.oracle.ofsc.etadirect.rest.RouteInfo;
 import com.oracle.ofsc.etadirect.rest.RouteList;
+import com.oracle.ofsc.geolocation.beans.TripInfo;
 import org.apache.camel.Exchange;
+import org.apache.camel.component.jdbc.ResultSetIterator;
 import org.joda.time.DateTime;
 import org.joda.time.Period;
 import org.joda.time.format.DateTimeFormat;
@@ -16,12 +18,15 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.math.BigDecimal;
 import java.sql.Connection;
+import java.sql.Date;
 import java.sql.DriverManager;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
 import java.sql.Timestamp;
+import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.Map;
 
 /**
  * Functionality and data manipulations for Acosta Route processing
@@ -88,6 +93,15 @@ public class AcostaFunctions {
         exchange.getIn().setBody(sqlStatement);
     }
 
+    /**
+     * Generate the SQL Insertion Statement Given A Property Stored TripInfo
+     * @param exchange
+     */
+    public void buildSQLRouteMetric(Exchange exchange) {
+        LOGGER.info("Generating SQL Storage Request For Route Metric");
+        TripInfo tripInfo = exchange.getProperty("TripInfo", TripInfo.class);
+        exchange.getIn().setBody(tripInfo.toSQLInsertString());
+    }
     /**
      * Extracts the OFSC route from the Json response and formats it for te
      * DB table insertion

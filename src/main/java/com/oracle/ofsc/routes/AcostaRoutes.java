@@ -4,6 +4,8 @@ import com.oracle.ofsc.etadirect.camel.beans.AcostaFunctions;
 import com.oracle.ofsc.etadirect.camel.beans.DebugOnly;
 import com.oracle.ofsc.etadirect.camel.beans.Resource;
 import com.oracle.ofsc.etadirect.camel.beans.ResourceAdjustAggregationStrategy;
+import com.oracle.ofsc.geolocation.beans.Location;
+import org.apache.camel.Exchange;
 import org.apache.camel.LoggingLevel;
 import org.apache.camel.Predicate;
 import org.apache.camel.builder.RouteBuilder;
@@ -52,6 +54,27 @@ public class AcostaRoutes  extends RouteBuilder {
                 .routeId("invokeContyScheduleReset")
                 .to("direct://schedule/continuity/reset")
                 .to("direct://processAggregationResults");
+
+        // Web End-Point
+        // Invoke the call to perform Distance routing on an Acosta route plan
+        from("restlet:http://localhost:8085/sctool/v1/acosta/schedule/distance/{routeDay}/{resource}?restletMethods=get")
+                .routeId("invokeDistance")
+                .to("direct://routeplan/find/ordered")
+                .bean(Location.class, "generateTripRouteOfPlan")  // Loads The Route Into Trip Stops
+                .split(body()).streaming()
+                    // Store The Body Value As Header
+                    .setProperty("TripInfo", simple("${body}"))
+                    // Using The Route List - Make Google Calls
+                    .bean(Location.class, "loadGoogleHeaders")
+                    .setHeader(Exchange.HTTP_METHOD, constant(org.apache.camel.component.http4.HttpMethods.GET))
+                    .toD("https4:maps.googleapis.com/maps/api/distancematrix/json?bridgeEndpoint=true&throwExceptionOnFailure=false")
+                    .bean(Location.class, "covertJsonToTripInfo")
+                    .to("direct://routeplan/insert/metric");
+
+        from("direct://routeplan/insert/metric")
+                .routeId("insertRouteMetricInfo")
+                .bean(AcostaFunctions.class, "buildSQLRouteMetric")
+                .to("jdbc:acostaDS?useHeadersAsParameters=true&outputType=StreamList");
 
         // Handler for baseline build of existing Acosta activities under Continuity
         from("direct://handleImpactBaseline")
@@ -172,8 +195,16 @@ public class AcostaRoutes  extends RouteBuilder {
 
                 .end();
 
+        // Locate The Route Plan From The DB.  This step will locate the route plan
+        // for the given route and resource, and will order the route plan per sequencing in the
+        // ordered job list
+        from("direct://routeplan/find/ordered")
+                .routeId("findRoutePlan")
+                .setProperty("original_headers", simple("${in.header[CamelHttpQuery]}"))
+                .setBody(constant("select * from route_plan where route_day = :?routeDay AND resource_id = :?resource order by route_day, route_order"))
+                .to("jdbc:acostaDS?useHeadersAsParameters=true&outputType=StreamList");
 
-        from ("direct://buildRouteForDay")
+        from("direct://buildRouteForDay")
                 .routeId("BuildRouteImpact")
                 .setHeader("sequence", constant(0))
 
