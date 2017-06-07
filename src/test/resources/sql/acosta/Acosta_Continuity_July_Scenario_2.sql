@@ -7,7 +7,7 @@
 CREATE 
 VIEW `continuity_activity_jul18_wm` AS
     SELECT 
-        CONCAT('ContyF_', `CCD`.`ACTUAL_CALLID`) AS `ActivityKey`,
+        CONCAT('ContyFW_', `CCD`.`ACTUAL_CALLID`) AS `ActivityKey`,
         CAST(`CCD`.`CALL_STARTED_LOCAL` AS DATE) AS `OriginalStartDate`,
         CAST((`CCD`.`CALL_STARTED_LOCAL` + INTERVAL 546 DAY)
             AS DATE) AS `StartDate`,
@@ -42,6 +42,7 @@ OR
 CCD.Store LIKE 'Sams Club%'));
 
 select * from continuity_activity_jul18_wm;
+drop view continuity_activity_jul18_wm;
 
 
 -- 
@@ -78,6 +79,15 @@ VIEW `continuity_activity_jul18` AS
             AND (`STORE`.`ACOSTA_NO` = `CCD`.`ACOSTA_NO`))))
         JOIN `all_call_types` `ALLCALL` ON ((`ALLCALL`.`CALLTYPE_CODE` = `CCD`.`CALL_TYPE_CODE`)))
     WHERE
-        (`CCD`.`CALL_STATUS_DETAILS` = 'Successful' AND (CCD.Store LIKE 'Wal%'
-OR
-CCD.Store LIKE 'Sams Club%'));
+        (`CCD`.`CALL_STATUS_DETAILS` = 'Successful' AND (CCD.Store NOT LIKE 'Wal%'
+AND
+CCD.Store NOT LIKE 'Sams Club%'));
+
+select * from continuity_activity_jul18;
+
+
+-- Data Extractors:
+select ActivityKey, ReqResource as ResourceId, activitytype, startdate, enddate, Latitude, Longitude, PlannedDuration as Duration, StartTime, EndTime, Store, city as City, state as State, zip as Zip, 'Eastern' as Timezone, TimeSlot as TimeSlot, Resource_No, DOW 
+from continuity_activity_jul18 order by startdate;
+select ActivityKey, ReqResource as ResourceId, activitytype, startdate, enddate, Latitude, Longitude, PlannedDuration as Duration, StartTime, EndTime, Store, city as City, state as State, zip as Zip, 'Eastern' as Timezone, TimeSlot as TimeSlot, Resource_No, DOW 
+from continuity_activity_jul18_wm;
