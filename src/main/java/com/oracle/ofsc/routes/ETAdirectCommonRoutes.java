@@ -64,7 +64,7 @@ public class ETAdirectCommonRoutes extends RouteBuilder {
                 .bean(Location.class, "extractOriginDestination")
                 .split(body(), new DistanceAggregationStrategy())
                     .setHeader(Exchange.HTTP_METHOD, constant(org.apache.camel.component.http4.HttpMethods.GET))
-                    .bean(Location.class, "loadHeaders")
+                    .bean(Location.class, "loadGoogleHeaders")
                     .toD("https4:maps.googleapis.com/maps/api/distancematrix/json?bridgeEndpoint=true&throwExceptionOnFailure=false")
                     .bean(Location.class, "covertJsonToRouteReport")
                 .end()

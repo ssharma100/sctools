@@ -3,28 +3,33 @@
 -- All contents will be use to send origination/destination information to
 -- the Google distance API
 
-create table route_queue (
-`g_request` varchar(200) COMMENT 'Google Request Identifier',
-`g_result` enum('NotRun', 'OK', 'ERROR') DEFAULT 'NotRun',
-`g_msg` varchar(256),
-`from_activity` varchar(128) NOT null COMMENT 'Unique Identifier for route - also activity ID',
-`to_activity` varchar(128) NOT null COMMENT 'Unique Identifier for route - also activity ID',
-`resource_id` varchar(80) COMMENT 'Resource Idenifier For The Route',
-`origin_lat` varchar(15) NOT NULL COMMENT 'Origination Latitude',
-`origin_long` varchar(15) NOT NULL COMMENT 'Origination Longitude',
-`dest_lat` varchar(15) NOT NULL COMMENT 'Destiniation Latitude',
-`dest_long` varchar(15) NOT NULL COMMENT 'Desitnation Latitude',
-`g_drive_time` integer COMMENT 'Google Provided Drive Time',
-`g_drive_distance` varchar(20) COMMENT 'Google PRovided Drive Distance',
-
-PRIMARY KEY (`g_request`),
-KEY `KEY_RQ_PK` (`resource_id`),
-INDEX `Key_DriveTime` (`g_drive_time`),
-INDEX `Key_DriveDist` (`g_drive_distance`)
+CREATE TABLE `route_metrics` (
+  `g_request` varchar(255) NOT NULL COMMENT 'Google Request Identifier',
+  `g_result` varchar(32) DEFAULT 'NOTRUN',
+  `g_msg` varchar(256) DEFAULT NULL,
+  `route_day` DATE NOT NULL,
+  `from_activity` varchar(128) NOT NULL COMMENT 'Unique Identifier for route - also activity ID',
+  `to_activity` varchar(128) NOT NULL COMMENT 'Unique Identifier for route - also activity ID',
+  `resource_id` varchar(80) DEFAULT NULL COMMENT 'Resource Identifier For The Route',
+  `origin_lat` varchar(15) NOT NULL COMMENT 'Origination Latitude',
+  `origin_long` varchar(15) NOT NULL COMMENT 'Origination Longitude',
+  `dest_lat` varchar(15) NOT NULL COMMENT 'Destination Latitude',
+  `dest_long` varchar(15) NOT NULL COMMENT 'Destination Latitude',
+  `g_drive_time` int(11) DEFAULT NULL COMMENT 'Google Provided Drive Time',
+  `g_drive_distance` decimal(6,2) DEFAULT NULL,
+  `origin` varchar(164) DEFAULT NULL,
+  `dest` varchar(164) DEFAULT NULL,
+  `created` TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  PRIMARY KEY (`g_request`, `route_day`),
+  KEY `KEY_RQ_PK` (`resource_id`),
+  KEY (`from_activity`, `to_activity`),
+  KEY `Key_DriveTime` (`g_drive_time`),
+  KEY `Key_DriveDist` (`g_drive_distance`),
+  KEY (`created`)
 ) ENGINE=InnoDB DEFAULT CHARSET=latin1;
 
 
-drop table route_queue;
+drop table route_metrics;
 
 -- Travel Time/Distance Results Table
 
@@ -80,3 +85,6 @@ select count(*) from route_plan;
 select * from route_plan where resource_id = '992352257' and route_day = '2017-01-06' order by route_day, route_order;
 delete from route_plan where resource_id = '992352257' and route_day = '2017-06-19' limit 2;
 
+select route_day, count(*) as 'Appointments', sum(g_drive_time) as 'Total Drive Time', avg(g_drive_time) as 'Avg Drive Time',
+                  sum(g_drive_distance) as 'Total Drive Distance', avg(g_drive_distance) as 'Avg Drive Distance', max(g_drive_distance) as 'Max Driven',
+                  min(g_drive_distance) as 'Min Driven' from route_metrics where route_day = '2017-01-02' group by route_day;
