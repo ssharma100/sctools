@@ -24,19 +24,20 @@ select * from route_plan where resource_id = '992310469' order by route_id, reso
 select count(*) from impact_activity_24 where Resource_No=2;
 select * from impact_activity_24 order by startdate desc limit 10;
 
-select count(*) from impact_actual_call_details as ICD
+--
+-- Route day extraction of resources/day for Impact
+--
+select distinct DATE_PLANNED, 'impact' as 'Activity_Type', COMPLETED_BY_EMPLOYEE_NO from impact_actual_call_details as ICD
 WHERE
-ICD.CALL_STATUS_DETAILS = 'Successful'
-AND 
-ICD.Store NOT LIKE 'Wal%'
-AND ICD.RESOURCE_NUMBER=1
-group by COMPLETED_BY_EMPLOYEE_NO, DATE_PLANNED;
+ICD.CALL_STATUS = 'Completed'
+AND ICD.RESOURCE_NUMBER=1;
 
-select distinct DATE_PLANNED, COMPLETED_BY_EMPLOYEE_NO from impact_actual_call_details as ICD
+--
+-- Route day extraction of resources/day for Continuity
+--
+select distinct DATE_PLANNED, 'continuity' as 'Activity_Type', COMPLETED_BY_EMPLOYEE_NO from continuity_actual_call_details as ICD
 WHERE
-ICD.CALL_STATUS_DETAILS = 'Successful'
-AND 
-ICD.Store NOT LIKE 'Wal%'
+ICD.CALL_STATUS = 'Completed'
 AND ICD.RESOURCE_NUMBER=1;
 
 -- Loading All Impact Distinct Day/Resource Combinations For Jobs
