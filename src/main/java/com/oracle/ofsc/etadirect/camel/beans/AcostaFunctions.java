@@ -186,7 +186,7 @@ public class AcostaFunctions {
      *
      * @param exchange
      */
-    public void generateResourceUtilizationSQL(Exchange exchange) {
+    public void generateContyResourceUtilizationSQL(Exchange exchange) {
         String weekNo = (String )exchange.getIn().getHeader("week");
         LOGGER.info("Building Query For Utilization Week = 1");
         StringBuilder sb = new StringBuilder();
@@ -197,6 +197,27 @@ public class AcostaFunctions {
                 .append(" LEFT OUTER JOIN continuity_assocaites_avail_sun AS CSUN on CSUN.EMPLOYEE_NO = wk.ReqResource and CSUN.week = ")
                 .append(weekNo)
                 .append(" LEFT OUTER JOIN continuity_associates_avail AS CONAV on CONAV.EMPLOYEE_NO = wk.ReqResource");
+
+        LOGGER.debug("Query: {}", sb.toString());
+        exchange.getIn().setBody(sb.toString());
+    }
+
+    /**
+     * The caller should have provided the week that this utilization should be reset for.
+     * This query pulls all the utilization information for the given week.
+     *
+     * @param exchange
+     */
+    public void generateImpactResourceUtilizationSQL(Exchange exchange) {
+        String weekNo = (String )exchange.getIn().getHeader("week");
+        LOGGER.info("Building Query For Utilization Week = 1");
+        StringBuilder sb = new StringBuilder();
+        sb.append("select CAST(wk.ReqResource AS CHAR) AS 'ResourceId', CAST(wk.HOURS_PER_WEEK AS UNSIGNED) as HOURS_PER_WEEK, CAST(wk.HOURS_PER_WEEK AS UNSIGNED) as IMPACT_HOURS, CSAT.CONTY_SAT_SHIFT, CSUN.CONTY_SUN_SHIFT")
+                .append(" FROM impact_resource_utilization_week").append(weekNo).append(" AS wk")
+                .append(" LEFT OUTER JOIN impact_assocaites_avail_sat AS CSAT on CSAT.EMPLOYEE_NO = wk.reqresource and CSAT.week = ")
+                .append(weekNo)
+                .append(" LEFT OUTER JOIN impact_assocaites_avail_sun AS CSUN on CSUN.EMPLOYEE_NO = wk.ReqResource and CSUN.week = ")
+                .append(weekNo);
 
         LOGGER.debug("Query: {}", sb.toString());
         exchange.getIn().setBody(sb.toString());

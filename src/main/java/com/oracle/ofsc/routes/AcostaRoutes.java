@@ -48,11 +48,19 @@ public class AcostaRoutes  extends RouteBuilder {
                 .routeId("invokeContyScheduleUpdate")
                 .to("direct://schedule/continuity/update")
                 .to("direct://processAggregationResults");
+
         // Web End-Point
         // Perform reset for a given week (1-5)
         from("restlet:http://localhost:8085/sctool/v1/acosta/schedule/continuity/reset/{routeDay}/{week}?restletMethods=post")
                 .routeId("invokeContyScheduleReset")
                 .to("direct://schedule/continuity/reset")
+                .to("direct://processAggregationResults");
+
+        // Web End-Point
+        // Perform reset for a given week (1-5)
+        from("restlet:http://localhost:8085/sctool/v1/acosta/schedule/impact/reset/{routeDay}/{week}?restletMethods=post")
+                .routeId("invokeImpactScheduleReset")
+                .to("direct://schedule/impact/reset")
                 .to("direct://processAggregationResults");
 
         // Web End-Point
@@ -139,12 +147,62 @@ public class AcostaRoutes  extends RouteBuilder {
                             .bean(AcostaFunctions.class, "prepareResourceUpdate")
                     .endChoice().end();
 
+        // Schedule Resetter: read all Impact resources from the DB.
+        // For each one - set the Impactable Value if they have impact hours, and update remaining hours
+        from("direct://schedule/impact/reset")
+                .routeId("ResetImpactSchedules")
+                .setProperty("original_headers", simple("${in.header[CamelHttpQuery]}"))
+                .bean(AcostaFunctions.class, "generateImpactResourceUtilizationSQL")
+
+                .to("jdbc:acostaDS?useHeadersAsParameters=true&outputType=StreamList")
+                .split(body(), new ResourceAdjustAggregationStrategy())
+                    .setProperty("employee_info", simple("${in.body}"))
+                    .setHeader("id", simple("${in.body[ResourceId]}"))
+                    .setBody(constant(null))
+
+                        // Get The Resource Record
+                    .bean(Resource.class, "authOnly")
+                    .to("direct://generic/resource/get")
+                    .setHeader("CamelJacksonUnmarshalType", constant("com.oracle.ofsc.etadirect.rest.ResourceJson"))
+                    .unmarshal(jacksonDataFormat).setProperty("ofsc_resource", simple("${in.body}"))
+                    .bean(Resource.class, "checkOfscResponse")
+                    .choice()
+                        .when(resource_exists)
+
+                        // Extract The Resource Record
+                        // First Do The Shift Reset (Also Checks For Reset Run On Sunday)
+                        .bean(Resource.class, "checkWeekendShifts")
+
+                        // Only Process Sundays When A Sunday Is Provided
+                        .choice()
+                            .when(sunday_route)
+                            .bean(Resource.class, "resetSundayShift")
+                            .to("direct://etadirectrest/resource/schedule")
+                        .otherwise()
+                            .log(LoggingLevel.INFO, "Skipping Sunday - No Schedule For Continuity Associate")
+                        .endChoice()
+
+                        // Only Process Sundays When A Sunday Is Provided
+                        .choice()
+                            .when(saturday_route)
+                            .bean(Resource.class, "resetSaturdayShift")
+                            .to("direct://etadirectrest/resource/schedule")
+                        .otherwise()
+                            .log(LoggingLevel.INFO, "Skipping Saturday - No Schedule For Impact Associate")
+                        .endChoice()
+
+                    .endChoice()
+                    .otherwise()
+                        .setHeader("errorMsg", constant("No Resource In OFSC"))
+
+                .end();
+
         // Schedule Resetter: read all continuity resources from the DB.
         // For each one - set the Impactable Value if they have impact hours, and update remaining hours
         from("direct://schedule/continuity/reset")
                 .routeId("ResetContySchedules")
                 .setProperty("original_headers", simple("${in.header[CamelHttpQuery]}"))
-                .bean(AcostaFunctions.class, "generateResourceUtilizationSQL")
+                .bean(AcostaFunctions.class, "generateContyResourceUtilizationSQL")
 
                 .to("jdbc:acostaDS?useHeadersAsParameters=true&outputType=StreamList")
                 .split(body(), new ResourceAdjustAggregationStrategy())

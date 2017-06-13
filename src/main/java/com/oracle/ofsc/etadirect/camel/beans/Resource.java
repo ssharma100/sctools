@@ -231,6 +231,14 @@ public class Resource {
         return DateTime.now().withTimeAtStartOfDay().plus(Period.hours(effectiveHour));
     }
 
+    public void checkWeekendShifts (Exchange exchange) {
+        Map resourceInfo = (Map) exchange.getProperty("employee_info");
+        String sundayShift = StringUtils.trim((String) resourceInfo.get("CONTY_SUN_SHIFT"));
+        String saturdayShift = StringUtils.trim((String) resourceInfo.get("CONTY_SAT_SHIFT"));
+
+        exchange.setProperty("has_sunday_shift", StringUtils.isBlank(sundayShift) ? null : sundayShift);
+        exchange.setProperty("has_saturday_shift", StringUtils.isBlank(saturdayShift) ? null : saturdayShift);
+    }
     /**
      * For a given day, will set up a 9-5 schedule for the whole week (7days out)
      * Works on the basis of a 7 day work week, starting on Sunday and going to Saturday
