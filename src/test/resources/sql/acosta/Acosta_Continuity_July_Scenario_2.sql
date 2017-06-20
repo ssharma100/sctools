@@ -94,4 +94,4 @@ from continuity_activity_jul18_wm;
 
 -- People Working On A Given Day
 select * from continuity_actual_call_details limit 10;
-select COMPLETED_BY_EMPLOYEE_NO as 'resource', date(COMPLETED_ON_LOCAL) as 'route_day' from continuity_actual_call_details where CALL_STATUS='Completed' and CALL_STATUS_DETAILS='Successful' group by COMPLETED_BY_EMPLOYEE_NO,date(COMPLETED_ON_LOCAL);
+select ReqResource as 'resource_id', StartDate as 'route_day' from continuity_activity_may18_consol group by startdate, ReqResource;
