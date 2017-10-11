@@ -15,6 +15,7 @@ public class InsertLocation {
     private String city;
     private String state;
     private String postalCode;
+    private String country;
     private String status;
     private BigDecimal latitude;
     private BigDecimal longitude;
@@ -81,5 +82,13 @@ public class InsertLocation {
 
     public void setLongitude(BigDecimal longitude) {
         this.longitude = longitude;
+    }
+
+    public String getCountry() {
+        return country;
+    }
+
+    public void setCountry(String country) {
+        this.country = country;
     }
 }

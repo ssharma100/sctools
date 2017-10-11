@@ -249,6 +249,7 @@ public class Location {
         jsonLocation.setPostalCode(location.getZip());
         jsonLocation.setLatitude(location.getLatitude());
         jsonLocation.setLongitude(location.getLongitude());
+        jsonLocation.setCountry(location.getCountry());
 
         // Set Values For HTTP Call And Authentication To ETAdirect
         HashMap<String, String> authInfo =
