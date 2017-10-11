@@ -39,6 +39,7 @@ public class InsertActivity {
     private String city;
     private String stateProvince;
     private String postalCode;
+    private String country;
 
     // Special Items
     private String lift_gate;
@@ -268,5 +269,13 @@ public class InsertActivity {
 
     public void setLinked_sto(String linked_sto) {
         this.linked_sto = linked_sto;
+    }
+
+    public String getCountry() {
+        return country;
+    }
+
+    public void setCountry(String country) {
+        this.country = country;
     }
 }

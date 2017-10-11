@@ -361,8 +361,11 @@ public class Activity {
         activityIns.setDuration(activityData.getDuration());
         activityIns.setLatitude(activityData.getLatitude());
         activityIns.setLongitude(activityData.getLongitude());
+        activityIns.setStreetAddress(activityData.getStreetAddr());
         activityIns.setCity(activityData.getCity());
         activityIns.setStateProvince(activityData.getState());
+        activityIns.setPostalCode(activityData.getZipCode());
+        activityIns.setCountry(activityData.getCountry());
 
         activityIns.setTimeSlot(activityData.getTimeSlot());
         if (isSLA) {
