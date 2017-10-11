@@ -56,6 +56,14 @@ public class AcostaRoutes  extends RouteBuilder {
                 .to("direct://schedule/continuity/reset")
                 .to("direct://processAggregationResults");
 
+        // Obtains the route list (ordered) for the given resource "id" on the given date
+        // Specifically for Acosta processing the the output will be put into the Acosta DB
+        // and targets the route_plan table.
+        from("restlet:http://localhost:8085/sctool/v1/acosta/route/{id}/{routeDay}?restletMethod=get")
+                .routeId("invokeRouteQueryToRoutePlan")
+                .to("log:" + LOG_CLASS + "?showAll=true&multiline=true&level=INFO")
+                .to("direct://common/get/route/route_plan/db_store");
+
         // Web End-Point
         // Perform reset for a given week (1-5)
         from("restlet:http://localhost:8085/sctool/v1/acosta/schedule/impact/reset/{routeDay}/{week}?restletMethods=post")
@@ -119,14 +127,6 @@ public class AcostaRoutes  extends RouteBuilder {
                 .when(isDelete)
                     .to("direct://deleteRouteForDay")
                 .end();
-
-        // Obtains the route list (ordered) for the given resource "id" on the given date
-        // Specifically for Acosta processing the the output will be put into the Acosta DB
-        // and targets the route_plan table.
-        from("restlet:http://localhost:8085/sctool/v1/acosta/route/{id}/{routeDay}?restletMethod=get")
-                .routeId("invokeRouteQueryToRoutePlan")
-                .to("log:" + LOG_CLASS + "?showAll=true&multiline=true&level=INFO")
-                .to("direct://common/get/route/route_plan/db_store");
 
         // Performs DOW route extraction and shift updates.
         // Will populate the route_plan table for the given DOW and then use that information

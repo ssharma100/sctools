@@ -91,3 +91,7 @@ select ActivityKey, ReqResource as ResourceId, activitytype, startdate, enddate,
 from continuity_activity_jul18 order by startdate;
 select ActivityKey, ReqResource as ResourceId, activitytype, startdate, enddate, Latitude, Longitude, PlannedDuration as Duration, StartTime, EndTime, Store, city as City, state as State, zip as Zip, 'Eastern' as Timezone, TimeSlot as TimeSlot, Resource_No, DOW 
 from continuity_activity_jul18_wm;
+
+-- People Working On A Given Day
+select * from continuity_actual_call_details limit 10;
+select ReqResource as 'resource_id', StartDate as 'route_day' from continuity_activity_may18_consol group by startdate, ReqResource;

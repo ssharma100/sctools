@@ -309,4 +309,5 @@ select View.ActivityKey, View.ReqResource, ETA.a_id from continuity_activity_2Pe
 select View.ActivityKey, View.ReqResource, ETA.a_id from continuity_activity_2PerQ as View JOIN eta_activities as ETA on ETA.activity_key = View.ActivityKey;	
 select View.ActivityKey, View.ReqResource, ETA.a_id from continuity_activity_None as View JOIN eta_activities as ETA on ETA.activity_key = View.ActivityKey;	
 
-
+-- Build User & Rroute Day Combinations:
+select distinct STARTDATE,  ReqResource from continuity_activity_october;

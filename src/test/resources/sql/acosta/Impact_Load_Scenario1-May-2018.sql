@@ -39,6 +39,8 @@ WHERE
 ICD.CALL_STATUS_DETAILS = 'Successful'
 AND ICD.RESOURCE_NUMBER=1;
 
+drop view impact_activity_may18;
+
 --
 -- Testing And Validation
 --
@@ -51,5 +53,5 @@ select * from impact_activity_may18 limit 100;
 --
 -- Extraction Queries (Jan-2018)
 select ActivityKey, ReqResource as ResourceId, activitytype, startdate, enddate, Latitude, Longitude, PlannedDuration as Duration, StartTime, EndTime, Store, city as City, state as State, zip as Zip, 'Eastern' as Timezone, TimeSlot as TimeSlot, Resource_No , DOW from impact_activity_may18 where Resource_No=2;
-select ActivityKey, ReqResource as ResourceId, activitytype, startdate, enddate, Latitude, Longitude, PlannedDuration as Duration, StartTime, EndTime, Store, city as City, state as State, zip as Zip, 'Eastern' as Timezone, TimeSlot as TimeSlot, Resource_No , DOW from impact_activity_may18 where startdate >= '2018-01-01' and startdate <= '2018-01-15';
+select ActivityKey, ReqResource as ResourceId, activitytype, startdate, enddate, Latitude, Longitude, PlannedDuration as Duration, StartTime, EndTime, Store, city as City, state as State, zip as Zip, 'Eastern' as Timezone, TimeSlot as TimeSlot, Resource_No , DOW from impact_activity_may18 where startdate >= '2018-04-29' and startdate <= '2018-05-05';
 select ActivityKey, ReqResource as ResourceId, activitytype, startdate, enddate, Latitude, Longitude, PlannedDuration as Duration, StartTime, EndTime, Store, city as City, state as State, zip as Zip, 'Eastern' as Timezone, TimeSlot as TimeSlot, Resource_No , DOW from impact_activity_may18 where startdate >= '2018-01-16' and startdate <= '2018-02-05';
