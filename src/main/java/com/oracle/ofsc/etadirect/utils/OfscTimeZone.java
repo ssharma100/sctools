@@ -6,7 +6,9 @@ package com.oracle.ofsc.etadirect.utils;
  */
 public enum OfscTimeZone {
     New_York("Eastern"),
-    Chicago("Central");
+    Chicago("Central"),
+    Denver("Mountain"),
+    Los_Angeles("Pacific");
 
     private String ofcsTimeZoneLabel;
     OfscTimeZone(String ofcsTimeZoneLabel) {
