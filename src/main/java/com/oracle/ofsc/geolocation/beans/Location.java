@@ -132,7 +132,7 @@ public class Location {
         String keyParam = params.stream()
                 .filter(param -> StringUtils.split(param, "=")[0].equals("key"))
                 .findFirst().get();
-        exchange.getOut().setHeader(Exchange.HTTP_QUERY, "units=imperial&" + routeCords + "&" + keyParam);
+        exchange.getOut().setHeader(Exchange.HTTP_QUERY, "units=metric&" + routeCords + "&" + keyParam);
     }
 
     /**
