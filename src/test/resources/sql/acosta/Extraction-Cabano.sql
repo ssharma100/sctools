@@ -1,5 +1,6 @@
 select appoint_id, route_order from route_plan where resource_id= 992369365 and route_day='2018-05-08' order by route_order;
 
+select * from associates_info where employee_no=992369365;
 -- Cabano's Impact Jobs
 select substring(appoint_id,6), route_order from route_plan where resource_id= 992369365 and route_day='2018-05-08' 
 and 

@@ -14,9 +14,10 @@ appoint_id like 'ImpM_%'
 );
 
 -- Employee Information
-select * from associates_info where employee_no = 992369365;
+select * from associates_info where employee_no = 992362846;
 -- Do you want to Work Continuity Work?
-select * from continuity_associates_avail where employee_no = 992369365;
+select * from continuity_associates_avail where employee_no = 992362846;
+select * from continuity_associates_fullhours where employee_no = 992362846;
 
 
 
@@ -72,13 +73,13 @@ select route_day, count(*), sum(g_drive_time), sum(g_drive_distance), sum(`Miles
 group by route_day;
 
 -- Cost Of Impact From Other's Work Tasks
-select * from impact_drive_work where from_activity in ('A000-1869-7988C924', 'A000-1870-3826C899', 'A000-1870-3947C927’, ‘A000-1875-6183C213’, ‘A000-1878-6885C509') 
+select * from impact_drive_work where from_activity in ('A000-1875-5124C949', 'A000-1885-6137C881', 'A000-1869-3125C081', 'A000-1869-3266C391') 
 or 
-to_activity in ('A000-1869-7988C924', 'A000-1870-3826C899', 'A000-1870-3947C927’, ‘A000-1875-6183C213’, ‘A000-1878-6885C509');
+to_activity in ('A000-1875-5124C949', 'A000-1885-6137C881', 'A000-1869-3125C081', 'A000-1869-3266C391');
 
-select sum(`Miles Cost`), sum(`Time Cost`) from impact_drive_work where from_activity in ('A000-1869-7988C924', 'A000-1870-3826C899', 'A000-1870-3947C927’, ‘A000-1875-6183C213’, ‘A000-1878-6885C509') 
+select sum(`Miles Cost`), sum(`Time Cost`) from impact_drive_work where from_activity in ('A000-1875-5124C949', 'A000-1885-6137C881', 'A000-1869-3125C081', 'A000-1869-3266C391') 
 or 
-to_activity in ('A000-1869-7988C924', 'A000-1870-3826C899', 'A000-1870-3947C927’, ‘A000-1875-6183C213’, ‘A000-1878-6885C509');
+to_activity in ('A000-1875-5124C949', 'A000-1885-6137C881', 'A000-1869-3125C081', 'A000-1869-3266C391');
 
 select * from route_metrics where resource_id= 992369365 and (route_day='2017-01-10');
 select * from route_metrics where resource_id= 992369365 and (route_day='2018-05-08');

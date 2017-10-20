@@ -59,16 +59,18 @@ where (RM.from_activity like 'str%' or RM.to_activity like 'end%');
 
 
 -- Extract Continuity Commute Information
-select *, from continuity_drive_commute where route_day >= '2017-01-01' and route_day <= '2017-01-31' order by resource_id, route_day;
+select * from continuity_drive_commute where route_day >= '2017-01-01' and route_day <= '2017-01-31' order by resource_id, route_day;
 
 select route_day, resource_id, sum(g_drive_distance) as 'Total Drive Distance', 
 sum(g_drive_time) as 'Total Drive Time',
-sum(`Miles Cost`) as 'Total Miles Paid' from continuity_drive_commute where route_day >= '2017-01-01' and route_day <= '2017-01-31' 
+sum(`Miles Cost`) as 'Total Miles Paid' from continuity_base_drive_commute where route_day >= '2017-01-01' and route_day <= '2017-01-31' 
 group by route_day, resource_id order by route_day, resource_id;
 
 select sum(g_drive_distance) as 'Total Drive Distance', 
 sum(g_drive_time) as 'Total Drive Time',
-sum(`Miles Cost`) as 'Total Miles Paid' from continuity_drive_commute where route_day >= '2017-01-01' and route_day <= '2017-01-31' ;
+sum(`Miles Cost`) as 'Total Miles Paid',
+sum(`Time Cost`) as 'Total Time Paid'
+from continuity_base_drive_work where route_day >= '2017-01-01' and route_day <= '2017-01-31' ;
 
 -- Extract Impact Commute Information
 select * from impact_drive_commute where route_day >= '2017-01-01' and route_day <= '2017-01-31' order by resource_id, route_day;
@@ -80,7 +82,9 @@ group by route_day, resource_id order by route_day, resource_id;
 
 select sum(g_drive_distance) as 'Total Drive Distance', 
 sum(g_drive_time) as 'Total Drive Time',
-sum(`Miles Cost`) as 'Total Miles Paid' from impact_drive_commute where route_day >= '2017-01-01' and route_day <= '2017-01-31' ;
+sum(`Miles Cost`) as 'Total Miles Paid',
+sum(`Time Cost`) as 'Total Time Paid'
+from impact_base_drive_work where route_day >= '2017-01-01' and route_day <= '2017-01-31' ;
 
 
 -- Extract Impact Work Information
