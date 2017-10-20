@@ -159,16 +159,18 @@ public class AcostaFunctions {
                                 dtf.print(startStart), dtf.print(startEnd), home.latitude,
                                 home.longitude, -1, "0", "0"));
             }
-            insertStmt.append(String.format(" ('%s', '%s', '%s', TIME('%s'), TIME('%s'), %s, %s, %s, %s, %s),", routeItem.getDate(), routeItem.getResourceId(),
-                            routeItem.getApptNumber(), routeItem.getStartTime(), routeItem.getEndTime(), routeItem.getLatitude(), routeItem.getLongitude(),
-                            routeItem.getPositionInRoute(), routeItem.getTravelTime(), routeItem.getDuration()));
-
+            // When Inserting Pre-Set Appointments (Lunch, Warehouse) They Will Have No Location:
+            if (null != routeItem.getApptNumber()) {
+                insertStmt.append(
+                        String.format(" ('%s', '%s', '%s', TIME('%s'), TIME('%s'), %s, %s, %s, %s, %s),", routeItem.getDate(), routeItem.getResourceId(),
+                                routeItem.getApptNumber(), routeItem.getStartTime(), routeItem.getEndTime(), routeItem.getLatitude(), routeItem.getLongitude(),
+                                routeItem.getPositionInRoute(), routeItem.getTravelTime(), routeItem.getDuration()));
+            }
             // Always Store The End time
             lastRouteItem = routeItem;
         }
 
-        // Insert The Home Location
-        // Insert Home Location
+        // Insert Home Location @ The End Of The Route
         DateTimeFormatter dtf = DateTimeFormat.forPattern("yyyy-MM-dd HH:mm:ss");
         DateTime startStart = dtf.parseDateTime(lastRouteItem.getEndTime()).plus(Period.minutes(5));
         DateTime startEnd = dtf.parseDateTime(lastRouteItem.getEndTime()).plus(Period.minutes(10));
