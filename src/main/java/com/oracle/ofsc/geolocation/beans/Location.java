@@ -346,6 +346,9 @@ public class Location {
         if (StringUtils.endsWith(distance, "mi")) {
             tripInfo.setMileage(new BigDecimal(StringUtils.substringBefore(distance, " mi")));
         }
+        else if (StringUtils.endsWith(distance, "km")) {
+            tripInfo.setMileage(new BigDecimal(StringUtils.substringBefore(distance, " km")));
+        }
         else {
             tripInfo.setMileage(BigDecimal.ZERO);
         }
