@@ -1,12 +1,11 @@
 package com.oracle.ofsc.etadirect.camel.beans;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.oracle.ofsc.etadirect.rest.ResourceJson;
+import com.oracle.ofsc.etadirect.rest.EtaJsonResource;
 import com.oracle.ofsc.etadirect.rest.RouteInfo;
 import com.oracle.ofsc.etadirect.rest.RouteList;
 import com.oracle.ofsc.geolocation.beans.TripInfo;
 import org.apache.camel.Exchange;
-import org.apache.camel.component.jdbc.ResultSetIterator;
 import org.joda.time.DateTime;
 import org.joda.time.Period;
 import org.joda.time.format.DateTimeFormat;
@@ -18,15 +17,12 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.math.BigDecimal;
 import java.sql.Connection;
-import java.sql.Date;
 import java.sql.DriverManager;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
 import java.sql.Timestamp;
-import java.util.ArrayList;
 import java.util.HashMap;
-import java.util.Map;
 
 /**
  * Functionality and data manipulations for Acosta Route processing
@@ -233,8 +229,8 @@ public class AcostaFunctions {
         Integer impactHoursWorked;
 
         try {
-            ResourceJson response =
-                    ofscMapper.readValue((InputStream) exchange.getIn().getBody(), ResourceJson.class);
+            EtaJsonResource response =
+                    ofscMapper.readValue((InputStream) exchange.getIn().getBody(), EtaJsonResource.class);
 
             LOGGER.info("Resource Currently Has: ResourceID {} Name {} For XA Impactable {}, Impact Hours Worked {}", response.getResourceId(),
                     response.getName(), response.getXaImpactable(), response.getImpact_worked());

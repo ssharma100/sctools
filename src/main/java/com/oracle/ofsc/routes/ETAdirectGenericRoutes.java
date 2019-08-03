@@ -3,6 +3,7 @@ package com.oracle.ofsc.routes;
 import com.oracle.ofsc.etadirect.camel.beans.Activity;
 import com.oracle.ofsc.etadirect.camel.beans.Resource;
 import com.oracle.ofsc.etadirect.camel.beans.ResponseHandler;
+import com.oracle.ofsc.etadirect.camel.beans.Security;
 import org.apache.camel.builder.RouteBuilder;
 import org.apache.camel.dataformat.bindy.csv.BindyCsvDataFormat;
 import org.apache.camel.spi.DataFormat;
@@ -13,17 +14,31 @@ import org.apache.camel.spi.DataFormat;
 public class ETAdirectGenericRoutes extends RouteBuilder {
     private static final String LOG_CLASS = "com.oracle.ofsc.routes.ETAdirectGenericRoutes";
     private DataFormat resourceInsert = new BindyCsvDataFormat(com.oracle.ofsc.transforms.GenericResourceData.class);
+    private DataFormat resource       = new BindyCsvDataFormat(com.oracle.ofsc.transforms.ResourceData.class);
     private DataFormat activityInsert = new BindyCsvDataFormat(com.oracle.ofsc.transforms.GenericActivityData.class);
 
     @Override
-    public void configure() throws Exception {
+    public void configure() {
 
         /* Populates The Body With The SOAP Call Needed To Call The Server */
 
+        // Makes the request to the RESTful Route For ETA Direct API and sends back the native response
         from("direct://generic/resource/get")
                 .routeId("etaDirectGenResourceGet")
+                // Extract The Headers
+                .bean(Resource.class, "authOnly")
                 .to("direct://etadirectrest/resource/get");
 
+        // Makes the ETA Direct RESTful request and generates a CSV response
+        from("direct://generic/resources/get")
+                .routeId("etaDirectGenResourcesGet")
+                // Extract The Headers
+                .bean(Resource.class, "authOnly")
+                .to("direct://etadirectrest/resources/get")
+                .bean(Resource.class, "mapResourceListToBeanList")
+                .marshal(resource);
+
+        // Performs creation of the resource REST object from the input list items (CSV)
         from("direct://generic/resource/insert")
                 .routeId("etaDirectGenResourceInsert")
                 .unmarshal(resourceInsert)

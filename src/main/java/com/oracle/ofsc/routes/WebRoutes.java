@@ -40,7 +40,7 @@ public class WebRoutes extends RouteBuilder {
         // - Get Resource
         // - Insert Resource
         from("restlet:http://localhost:8085/sctool/v1/transportation/resource/{id}?restletMethods=post,get")
-                .routeId("invokeTransResourceCall")
+                .routeId("invokeTransportResourceCall")
                 .to("log:" + LOG_CLASS + "?showAll=true&multiline=true&level=INFO")
                 .choice()
                     .when(isPost)
@@ -48,15 +48,21 @@ public class WebRoutes extends RouteBuilder {
                     .otherwise()
                         .to("direct://transportation/resource/get");
 
-        // RESTful End Point For Generic Resource Management
+        // RESTful End Point For Generic Resource Management (Updated To Use REST and Client/Secret)
         from("restlet:http://localhost:8085/sctool/v1/generic/resource/{id}?restletMethods=post,get")
-                .routeId("invokeGenResourceCall")
+                .routeId("invokeGenericResourceCall")
                 .to("log:" + LOG_CLASS + "?showAll=true&multiline=true&level=INFO")
                 .choice()
                     .when(isPost)
                         .to("direct://generic/resource/insert")
                     .otherwise()
                         .to("direct://generic/resource/get");
+
+        // RESTful End Point For Generic Resource Management (Updated To Use REST and Client/Secret)
+        from("restlet:http://localhost:8085/sctool/v1/generic/resourcesunder/{id}?restletMethods=get")
+                .routeId("invokeGenericResourcesGetCall")
+                .to("log:" + LOG_CLASS + "?showAll=true&multiline=true&level=INFO")
+                .to("direct://generic/resources/get");
 
         // EndPoint For Resource To EtaDirect Assignment To Activity based on
         // listing of activity IDs and resource mappings (post)

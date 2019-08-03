@@ -9,19 +9,35 @@ import com.fasterxml.jackson.databind.annotation.JsonSerialize;
  */
 @JsonSerialize(include=JsonSerialize.Inclusion.NON_NULL)
 @JsonIgnoreProperties(ignoreUnknown = true)
-public class ResourceJson {
+public class EtaJsonResource {
 
     private String resourceId;
     private String organization;
+    private String email;
+    private String phone;
     private String status;
+    private String resourceInternalId;
     private String parentResourceId;
+    private String parentResourceInternalId;
     private String resourceType;
+    private String timeZone;
+    private String dateFormat;
+    private String timeFormat;
+    private String language;
     private String name;
     private String work_hours;
     @JsonProperty("XA_IMPACTABLE")
     private String xaImpactable;
     private Integer impact_hours;
     private Integer impact_worked;
+
+    public String getResourceInternalId() {
+        return resourceInternalId;
+    }
+
+    public void setResourceInternalId(String resourceInternalId) {
+        this.resourceInternalId = resourceInternalId;
+    }
 
     public String getResourceId() {
         return resourceId;
@@ -101,5 +117,61 @@ public class ResourceJson {
 
     public void setImpact_worked(Integer impact_worked) {
         this.impact_worked = impact_worked;
+    }
+
+    public String getParentResourceInternalId() {
+        return parentResourceInternalId;
+    }
+
+    public void setParentResourceInternalId(String parentResourceInternalId) {
+        this.parentResourceInternalId = parentResourceInternalId;
+    }
+
+    public String getTimeZone() {
+        return timeZone;
+    }
+
+    public void setTimeZone(String timeZone) {
+        this.timeZone = timeZone;
+    }
+
+    public String getDateFormat() {
+        return dateFormat;
+    }
+
+    public void setDateFormat(String dateFormat) {
+        this.dateFormat = dateFormat;
+    }
+
+    public String getLanguage() {
+        return language;
+    }
+
+    public void setLanguage(String language) {
+        this.language = language;
+    }
+
+    public String getTimeFormat() {
+        return timeFormat;
+    }
+
+    public void setTimeFormat(String timeFormat) {
+        this.timeFormat = timeFormat;
+    }
+
+    public String getEmail() {
+        return email;
+    }
+
+    public void setEmail(String email) {
+        this.email = email;
+    }
+
+    public String getPhone() {
+        return phone;
+    }
+
+    public void setPhone(String phone) {
+        this.phone = phone;
     }
 }

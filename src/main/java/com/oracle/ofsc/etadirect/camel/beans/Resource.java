@@ -5,13 +5,15 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
 import com.oracle.ofsc.etadirect.rest.Recurrence;
-import com.oracle.ofsc.etadirect.rest.ResourceJson;
+import com.oracle.ofsc.etadirect.rest.EtaJsonResource;
+import com.oracle.ofsc.etadirect.rest.ResourceList;
 import com.oracle.ofsc.etadirect.rest.RouteInfo;
 import com.oracle.ofsc.etadirect.rest.RouteList;
 import com.oracle.ofsc.etadirect.rest.WorkSchedule;
 import com.oracle.ofsc.etadirect.soap.*;
 import com.oracle.ofsc.etadirect.utils.OfscTimeZone;
 import com.oracle.ofsc.transforms.GenericResourceData;
+import com.oracle.ofsc.transforms.ResourceData;
 import com.oracle.ofsc.transforms.RouteReportData;
 import com.oracle.ofsc.transforms.TransportResourceData;
 import org.apache.camel.Exchange;
@@ -323,7 +325,7 @@ public class Resource {
         org.restlet.engine.adapter.HttpResponse response =
                 (org.restlet.engine.adapter.HttpResponse) exchange.getIn().getHeader("CamelRestletResponse");
 
-        ResourceJson resource = (ResourceJson )exchange.getIn().getBody();
+        EtaJsonResource resource = (EtaJsonResource)exchange.getIn().getBody();
         if (response != null && response.getStatus().equals(Status.SUCCESS_OK)) {
           if (resource.getStatus() != null && resource.getStatus().equals("active")) {
               LOGGER.warn("Active Resource Found In OFSC - Processing Reset");
@@ -363,6 +365,10 @@ public class Resource {
         }
     }
 
+    /**
+     * Perfoms a User Insert using REST
+     * @param exchange
+     */
     public void mapToInsertUser(Exchange exchange) {
         String category = (String) exchange.getIn().getHeader("resource_category");
 
@@ -399,39 +405,75 @@ public class Resource {
     }
 
     /**
-     * Generates the request body and complete SOAP request for a resource creation
+     * Provided an input Json (from the ETAdirect resource list) will generate
+     * an output list of EtaResource beans.
+     * Performs the conversion from Json list to EtaResource list and places it in the body
+     * @param exchange
+     */
+    public void mapResourceListToBeanList(Exchange exchange) throws IOException {
+
+        InputStream jsonBodyStream = (InputStream )exchange.getIn().getBody();
+        ResourceList resourceList = resourceMapper.readValue(jsonBodyStream, ResourceList.class);
+        LOGGER.info("Processing Resource List {} Entries, Limit Is {}", resourceList.getTotalResults(), resourceList.getLimit() );
+
+        // TODO - this method will need to signal a offset for a re-query of the services for offset.
+        ArrayList<EtaJsonResource> jsonResourceList = resourceList.getItems();
+        ArrayList<ResourceData> bindyList = new ArrayList<>();
+        for (EtaJsonResource resourceJson : jsonResourceList) {
+            if (resourceJson.getResourceType().equals("GR")) { continue; }
+            if (resourceJson.getStatus().equals("inactive")) { continue; }
+            ResourceData bindyItem = new ResourceData();
+            bindyItem.setName(resourceJson.getName());
+            bindyItem.setResourceId(resourceJson.getResourceId());
+            bindyItem.setParentResourceInternalId(resourceJson.getParentResourceInternalId());
+            bindyItem.setEmail(resourceJson.getEmail());
+            bindyItem.setPhone(resourceJson.getPhone());
+            bindyItem.setResourceInternalId(resourceJson.getResourceInternalId());
+            bindyItem.setTimeZone(resourceJson.getTimeZone());
+            bindyItem.setTimeFormat(resourceJson.getTimeFormat());
+            bindyItem.setDateFormat(resourceJson.getDateFormat());
+            bindyItem.setResourceType(resourceJson.getResourceType());
+            bindyList.add(bindyItem);
+
+        }
+
+        exchange.getIn().setBody(bindyList);
+
+    }
+    /**
+     * Generates the request body and complete REST request for a resource creation
      */
     public void mapToInsertResource(Exchange exchange) {
         String id = (String) exchange.getIn().getHeader("id");
         String category = (String) exchange.getIn().getHeader("resource_category");
 
-        LOGGER.info("Generate Insert Resource Body For Insertion Under ResourceID: {}", id);
+        LOGGER.info("Generate Insert Resource REST Json For Insertion Under ResourceID: {}", id);
         // TODO: The request should have the information for the request, however, this is hardcoded for now:
         User userBlock = Security.generateUserAuth((String) exchange.getIn().getHeader("CamelHttpQuery"), !USE_MD5);
-        InsertResource insertResource = null;
+        EtaXmlResource etaXmlResource = null;
 
         switch (category) {
         case "transportation":
-            insertResource = this.generateTransportationResource(id, (TransportResourceData) exchange.getIn().getBody());
+            etaXmlResource = this.generateTransportationResource(id, (TransportResourceData) exchange.getIn().getBody());
             break;
         case "generic":
-            insertResource = this.generateGenericResource(id, (GenericResourceData) exchange.getIn().getBody());
+            etaXmlResource = this.generateGenericResource(id, (GenericResourceData) exchange.getIn().getBody());
             break;
         default:
 
         }
 
         // Load The Credentials
-        insertResource.setUser(userBlock);
+        etaXmlResource.setUser(userBlock);
 
         String soapBody = null;
         try {
-            JAXBContext context = JAXBContext.newInstance(InsertResource.class);
+            JAXBContext context = JAXBContext.newInstance(EtaXmlResource.class);
             Marshaller marshaller = context.createMarshaller();
             marshaller.setProperty(Marshaller.JAXB_FORMATTED_OUTPUT, true);
             marshaller.setProperty(Marshaller.JAXB_FRAGMENT, true);
             StringWriter sw = new StringWriter();
-            marshaller.marshal(insertResource, sw);
+            marshaller.marshal(etaXmlResource, sw);
             soapBody = sw.toString();
         } catch (JAXBException e) {
             LOGGER.error("Failed To Marshal Object: {}", e.getMessage());
@@ -475,13 +517,13 @@ public class Resource {
         return insertUser;
     }
 
-    private InsertResource generateGenericResource(String id, GenericResourceData resource) {
-        InsertResource insertResource = new InsertResource();
-        insertResource.setId(resource.getResourceId());
+    private EtaXmlResource generateGenericResource(String id, GenericResourceData resource) {
+        EtaXmlResource etaXmlResource = new EtaXmlResource();
+        etaXmlResource.setId(resource.getResourceId());
 
         // Mandatory Elements
         ArrayList<Property> properties = new ArrayList<>(10);
-        insertResource.setProperties(properties);
+        etaXmlResource.setProperties(properties);
         properties.add(new Property("status", "active"));
         properties.add(new Property("parent_id", id));
         properties.add(new Property("name", StringUtils.trim(resource.getName())));
@@ -515,9 +557,9 @@ public class Resource {
         }
 
         workSkills.setWorkskill(workskillList);
-        insertResource.setWorkskills(workSkills);
+        etaXmlResource.setWorkskills(workSkills);
 
-        return insertResource;
+        return etaXmlResource;
     }
 
     /**
@@ -526,14 +568,14 @@ public class Resource {
      * @param truck
      * @return
      */
-    private InsertResource generateTransportationResource(String id, TransportResourceData truck) {
+    private EtaXmlResource generateTransportationResource(String id, TransportResourceData truck) {
 
-        InsertResource insertResource = new InsertResource();
-        insertResource.setId(truck.getName());
+        EtaXmlResource etaXmlResource = new EtaXmlResource();
+        etaXmlResource.setId(truck.getName());
 
         // Mandatory Elements
         ArrayList<Property> properties = new ArrayList<>(10);
-        insertResource.setProperties(properties);
+        etaXmlResource.setProperties(properties);
         properties.add(new Property("status", "active"));
         properties.add(new Property("parent_id", id));
         properties.add(new Property("name", truck.getName()));
@@ -558,10 +600,10 @@ public class Resource {
         }
 
         workSkills.setWorkskill(workskill);
-        insertResource.setWorkskills(workSkills);
+        etaXmlResource.setWorkskills(workSkills);
         properties.add(new Property("type", "LGT"));
 
-        return insertResource;
+        return etaXmlResource;
     }
 
     public void authOnly(Exchange exchange) {
