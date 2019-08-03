@@ -11,14 +11,14 @@ import java.util.List;
 @XmlType(propOrder = { "user", "id", "properties", "workskills" })
 @XmlSeeAlso({User.class, Property.class, WorkSkills.class})
 @XmlAccessorType(XmlAccessType.PROPERTY)
-public class InsertResource {
+public class EtaXmlResource {
 
     private User user;
     private String id;
     private List<Property> properties;
     private WorkSkills workskills;
 
-    public InsertResource () {
+    public EtaXmlResource() {
 
     }
     @XmlElement(name="user")
