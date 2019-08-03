@@ -1,6 +1,7 @@
 package com.oracle.ofsc.routes;
 
 
+import com.oracle.ofsc.etadirect.camel.beans.Resource;
 import org.apache.camel.Exchange;
 import org.apache.camel.LoggingLevel;
 import org.apache.camel.builder.RouteBuilder;
@@ -15,7 +16,7 @@ public class ResourceRoutes extends RouteBuilder {
     private static final String LOG_CLASS = "com.oracle.ofsc.routes.ResourceRoutes";
 
     @Override
-    public void configure() throws Exception {
+    public void configure() {
 
         from("direct://etadirectsoap/resource")
                 .to("log:" + LOG_CLASS + "?level=INFO")
@@ -29,11 +30,12 @@ public class ResourceRoutes extends RouteBuilder {
                 .to("log:" + LOG_CLASS + "?level=INFO");
 
         from("direct://etadirectrest/resource/get")
-
                 // Send actual request to endpoint of Web Service.
                 .setHeader(Exchange.HTTP_METHOD, constant(org.apache.camel.component.http4.HttpMethods.GET))
                 .setHeader("CamelHttpQuery", constant(null))
 
+                .log("Show User: ${in.headers}")
+                .log("Show Body: ${in.body}")
                 .toD("https4:api.etadirect.com/rest/ofscCore/v1/resources/${in.header[id]}"
                         + "?bridgeEndpoint=true&throwExceptionOnFailure=false&authenticationPreemptive=true"
                         + "&authUsername=${in.header[username]}&authPassword=${in.header[passwd]}");

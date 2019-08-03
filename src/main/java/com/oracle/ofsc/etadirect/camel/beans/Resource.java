@@ -363,6 +363,10 @@ public class Resource {
         }
     }
 
+    /**
+     * Perfoms a User Insert using REST
+     * @param exchange
+     */
     public void mapToInsertUser(Exchange exchange) {
         String category = (String) exchange.getIn().getHeader("resource_category");
 
@@ -399,13 +403,13 @@ public class Resource {
     }
 
     /**
-     * Generates the request body and complete SOAP request for a resource creation
+     * Generates the request body and complete REST request for a resource creation
      */
     public void mapToInsertResource(Exchange exchange) {
         String id = (String) exchange.getIn().getHeader("id");
         String category = (String) exchange.getIn().getHeader("resource_category");
 
-        LOGGER.info("Generate Insert Resource Body For Insertion Under ResourceID: {}", id);
+        LOGGER.info("Generate Insert Resource REST Json For Insertion Under ResourceID: {}", id);
         // TODO: The request should have the information for the request, however, this is hardcoded for now:
         User userBlock = Security.generateUserAuth((String) exchange.getIn().getHeader("CamelHttpQuery"), !USE_MD5);
         InsertResource insertResource = null;

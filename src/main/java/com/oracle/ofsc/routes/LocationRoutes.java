@@ -24,7 +24,7 @@ public class LocationRoutes extends RouteBuilder {
                 // Send actual request to endpoint of Web Service.
                 .setHeader(Exchange.HTTP_METHOD, constant(org.apache.camel.component.http4.HttpMethods.POST))
                 .setHeader("CamelHttpQuery", constant(null))
-                .toD("https4:api.etadirect.com/rest/ofscCore/v1/resources/${in.header[id]}/locations?bridgeEndpoint=true&throwExceptionOnFailure=false&authenticationPreemptive=true&authUsername=${in.header[username]}&authPassword=${in.header[passwd]}")
+                .toD("https4:api.etadirect.com/rest/ofscCore/v1/resources/${in.header[id]}/locations?bridgeEndpoint=true&throwExceptionOnFailure=false&authenticationPreemptive=true&authUsername=${in.header[  username]}&authPassword=${in.header[passwd]}")
                 .to("log:" + LOG_CLASS + "?level=INFO");
 
         from("direct://etadirectrest/getLocation")

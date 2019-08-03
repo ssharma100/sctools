@@ -33,7 +33,7 @@ public class Security {
      * @param camelHttpQuery
      * @return
      */
-    public static User generateUserAuth(String camelHttpQuery, boolean useMD5) {
+    static User generateUserAuth(String camelHttpQuery, boolean useMD5) {
 
         HashMap<String, String> authInfo = extractURLInfo(camelHttpQuery);
         // Get current time in ISO 8601 Format:
@@ -87,7 +87,7 @@ public class Security {
         return hexString.toString();
     }
 
-    public static String hexMD5Encode( String input) throws NoSuchAlgorithmException {
+    static String hexMD5Encode( String input) throws NoSuchAlgorithmException {
         MessageDigest md = MessageDigest.getInstance("MD5");
         md.update(input.getBytes(StandardCharsets.UTF_8));
 
@@ -118,5 +118,4 @@ public class Security {
 
         return map;
     }
-
 }

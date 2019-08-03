@@ -3,6 +3,7 @@ package com.oracle.ofsc.routes;
 import com.oracle.ofsc.etadirect.camel.beans.Activity;
 import com.oracle.ofsc.etadirect.camel.beans.Resource;
 import com.oracle.ofsc.etadirect.camel.beans.ResponseHandler;
+import com.oracle.ofsc.etadirect.camel.beans.Security;
 import org.apache.camel.builder.RouteBuilder;
 import org.apache.camel.dataformat.bindy.csv.BindyCsvDataFormat;
 import org.apache.camel.spi.DataFormat;
@@ -16,14 +17,17 @@ public class ETAdirectGenericRoutes extends RouteBuilder {
     private DataFormat activityInsert = new BindyCsvDataFormat(com.oracle.ofsc.transforms.GenericActivityData.class);
 
     @Override
-    public void configure() throws Exception {
+    public void configure() {
 
         /* Populates The Body With The SOAP Call Needed To Call The Server */
 
         from("direct://generic/resource/get")
                 .routeId("etaDirectGenResourceGet")
+                // Extract The Headers
+                .bean(Resource.class, "authOnly")
                 .to("direct://etadirectrest/resource/get");
 
+        // Performs creation of the resource REST object from the input list items (CSV)
         from("direct://generic/resource/insert")
                 .routeId("etaDirectGenResourceInsert")
                 .unmarshal(resourceInsert)
