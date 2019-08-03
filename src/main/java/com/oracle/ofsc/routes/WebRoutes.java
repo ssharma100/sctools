@@ -58,6 +58,12 @@ public class WebRoutes extends RouteBuilder {
                     .otherwise()
                         .to("direct://generic/resource/get");
 
+        // RESTful End Point For Generic Resource Management (Updated To Use REST and Client/Secret)
+        from("restlet:http://localhost:8085/sctool/v1/generic/resourcesunder/{id}?restletMethods=get")
+                .routeId("invokeGenericResourcesGetCall")
+                .to("log:" + LOG_CLASS + "?showAll=true&multiline=true&level=INFO")
+                .to("direct://generic/resources/get");
+
         // EndPoint For Resource To EtaDirect Assignment To Activity based on
         // listing of activity IDs and resource mappings (post)
         // or from existing Activity Structure (patch)

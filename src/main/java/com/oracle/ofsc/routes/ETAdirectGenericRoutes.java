@@ -27,6 +27,12 @@ public class ETAdirectGenericRoutes extends RouteBuilder {
                 .bean(Resource.class, "authOnly")
                 .to("direct://etadirectrest/resource/get");
 
+        from("direct://generic/resources/get")
+                .routeId("etaDirectGenResourcesGet")
+                // Extract The Headers
+                .bean(Resource.class, "authOnly")
+                .to("direct://etadirectrest/resources/get");
+
         // Performs creation of the resource REST object from the input list items (CSV)
         from("direct://generic/resource/insert")
                 .routeId("etaDirectGenResourceInsert")
