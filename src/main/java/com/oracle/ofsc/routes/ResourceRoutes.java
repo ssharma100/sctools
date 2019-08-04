@@ -34,9 +34,6 @@ public class ResourceRoutes extends RouteBuilder {
                 // Send actual request to endpoint of RESTful Service.
                 .setHeader(Exchange.HTTP_METHOD, constant(org.apache.camel.component.http4.HttpMethods.GET))
                 .setHeader("CamelHttpQuery", constant(null))
-
-                .log("Show User: ${in.headers}")
-                .log("Show Body: ${in.body}")
                 .toD("https4:api.etadirect.com/rest/ofscCore/v1/resources/${in.header[id]}"
                         + "?bridgeEndpoint=true&throwExceptionOnFailure=false&authenticationPreemptive=true"
                         + "&authUsername=${in.header[username]}&authPassword=${in.header[passwd]}");
@@ -46,10 +43,15 @@ public class ResourceRoutes extends RouteBuilder {
                 // Send actual request to endpoint of RESTful Service.
                 .setHeader(Exchange.HTTP_METHOD, constant(org.apache.camel.component.http4.HttpMethods.GET))
                 .setHeader("CamelHttpQuery", constant(null))
-
-                .log("Show User: ${in.headers}")
-                .log("Show Body: ${in.body}")
                 .toD("https4:api.etadirect.com/rest/ofscCore/v1/resources/${in.header[id]}/children"
+                        + "?bridgeEndpoint=true&throwExceptionOnFailure=false&authenticationPreemptive=true"
+                        + "&authUsername=${in.header[username]}&authPassword=${in.header[passwd]}");
+
+        // Actual RESTful Call For The PUT (Creation Or Update)
+        from("direct://etadirectrest/resources/put")
+                .setHeader(Exchange.HTTP_METHOD, constant(org.apache.camel.component.http4.HttpMethods.PUT))
+                .setHeader("CamelHttpQuery", constant(null))
+                .toD("https4:api.etadirect.com/rest/ofscCore/v1/resources/${in.header[id]}"
                         + "?bridgeEndpoint=true&throwExceptionOnFailure=false&authenticationPreemptive=true"
                         + "&authUsername=${in.header[username]}&authPassword=${in.header[passwd]}");
 

@@ -425,7 +425,7 @@ public class Resource {
             ResourceData bindyItem = new ResourceData();
             bindyItem.setName(resourceJson.getName());
             bindyItem.setResourceId(resourceJson.getResourceId());
-            bindyItem.setParentResourceInternalId(resourceJson.getParentResourceInternalId());
+            bindyItem.setParentResourceId(resourceJson.getParentResourceId());
             bindyItem.setEmail(resourceJson.getEmail());
             bindyItem.setPhone(resourceJson.getPhone());
             bindyItem.setResourceInternalId(resourceJson.getResourceInternalId());
@@ -436,12 +436,31 @@ public class Resource {
             bindyList.add(bindyItem);
 
         }
-
         exchange.getIn().setBody(bindyList);
+    }
+
+    public void generateRESTfulResource(Exchange exchange) throws JsonProcessingException {
+        // Body Should Contain A Bindy Object That Needs To Be Converted To Json
+        ResourceData resourceCSV = (ResourceData ) exchange.getIn().getBody();
+
+        // Map To The Json Object:
+        EtaJsonResource resourceJson = new EtaJsonResource();
+        resourceJson.setResourceId(resourceCSV.getResourceId());
+        resourceJson.setParentResourceId(resourceCSV.getParentResourceId());
+        resourceJson.setName(resourceCSV.getName());
+        resourceJson.setEmail(resourceCSV.getEmail());
+        resourceJson.setResourceType(resourceCSV.getResourceType());
+        resourceJson.setPhone(resourceCSV.getPhone());
+        resourceJson.setTimeZone(resourceCSV.getTimeZone());
+        resourceJson.setLanguage("en");
+        resourceJson.setStatus("active");
+
+        exchange.getIn().setHeader("id", resourceCSV.getResourceId());
+        exchange.getIn().setBody(resourceMapper.writeValueAsString(resourceJson));
 
     }
     /**
-     * Generates the request body and complete REST request for a resource creation
+     * (Legacy) Generates the request body and complete REST request for a resource creation
      */
     public void mapToInsertResource(Exchange exchange) {
         String id = (String) exchange.getIn().getHeader("id");
