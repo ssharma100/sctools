@@ -57,8 +57,10 @@ The loader will take the input file of the format, depending on what loader you 
 Where {id} is the external resource ID of the parent (folder or group) under which the new resource will be added.
 THe format for the input body should be:
 
-    Name, ResourceID, WorkSkillList, Latitude, Longitude, Address, City, State, Zip, TIME_ZONE, HoursPerWeek, Affiliation, Login, Password
-    Handy, Douglas, A, 992200220, continuity, 28.3088, -81.4193, 1938 Cattleya Dr, Kissimmee, Florida, 34741-3124, America/New_York, 33, Walmart Purple Consortium, acosta_992200220, test123
+    resourceId,name,email,phone,resourceInternalId,parentResourceInternalId,resourceType,timeZone,dateFormat,timeFormat,personnel_type
+    
+Note: The 19x version of OFSC requires that a Resource and a User be created in order to use/route to a resource.  If the User is not created the Resource will appear 
+as disabled.
 
 ### Loading A User:
 The latest version of the scheduler need a valid user to be added to each resource in order for the resource to be considered in routing.

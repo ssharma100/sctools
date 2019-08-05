@@ -8,7 +8,7 @@ import java.math.BigDecimal;
 /**
  * Modeling for Generic resource for general resource upload
  */
-@CsvRecord(separator = ",", skipFirstLine = false, generateHeaderColumns = true)
+@CsvRecord(separator = ",", skipFirstLine = true, generateHeaderColumns = true)
 public class ResourceData {
 
     @DataField(pos=1)
@@ -27,7 +27,7 @@ public class ResourceData {
     private String resourceInternalId;
 
     @DataField(pos=6)
-    private String parentResourceInternalId;
+    private String parentResourceId;
 
     @DataField(pos=7)
     private String resourceType;
@@ -40,9 +40,6 @@ public class ResourceData {
 
     @DataField(pos=10)
     private String timeFormat;
-
-    @DataField(pos=12)
-    private String personnel_type;
 
     // Accessor Methods
     public String getName() {
@@ -117,21 +114,11 @@ public class ResourceData {
         this.timeFormat = timeFormat;
     }
 
-    public String getPersonnel_type() {
-        return personnel_type;
+    public String getParentResourceId() {
+        return parentResourceId;
     }
 
-    public void setPersonnel_type(String personnel_type) {
-        this.personnel_type = personnel_type;
+    public void setParentResourceId(String parentResourceId) {
+        this.parentResourceId = parentResourceId;
     }
-
-    public String getParentResourceInternalId() {
-        return parentResourceInternalId;
-    }
-
-    public void setParentResourceInternalId(String parentResourceInternalId) {
-        this.parentResourceInternalId = parentResourceInternalId;
-    }
-
-
 }
