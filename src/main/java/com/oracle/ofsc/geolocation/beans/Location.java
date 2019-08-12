@@ -2,31 +2,90 @@ package com.oracle.ofsc.geolocation.beans;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.google.common.base.Splitter;
+import com.google.common.collect.Lists;
 import com.oracle.ofsc.etadirect.camel.beans.Security;
 import com.oracle.ofsc.etadirect.rest.Assignment;
 import com.oracle.ofsc.etadirect.rest.InsertLocation;
 import com.oracle.ofsc.etadirect.rest.LocationAssignment;
-import com.oracle.ofsc.etadirect.rest.RouteList;
 import com.oracle.ofsc.geolocation.transforms.google.DistanceJson;
 import com.oracle.ofsc.transforms.LocationListData;
 import com.oracle.ofsc.transforms.ResourceLocationData;
 import com.oracle.ofsc.transforms.RouteReportData;
-import com.oracle.ofsc.transforms.TransportationActivityData;
 import org.apache.camel.Exchange;
+import org.apache.camel.component.jdbc.ResultSetIterator;
+import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
 import java.io.InputStream;
+import java.math.BigDecimal;
 import java.util.*;
 
 /**
- * Created by xxx_sharma on 10/21/16.
+ * Location based functions - includes Google
  */
 public class Location {
     private static final Logger LOGGER = LoggerFactory.getLogger(Location.class.getName());
     private static final ObjectMapper locationMapper = new ObjectMapper();
     private static final String PROP_ORIGINALS = "Originals";
+
+
+    /**
+     * Given a DB Query result (from a JDBC SQL endpoint) will
+     * convert the route list to a List of Trip Objects.  These trip
+     * objects will be built with the intent to associate the original
+     * route entry, origin and destination.
+     *
+     * @param exchange
+     */
+    public void generateTripRouteOfPlan(Exchange exchange) {
+        LOGGER.debug("Generating Google Distance Requests");
+        ResultSetIterator resultIterator = (ResultSetIterator )exchange.getIn().getBody();
+        ArrayList<TripInfo> tripStops = new ArrayList<>(15);
+
+        // Extract Each Row And Build The Origin Destination Pairs
+        if (null == resultIterator || !resultIterator.hasNext()) {
+            LOGGER.error("No Routes Returned - Nothing To Map");
+            exchange.getIn().setBody(tripStops);
+            return;
+        }
+
+        Map<String, Object> rollingOrigin = null;
+        while (resultIterator.hasNext()) {
+            if (null == rollingOrigin) {
+                rollingOrigin = resultIterator.next();
+            }
+            Map<String, Object> destination = resultIterator.next();
+            TripInfo tripStop = buildOriginDestinationEntry(rollingOrigin, destination);
+
+            LOGGER.info("Adding Trip Stop: {}", tripStop.toString());
+            tripStops.add(tripStop);
+            rollingOrigin = destination;
+        }
+        LOGGER.info("End Of Routes After {} Stops", tripStops.size());
+        exchange.getIn().setBody(tripStops);
+    }
+
+    /**
+     * Generates the Origin and Destination
+     * @param origin fields for the origin record
+     * @param destination for the destination record
+     * @return
+     */
+    private TripInfo buildOriginDestinationEntry(Map<String, Object> origin, Map<String, Object> destination) {
+        TripInfo tripInfo = new TripInfo();
+        tripInfo.setRouteDay((Date )origin.get("route_day"));
+        tripInfo.setResourceId((String) origin.get("resource_id"));
+        tripInfo.setOriginEventId((String )origin.get("appoint_id"));
+        tripInfo.setDestEventId((String) destination.get("appoint_id"));
+        tripInfo.setOriginLat((BigDecimal) origin.get("latitude"));
+        tripInfo.setOriginLong((BigDecimal) origin.get("longitude"));
+        tripInfo.setDestLat((BigDecimal) destination.get("latitude"));
+        tripInfo.setDestLong((BigDecimal )destination.get("longitude"));
+        return tripInfo;
+    }
 
     /**
      * Based on the list of addresses pull out the origin destination pairs
@@ -61,11 +120,19 @@ public class Location {
         exchange.getIn().setBody(routePoints);
     }
 
-
-    public void loadHeaders (Exchange exchange) {
-        LOGGER.info("Loading Origin Destination For Call Information for http4");
+    /**
+     *
+     * @param exchange
+     */
+    public void loadGoogleHeaders(Exchange exchange) {
+        LOGGER.debug("Loading Origin Destination For Call Information for http4");
         String routeCords = exchange.getIn().getBody(String.class);
-        exchange.getOut().setHeader(Exchange.HTTP_QUERY, "units=imperial&"+ routeCords + "&key=AIzaSyDG2GXoRuhBSAicyU1TpBJ8PpagJHIyNyk");
+        String requestHeaders = exchange.getIn().getHeader("CamelHttpQuery", String.class);
+        List<String> params = Lists.newArrayList(Splitter.on('&').trimResults().omitEmptyStrings().split(requestHeaders));
+        String keyParam = params.stream()
+                .filter(param -> StringUtils.split(param, "=")[0].equals("key"))
+                .findFirst().get();
+        exchange.getOut().setHeader(Exchange.HTTP_QUERY, "units=metric&" + routeCords + "&" + keyParam);
     }
 
     /**
@@ -99,7 +166,7 @@ public class Location {
         ResourceLocationData rld = exchange.getIn().getBody(ResourceLocationData.class);
         // Set Values For HTTP Call And Authentication To ETAdirect
         HashMap<String, String> authInfo =
-                Security.extractAuthInfo((String )exchange.getIn().getHeader("CamelHttpQuery"));
+                Security.extractURLInfo((String) exchange.getIn().getHeader("CamelHttpQuery"));
         String username = authInfo.get("user") + "@" + authInfo.get("company");
         String passwd =   authInfo.get("passwd");
         exchange.getIn().setHeader("username", username);
@@ -182,10 +249,11 @@ public class Location {
         jsonLocation.setPostalCode(location.getZip());
         jsonLocation.setLatitude(location.getLatitude());
         jsonLocation.setLongitude(location.getLongitude());
+        jsonLocation.setCountry(location.getCountry());
 
         // Set Values For HTTP Call And Authentication To ETAdirect
         HashMap<String, String> authInfo =
-                Security.extractAuthInfo((String )exchange.getIn().getHeader("CamelHttpQuery"));
+                Security.extractURLInfo((String) exchange.getIn().getHeader("CamelHttpQuery"));
         String username = authInfo.get("user") + "@" + authInfo.get("company");
         String passwd =   authInfo.get("passwd");
         exchange.getIn().setHeader("id", location.getExternalId());
@@ -209,7 +277,7 @@ public class Location {
         DistanceJson distanceJson;
         try {
             distanceJson = locationMapper.readValue(is, DistanceJson.class);
-            LOGGER.info("Completed Google Distance List Parsing");
+            LOGGER.info("Completed Google Distance List Parsing (Status={}", distanceJson.getStatus());
         } catch (IOException e) {
             LOGGER.error("Failed To Parse Google Distance Response Json (InputStream)", e);
             return;
@@ -227,5 +295,71 @@ public class Location {
         routeData.setDriveTime(time);
 
         exchange.getIn().setBody(routeData);
+    }
+
+    /**
+     * Converts the Json Response From The Google Returned Drive Matrix To Update The Header Stored
+     * TripInfo Object With Results.
+     *
+     * @param exchange
+     */
+    public void covertJsonToTripInfo(Exchange exchange) {
+        TripInfo tripInfo = exchange.getProperty("TripInfo", TripInfo.class);
+
+        if (tripInfo == null) {
+            LOGGER.error("Cannot Find Original TripInfo Header Record");
+            return;
+        }
+
+        LOGGER.info("Updating Trip On {}, For Associate: {}, From Job: {} To Job: {} ", tripInfo.getRouteDay(), tripInfo.getResourceId(),
+                tripInfo.getOriginEventId(), tripInfo.getDestEventId());
+
+        InputStream is = (InputStream )exchange.getIn().getBody();
+
+        // Marshal Json IS To Object
+        DistanceJson distanceJson;
+        try {
+            distanceJson = locationMapper.readValue(is, DistanceJson.class);
+            LOGGER.info("Completed Google Distance List Parsing (Status={})", distanceJson.getStatus());
+        } catch (IOException e) {
+            LOGGER.error("Failed To Parse Google Distance Response Json (InputStream)", e);
+            return;
+        }
+
+        tripInfo.setStatus(distanceJson.getStatus());
+        if (StringUtils.isNotBlank(distanceJson.getError_message())) {
+            LOGGER.error("Failed Distance Query Call: {}", distanceJson.getError_message());
+            tripInfo.setgMessage(distanceJson.getError_message());
+            return;
+        }
+
+        // Map To The Header Object:
+        tripInfo.setId(exchange.getExchangeId());
+        tripInfo.setOriginAddress(distanceJson.getOrigins().get(0));
+        tripInfo.setDestAddress(distanceJson.getDestinations().get(0));
+
+        String time = distanceJson.getRows().get(0).getElements().get(0).getDuration().getText();
+        String distance = distanceJson.getRows().get(0).getElements().get(0).getDistance().getText();
+        LOGGER.info("Found Time: {}, Mileage: {}", time, distance);
+
+        // Distance and Mileage (parse)
+        if (StringUtils.endsWith(distance, "mi")) {
+            tripInfo.setMileage(new BigDecimal(StringUtils.substringBefore(distance, " mi")));
+        }
+        else if (StringUtils.endsWith(distance, "km")) {
+            tripInfo.setMileage(new BigDecimal(StringUtils.substringBefore(distance, " km")));
+        }
+        else {
+            tripInfo.setMileage(BigDecimal.ZERO);
+        }
+        // Parse The Proper Time
+        if (StringUtils.contains(time, "hour")) {
+            String hours = StringUtils.substringBefore(time, " hour");
+            String min   = StringUtils.substringAfterLast(StringUtils.substringBefore(time, " min"), " ");
+            tripInfo.setDriveTime(Integer.parseInt(hours) * 60 + Integer.parseInt(min));
+        }
+        else {
+            tripInfo.setDriveTime(Integer.parseInt(StringUtils.substringBefore(time, " min")));
+        }
     }
 }

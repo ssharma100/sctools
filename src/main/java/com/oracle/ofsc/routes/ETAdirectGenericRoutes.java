@@ -12,32 +12,45 @@ import org.apache.camel.spi.DataFormat;
  */
 public class ETAdirectGenericRoutes extends RouteBuilder {
     private static final String LOG_CLASS = "com.oracle.ofsc.routes.ETAdirectGenericRoutes";
-    private DataFormat resourceInsert = new BindyCsvDataFormat(com.oracle.ofsc.transforms.GenericResourceData.class);
+    private DataFormat resourceAndUserInsert = new BindyCsvDataFormat(com.oracle.ofsc.transforms.GenericResourceData.class);
+    private DataFormat resource       = new BindyCsvDataFormat(com.oracle.ofsc.transforms.ResourceData.class);
     private DataFormat activityInsert = new BindyCsvDataFormat(com.oracle.ofsc.transforms.GenericActivityData.class);
 
     @Override
-    public void configure() throws Exception {
+    public void configure() {
 
         /* Populates The Body With The SOAP Call Needed To Call The Server */
 
+        // Makes the request to the RESTful Route For ETA Direct API and sends back the native response
         from("direct://generic/resource/get")
                 .routeId("etaDirectGenResourceGet")
-                .to("log:" + LOG_CLASS + "?level=INFO")
-                .bean(Resource.class, "mapToGetRequest")
-                .to("direct://etadirectsoap/resource");
+                // Extract The Headers
+                .bean(Resource.class, "authOnly")
+                .to("direct://etadirectrest/resource/get");
 
+        // Makes the ETA Direct RESTful request and generates a CSV response
+        from("direct://generic/resources/get")
+                .routeId("etaDirectGenResourcesGet")
+                // Extract The Headers
+                .bean(Resource.class, "authOnly")
+                .to("direct://etadirectrest/resources/get")
+                .bean(Resource.class, "mapResourceListToBeanList")
+                .marshal(resource);
+
+        // Performs creation of the resource REST object from the input list items (CSV)
         from("direct://generic/resource/insert")
                 .routeId("etaDirectGenResourceInsert")
-                .unmarshal(resourceInsert)
+                .unmarshal(resource)
                 .split(body())
-                .to("log:" + LOG_CLASS + "?level=INFO")
-                .setHeader("resource_category", constant("generic"))
-                .bean(Resource.class, "mapToInsertResource")
-                .to("direct://etadirectsoap/resource");
+                    .to("log:" + LOG_CLASS + "?level=INFO")
+                    .setHeader("resource_category", constant("generic"))
+                    .bean(Resource.class, "authOnly")
+                    .bean(Resource.class, "generateRESTfulResource")
+                    .to("direct://etadirectrest/resources/put");
 
         from("direct://generic/user/insert")
                 .routeId("etaDirectGenUserInsert")
-                .unmarshal(resourceInsert)
+                .unmarshal(resourceAndUserInsert)
                 .split(body())
                 .to("log:" + LOG_CLASS + "?level=INFO")
                 .setHeader("resource_category", constant("generic"))
@@ -59,6 +72,21 @@ public class ETAdirectGenericRoutes extends RouteBuilder {
                 .bean(Activity.class, "mapToInsertRestRequest")
                 .to("direct://etadirectrest/activity")
                 .bean(ResponseHandler.class, "restResponse");
+
+        from("direct://generic/activity/search/appNumber")
+                .routeId("etaSearchActivity")
+                .bean(Activity.class, "authOnly")
+                .to("direct://etadirectrest/activity/search/apptNumber");
+
+        from("direct://common/get/patchAssignedResource")
+                .routeId("patchAssignedResources")
+                .unmarshal(activityInsert)
+                .split(body())
+                    .bean(Activity.class, "mapToWOSearch")
+                    .to("direct://etadirectrest/activity/search/apptNumber")
+                    .bean(Activity.class, "assignResourceFromActivityResponse")
+                    .to("direct://etadirectrest/assignResource");
+
     }
 
 }

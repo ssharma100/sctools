@@ -10,15 +10,13 @@ import org.joda.time.format.DateTimeFormatter;
 import org.joda.time.format.ISODateTimeFormat;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.util.StringUtils;;
+;
 
 import java.nio.charset.StandardCharsets;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 import java.util.HashMap;
-import java.util.Iterator;
 import java.util.List;
-import java.util.Properties;
 
 /**
  * Created by Samir on 10/6/2016.
@@ -35,9 +33,9 @@ public class Security {
      * @param camelHttpQuery
      * @return
      */
-    public static User generateUserAuth(String camelHttpQuery, boolean useMD5) {
+    static User generateUserAuth(String camelHttpQuery, boolean useMD5) {
 
-        HashMap<String, String> authInfo = extractAuthInfo(camelHttpQuery);
+        HashMap<String, String> authInfo = extractURLInfo(camelHttpQuery);
         // Get current time in ISO 8601 Format:
         DateTime currentTime = new DateTime(DateTimeZone.UTC);
         DateTimeFormatter fmt = ISODateTimeFormat.dateTimeNoMillis();
@@ -89,7 +87,7 @@ public class Security {
         return hexString.toString();
     }
 
-    public static String hexMD5Encode( String input) throws NoSuchAlgorithmException {
+    static String hexMD5Encode( String input) throws NoSuchAlgorithmException {
         MessageDigest md = MessageDigest.getInstance("MD5");
         md.update(input.getBytes(StandardCharsets.UTF_8));
 
@@ -103,7 +101,7 @@ public class Security {
         return sb.toString();
     }
 
-    public static HashMap<String, String> extractAuthInfo(String queryStr) {
+    public static HashMap<String, String> extractURLInfo(String queryStr) {
         Preconditions.checkNotNull(queryStr, "Query String Must Be Provided For Auth");
         List<String> params = Lists.newArrayList(Splitter.on('&').trimResults().omitEmptyStrings().split(queryStr));
         HashMap<String, String> map = new HashMap<>(4);
@@ -120,5 +118,4 @@ public class Security {
 
         return map;
     }
-
 }

@@ -1,46 +1,49 @@
 package com.oracle.ofsc.routes;
 
+import com.oracle.ofsc.etadirect.camel.beans.Activity;
+import com.oracle.ofsc.etadirect.camel.beans.AcostaFunctions;
 import com.oracle.ofsc.etadirect.camel.beans.AggregatorStrategy;
 import com.oracle.ofsc.etadirect.camel.beans.ArcBestBulk;
 import com.oracle.ofsc.etadirect.camel.beans.Resource;
-import com.oracle.ofsc.etadirect.rest.ResourceLocationResponse;
 import com.oracle.ofsc.geolocation.beans.DistanceAggregationStrategy;
 import com.oracle.ofsc.geolocation.beans.Location;
 import com.oracle.ofsc.geolocation.beans.ResourceLocationDataAggregationStrategy;
 import org.apache.camel.Exchange;
-import org.apache.camel.Predicate;
 import org.apache.camel.builder.RouteBuilder;
 import org.apache.camel.component.jackson.JacksonDataFormat;
 import org.apache.camel.dataformat.bindy.csv.BindyCsvDataFormat;
-import org.apache.camel.model.dataformat.JsonLibrary;
 import org.apache.camel.spi.DataFormat;
 
-import java.util.List;
-import java.util.Map;
 
-/**
- * Created by ssharma on 10/20/16.
- */
 public class ETAdirectCommonRoutes extends RouteBuilder {
 
     private static final String LOG_CLASS = "com.oracle.ofsc.routes.ETAdirectRoutes";
     private DataFormat routeReport = new BindyCsvDataFormat(com.oracle.ofsc.transforms.RouteReportData.class);
     private DataFormat locationsList = new BindyCsvDataFormat(com.oracle.ofsc.transforms.LocationListData.class);
     private DataFormat resourceLocation = new BindyCsvDataFormat(com.oracle.ofsc.transforms.ResourceLocationData.class);
+    private DataFormat resourceAssignment = new BindyCsvDataFormat(com.oracle.ofsc.transforms.ResourceAssignment.class);
 
     private JacksonDataFormat jacksonDataFormat = new JacksonDataFormat();
-
-
 
     @Override public void configure() throws Exception {
 
         from("direct://common/get/route")
                 .routeId("etaDirectRouteGet")
                 .bean(Resource.class, "authOnly")
-                .to("log:" + LOG_CLASS + "?level=INFO")
                 .to("direct://etadirectrest/getRoute")
                 .bean(Resource.class, "extractRoutes")
                 .marshal(routeReport);
+
+        // Queries For Route And Loads In The DB Table
+        from("direct://common/get/route/route_plan/db_store")
+                .routeId("etaDirectRouteGetForRoutePlan")
+                .bean(Resource.class, "authOnly")
+                .setHeader("CamelJacksonUnmarshalType", constant("com.oracle.ofsc.etadirect.rest.RouteList"))
+                .to("direct://etadirectrest/getRoute")
+                .unmarshal(jacksonDataFormat)
+                .setProperty("routeListJson", simple("${in.body}"))
+                .bean(AcostaFunctions.class, "extractRoutesToSQL")
+                .to("jdbc:acostaDS?useHeadersAsParameters=true&outputType=StreamList");
 
         // Configured specifically for the bulk extraction of routes for the given day
         from("direct://common/get/route/bulk")
@@ -61,7 +64,7 @@ public class ETAdirectCommonRoutes extends RouteBuilder {
                 .bean(Location.class, "extractOriginDestination")
                 .split(body(), new DistanceAggregationStrategy())
                     .setHeader(Exchange.HTTP_METHOD, constant(org.apache.camel.component.http4.HttpMethods.GET))
-                    .bean(Location.class, "loadHeaders")
+                    .bean(Location.class, "loadGoogleHeaders")
                     .toD("https4:maps.googleapis.com/maps/api/distancematrix/json?bridgeEndpoint=true&throwExceptionOnFailure=false")
                     .bean(Location.class, "covertJsonToRouteReport")
                 .end()
@@ -104,5 +107,22 @@ public class ETAdirectCommonRoutes extends RouteBuilder {
                     .to("direct://etadirectrest/assignLocation")
                     .unmarshal(jacksonDataFormat)
                 .end();
+
+        from("direct://common/set/assignResource")
+                .routeId("assignResToActivity")
+                .unmarshal(resourceAssignment)
+                .split(body())
+                    .bean(Activity.class, "assignResource")
+                    .to("direct://etadirectrest/assignResource")
+                .end();
+
+        /**
+         * Makes a request to get all children resources under the given root.
+         * Note that this is broken and may not work.  Also limited to 100 responses.
+         */
+        from("direct://common/get/resource/children")
+                .routeId("getResourceChildren")
+                .to("direct://etadirectrest/getResourceChildren");
+
     }
 }

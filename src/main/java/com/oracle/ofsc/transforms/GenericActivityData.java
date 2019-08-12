@@ -34,18 +34,22 @@ public class GenericActivityData {
     @DataField(pos=11)
     private String      store;
     @DataField(pos=12)
-    private String      city;
+    private String      streetAddr;
     @DataField(pos=13)
-    private String      state;
+    private String      city;
     @DataField(pos=14)
-    private String      zipCode;
+    private String      state;
     @DataField(pos=15)
-    private String      timezone;
+    private String      zipCode;
     @DataField(pos=16)
-    private String      timeSlot;
+    private String      country;
     @DataField(pos=17)
-    private int         resourceCount;
+    private String      timezone;
     @DataField(pos=18)
+    private String      timeSlot;
+    @DataField(pos=19)
+    private int         resourceCount;
+    @DataField(pos=20)
     private String      allowedDOW;
 
     public GenericActivityData() {}
@@ -192,5 +196,21 @@ public class GenericActivityData {
 
     public void setAllowedDOW(String allowedDOW) {
         this.allowedDOW = allowedDOW;
+    }
+
+    public String getCountry() {
+        return country;
+    }
+
+    public void setCountry(String country) {
+        this.country = country;
+    }
+
+    public String getStreetAddr() {
+        return streetAddr;
+    }
+
+    public void setStreetAddr(String streetAddr) {
+        this.streetAddr = streetAddr;
     }
 }

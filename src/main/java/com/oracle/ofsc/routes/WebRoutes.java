@@ -40,7 +40,7 @@ public class WebRoutes extends RouteBuilder {
         // - Get Resource
         // - Insert Resource
         from("restlet:http://localhost:8085/sctool/v1/transportation/resource/{id}?restletMethods=post,get")
-                .routeId("invokeTransResourceCall")
+                .routeId("invokeTransportResourceCall")
                 .to("log:" + LOG_CLASS + "?showAll=true&multiline=true&level=INFO")
                 .choice()
                     .when(isPost)
@@ -48,9 +48,9 @@ public class WebRoutes extends RouteBuilder {
                     .otherwise()
                         .to("direct://transportation/resource/get");
 
-        // RESTful End Point For Generic Resource Management
+        // RESTful End Point For Generic Resource Management (Updated To Use REST and Client/Secret)
         from("restlet:http://localhost:8085/sctool/v1/generic/resource/{id}?restletMethods=post,get")
-                .routeId("invokeGenResourceCall")
+                .routeId("invokeGenericResourceCall")
                 .to("log:" + LOG_CLASS + "?showAll=true&multiline=true&level=INFO")
                 .choice()
                     .when(isPost)
@@ -58,7 +58,25 @@ public class WebRoutes extends RouteBuilder {
                     .otherwise()
                         .to("direct://generic/resource/get");
 
-        // RESTful End Point For Generic User Management
+        // RESTful End Point For Generic Resource Management (Updated To Use REST and Client/Secret)
+        from("restlet:http://localhost:8085/sctool/v1/generic/resourcesunder/{id}?restletMethods=get")
+                .routeId("invokeGenericResourcesGetCall")
+                .to("log:" + LOG_CLASS + "?showAll=true&multiline=true&level=INFO")
+                .to("direct://generic/resources/get");
+
+        // EndPoint For Resource To EtaDirect Assignment To Activity based on
+        // listing of activity IDs and resource mappings (post)
+        // or from existing Activity Structure (patch)
+        from("restlet:http://localhost:8085/sctool/v1/generic/assignresource?restletMethods=post,patch")
+                .routeId("invokeWebResAssign")
+                .choice()
+                .when(isPost)
+                    .to("direct://common/set/assignResource")
+                .otherwise()
+                    .to("direct://common/get/patchAssignedResource");
+
+
+        // RESTful End Point For Generic User Creation/Insert
         from("restlet:http://localhost:8085/sctool/v1/generic/user?restletMethods=post")
                 .routeId("invokeGenUserPostCall")
                 .to("log:" + LOG_CLASS + "?showAll=true&multiline=true&level=INFO")
@@ -85,7 +103,7 @@ public class WebRoutes extends RouteBuilder {
                 .to("log:" + LOG_CLASS + "?showAll=true&multiline=true&level=INFO")
                 .to("direct://common/get/assignLocations");
 
-        // RESTful End Point For Activity
+        // RESTful End Point For Activity (ABT Specific - Transportation)
         // - Get Activity (Transportation)
         // - Insert Activity (Transportation)
         from("restlet:http://localhost:8085/sctool/v1/transportation/activity/{id}?restletMethods=post,get")
@@ -103,15 +121,31 @@ public class WebRoutes extends RouteBuilder {
                 .routeId("invokeGenericActivityCall")
                 .to("log:" + LOG_CLASS + "?showAll=true&multiline=true&level=INFO")
                 .choice()
-                .when(isPost)
-                .to("direct://generic/activity/insert")
-                .otherwise()
-                .to("direct://generic/activity/get");
+                    .when(isPost)
+                        .to("direct://generic/activity/insert")
+                    .otherwise().to("direct://generic/activity/get");
+
+        // - Get Activity By Search Value
+        // The caller must provide date range for the search as query arguments
+        from("restlet:http://localhost:8085/sctool/v1/activity/{apptNumber}?restletMethod=get")
+                .routeId("invokeGetActivityAppNumber")
+                .to("direct://generic/activity/search/appNumber");
+      
+        // Search (PassThroughQuery)
+        from("restlet:http://localhost:8085/sctool/v1/generic/activity/search/{apptNumber}?restletMethods=get")
+                .routeId("invokeSearchGenericActivity")
+                .to("log:" + LOG_CLASS + "?showAll=true&multiline=true&level=INFO");
 
         // Obtains the route list (ordered) for the given resource "id"
         // Output will be formatted in a CSV
         from("restlet:http://localhost:8085/sctool/v1/route/{id}/{routeDay}?restletMethod=get")
-                .routeId("invokeRouteQueryCall").to("log:" + LOG_CLASS + "?showAll=true&multiline=true&level=INFO").to("direct://common/get/route");
+                .routeId("invokeWebQueryCall")
+                .to("log:" + LOG_CLASS + "?showAll=true&multiline=true&level=INFO")
+                .to("direct://common/get/route");
+
+        from("restlet:http://localhost:8085/sctool/v1/generic/{root}/resources?restletMethod=get")
+                .routeId("invokeWebResourceList")
+                .to("direct://common/get/resource/children");
 
         // Specific to ABT - Due To The Fact That The Locations Were Just Hard Coded
         // Generates A Listing of All Routes For A Given Office/DC To Show The Whole Route For All Resources
@@ -128,7 +162,6 @@ public class WebRoutes extends RouteBuilder {
         from("restlet:http://localhost:8085/sctool/v1/route/enhance/distance/{googleKey}?restletMethod=post")
                 .routeId("routingEnhanceDistance")
                 .to("log:" + LOG_CLASS + "?showAll=true&multiline=true&level=INFO")
-                .to("direct://common/get/route/enhance/distance")
-                .to("log:" + LOG_CLASS + "?showAll=true&multiline=true&level=DEBUG");
+                .to("direct://common/get/route/enhance/distance");
     }
 }
