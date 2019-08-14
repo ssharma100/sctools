@@ -57,6 +57,11 @@ public class ETAdirectGenericRoutes extends RouteBuilder {
                 .bean(Resource.class, "mapToInsertUser")
                 .to("direct://etadirectsoap/resource");
 
+        // Performs a Activity Insertion & Start/Stop Cycle For Each Activity On A Given Resource
+        from("direct://generic/activity/statsbatch")
+                .routeId("statsBatchLoad")
+
+                .end();
         from("direct://generic/activity/get")
                 .routeId("etaGenActivityGet")
                 .to("log:" + LOG_CLASS + "?level=INFO")
