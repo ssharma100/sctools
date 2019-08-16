@@ -60,7 +60,7 @@ public class Activity {
 
         LOGGER.info("Generate Assignment For a_id {} With Resource ID {}" , ra.getEtaId(), ra.getRequiredResource());
         HashMap<String, String> authInfo =
-                Security.extractURLInfo((String )exchange.getIn().getHeader("CamelHttpQuery"));
+                Security.extractURLQueryParameters((String )exchange.getIn().getHeader("CamelHttpQuery"));
 
         String username = authInfo.get("user") + "@" + authInfo.get("company");
         String passwd =   authInfo.get("passwd");
@@ -127,7 +127,7 @@ public class Activity {
         GenericActivityData activityData = (GenericActivityData )exchange.getIn().getBody();
         LOGGER.info("Generate W/O Search For Activity Key {} With Resource ID {}" , activityData.getActivityKey(), activityData.getResourceId());
         HashMap<String, String> authInfo =
-                Security.extractURLInfo((String )exchange.getIn().getHeader("CamelHttpQuery"));
+                Security.extractURLQueryParameters((String )exchange.getIn().getHeader("CamelHttpQuery"));
 
         String username = authInfo.get("user") + "@" + authInfo.get("company");
         String passwd =   authInfo.get("passwd");
@@ -228,9 +228,9 @@ public class Activity {
      */
     public void authOnly(Exchange exchange) {
 
-        LOGGER.info("Generate Auth Only For");
+        LOGGER.info("Generate Auth Only Headers");
 
-        HashMap<String, String> authInfo = Security.extractURLInfo((String) exchange.getIn().getHeader("CamelHttpQuery"));
+        HashMap<String, String> authInfo = Security.extractURLQueryParameters((String) exchange.getIn().getHeader("CamelHttpQuery"));
 
         String username = authInfo.get("user") + "@" + authInfo.get("company");
         String passwd = authInfo.get("passwd");
@@ -256,7 +256,7 @@ public class Activity {
 
         String category = (String) exchange.getIn().getHeader("activity_category");
         HashMap<String, String> authInfo =
-                Security.extractURLInfo((String) exchange.getIn().getHeader("CamelHttpQuery"));
+                Security.extractURLQueryParameters((String) exchange.getIn().getHeader("CamelHttpQuery"));
 
         String username = authInfo.get("user") + "@" + authInfo.get("company");
         String passwd =   authInfo.get("passwd");

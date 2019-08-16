@@ -3,6 +3,7 @@ package com.oracle.ofsc.routes;
 import com.oracle.ofsc.etadirect.camel.beans.Activity;
 import com.oracle.ofsc.etadirect.camel.beans.Resource;
 import com.oracle.ofsc.etadirect.camel.beans.ResponseHandler;
+import com.oracle.ofsc.etadirect.camel.beans.Statistics;
 import org.apache.camel.builder.RouteBuilder;
 import org.apache.camel.dataformat.bindy.csv.BindyCsvDataFormat;
 import org.apache.camel.spi.DataFormat;
@@ -56,6 +57,20 @@ public class ETAdirectGenericRoutes extends RouteBuilder {
                 .setHeader("resource_category", constant("generic"))
                 .bean(Resource.class, "mapToInsertUser")
                 .to("direct://etadirectsoap/resource");
+
+        // Performs a Activity Insertion & Start/Stop Cycle For Each Activity On A Given Resource
+        from("direct://generic/activity/statsbatch")
+                .routeId("statsBatchLoad")
+                .bean(Statistics.class, "extractActivityLoadParams")
+                .split().method(Statistics.class, "splitToMessageList").stopOnException()
+                    .log("Performing Iterative Processing Of Activity:  ${exchangeProperty[CamelSplitIndex]}")
+                    // Generate A Start + Stop Time
+                    .to("direct://etadirectrest/activity")
+                    .bean(Statistics.class, "buildStartFromCreatedActivity")
+                    .to("direct://etadirectrest/activity/start")
+                    .bean(Statistics.class, "buildCompleteFromStartedActivity")
+                    .to("direct://etadirectrest/activity/complete")
+                .end();
 
         from("direct://generic/activity/get")
                 .routeId("etaGenActivityGet")

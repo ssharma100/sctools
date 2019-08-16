@@ -125,6 +125,14 @@ public class WebRoutes extends RouteBuilder {
                         .to("direct://generic/activity/insert")
                     .otherwise().to("direct://generic/activity/get");
 
+        // - Insert Status Activity - Will Load A Number Of Activities To Start And Stop Each One Such That It Creates
+        // a working activity for stats collection.
+        from("restlet:http://localhost:8085/sctool/v1/stats/activitybatch/{id}?restletMethods=post")
+                .routeId("invokeBatchActivityStatsLoad")
+                .to("log:" + LOG_CLASS + "?showAll=true&multiline=true&level=INFO")
+                .to("direct://generic/activity/statsbatch")
+                .end();
+
         // - Get Activity By Search Value
         // The caller must provide date range for the search as query arguments
         from("restlet:http://localhost:8085/sctool/v1/activity/{apptNumber}?restletMethod=get")

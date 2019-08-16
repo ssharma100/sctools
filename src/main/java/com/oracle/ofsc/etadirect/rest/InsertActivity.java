@@ -1,5 +1,6 @@
 package com.oracle.ofsc.etadirect.rest;
 
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.databind.annotation.JsonSerialize;
 
 import java.math.BigDecimal;
@@ -8,8 +9,10 @@ import java.math.BigDecimal;
  * Created by xxx_sharma on 10/16/16.
  */
 @JsonSerialize(include=JsonSerialize.Inclusion.NON_NULL)
+@JsonIgnoreProperties(ignoreUnknown = true)
 public class InsertActivity {
 
+    private String activityId;
     private String resourceId;
     private String date;
     private String activityType;
@@ -46,6 +49,21 @@ public class InsertActivity {
     // Acosta items
     private String impact_allowable_days;
     private String linked_sto;
+
+    // Google Fiber Items
+    private String gServices;
+    private int    gTvCount;
+    private String gPhoneCount;
+    private String gRepairType;
+    private String gCustomerType;
+
+    public String getActivityId() {
+        return activityId;
+    }
+
+    public void setActivityId(String activityId) {
+        this.activityId = activityId;
+    }
 
     public String getResourceId() {
         return resourceId;
@@ -277,5 +295,45 @@ public class InsertActivity {
 
     public void setCountry(String country) {
         this.country = country;
+    }
+
+    public String getgServices() {
+        return gServices;
+    }
+
+    public void setgServices(String gServices) {
+        this.gServices = gServices;
+    }
+
+    public String getgPhoneCount() {
+        return gPhoneCount;
+    }
+
+    public void setgPhoneCount(String gPhoneCount) {
+        this.gPhoneCount = gPhoneCount;
+    }
+
+    public String getgRepairType() {
+        return gRepairType;
+    }
+
+    public void setgRepairType(String gRepairType) {
+        this.gRepairType = gRepairType;
+    }
+
+    public String getgCustomerType() {
+        return gCustomerType;
+    }
+
+    public void setgCustomerType(String gCustomerType) {
+        this.gCustomerType = gCustomerType;
+    }
+
+    public int getgTvCount() {
+        return gTvCount;
+    }
+
+    public void setgTvCount(int gTvCount) {
+        this.gTvCount = gTvCount;
     }
 }
