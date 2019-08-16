@@ -62,11 +62,14 @@ public class ETAdirectGenericRoutes extends RouteBuilder {
         from("direct://generic/activity/statsbatch")
                 .routeId("statsBatchLoad")
                 .bean(Statistics.class, "extractActivityLoadParams")
-                .split().method(Statistics.class, "splitToMessageList")
+                .split().method(Statistics.class, "splitToMessageList").stopOnException()
                     .log("Performing Iterative Processing Of Activity:  ${exchangeProperty[CamelSplitIndex]}")
                     // Generate A Start + Stop Time
                     .to("direct://etadirectrest/activity")
                     .bean(Statistics.class, "buildStartFromCreatedActivity")
+                    .to("direct://etadirectrest/activity/start")
+                    .bean(Statistics.class, "buildCompleteFromStartedActivity")
+                    .to("direct://etadirectrest/activity/complete")
                 .end();
 
         from("direct://generic/activity/get")

@@ -6,6 +6,8 @@ import com.oracle.ofsc.etadirect.rest.InsertActivity;
 import org.apache.camel.Exchange;
 import org.apache.camel.Message;
 import org.apache.camel.impl.DefaultMessage;
+import org.apache.commons.lang3.StringUtils;
+import org.joda.time.DateTime;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -14,6 +16,7 @@ import java.io.InputStream;
 import java.io.UnsupportedEncodingException;
 import java.net.URLDecoder;
 import java.nio.charset.Charset;
+import java.text.DecimalFormat;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.HashMap;
@@ -103,9 +106,26 @@ public class Statistics {
         try {
             com.oracle.ofsc.etadirect.rest.InsertActivity insertActivity =
                     activityMapper.readValue((InputStream)exchange.getIn().getBody(), com.oracle.ofsc.etadirect.rest.InsertActivity.class);
-            exchange.getIn().setHeader("id", insertActivity.getActivityId());
-            LOGGER.info("Generating Start Activity For {} For Increment {}", insertActivity.getActivityId(), headers.get("CamelSplitIndex"));
-            // Build The Request
+            exchange.getIn().setHeader("activityId", insertActivity.getActivityId());
+            int splitIndex = (int )exchange.getProperty("CamelSplitIndex");
+            LOGGER.info("Generating Start Activity For {} For Increment {}", insertActivity.getActivityId(), splitIndex);
+            // Build The Request Based On The Date/Time
+            // Generate Timestamp OffSet From The First Time
+            String time = (String )headers.get("firstAptTime");
+            String[] timeComponents = StringUtils.split(time, ":");
+            DateTime dateTime = new DateTime()
+                    .withHourOfDay(Integer.parseInt(timeComponents[0]))
+                    .withMinuteOfHour(Integer.parseInt(timeComponents[1]));
+            int duration = Integer.parseInt((String )headers.get("duration"));
+            int minuteIncrement = duration * splitIndex;
+            dateTime = dateTime.plusMinutes(minuteIncrement);
+            String startBody = String.format("{ \"time\": \"%s %02d:%02d\" }",
+                    headers.get("targetDate"), dateTime.getHourOfDay(), dateTime.getMinuteOfHour());
+            DefaultMessage message = new DefaultMessage();
+            message.setHeaders(exchange.getIn().getHeaders());
+            message.setBody(startBody);
+            exchange.setOut(message);
+
         } catch (JsonProcessingException e) {
             LOGGER.error("Failed To Marshal JSON Object: {}", e.getMessage());
         } catch (IOException e) {
@@ -114,12 +134,36 @@ public class Statistics {
         exchange.getIn().setBody(exchange.getOut().getBody());
     }
 
+    public void buildCompleteFromStartedActivity(Exchange exchange) {
+        Map<String, Object> headers = exchange.getIn().getHeaders();
+        int splitIndex = (int )exchange.getProperty("CamelSplitIndex");
+        LOGGER.info("Generating Start Activity For {} For Increment {}", exchange.getIn().getHeader("activityId"), splitIndex);
+
+        // Build The Request Based On The Date/Time
+        // Generate Timestamp OffSet From The First Time
+        String time = (String )headers.get("firstAptTime");
+        String[] timeComponents = StringUtils.split(time, ":");
+        DateTime dateTime = new DateTime()
+                .withHourOfDay(Integer.parseInt(timeComponents[0]))
+                .withMinuteOfHour(Integer.parseInt(timeComponents[1]));
+        int duration = Integer.parseInt((String )headers.get("duration"));
+        int minuteIncrement = duration * (splitIndex + 1);
+        dateTime = dateTime.plusMinutes(minuteIncrement);
+        String startBody = String.format("{ \"time\": \"%s %02d:%02d\" }",
+                headers.get("targetDate"), dateTime.getHourOfDay(), dateTime.getMinuteOfHour());
+        DefaultMessage message = new DefaultMessage();
+        message.setHeaders(exchange.getIn().getHeaders());
+        message.setBody(startBody);
+        exchange.setOut(message);
+    }
+
     private InsertActivity bootStrapDefaults(Map<String, Object> headers) throws UnsupportedEncodingException {
         com.oracle.ofsc.etadirect.rest.InsertActivity activity = new com.oracle.ofsc.etadirect.rest.InsertActivity();
         activity.setResourceId((String )headers.get("id"));
         activity.setActivityType((String )headers.get("activityType"));
         activity.setDate((String )headers.get("targetDate"));
         activity.setApptNumber("Stats-" + new Date().getTime());
+        activity.setDuration(Integer.parseInt((String )headers.get("duration")));
         activity.setgCustomerType((String )headers.get("customerType"));
         activity.setgServices((String )headers.get("services"));
         activity.setgTvCount(Integer.parseInt((String )headers.get("tv")));

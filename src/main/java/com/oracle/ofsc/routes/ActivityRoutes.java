@@ -41,6 +41,34 @@ public class ActivityRoutes extends RouteBuilder {
                 .toD("https4:api.etadirect.com/rest/ofscCore/v1/activities/?bridgeEndpoint=true&throwExceptionOnFailure=false&authenticationPreemptive=true&authUsername=${in.header[username]}&authPassword=${in.header[passwd]}")
                 .to("log:" + LOG_CLASS + "?level=DEBUG");
 
+        from ("direct://etadirectrest/activity/start")
+                .to("log:" + LOG_CLASS + "?level=INFO")
+                .onException(Exception.class)
+                .to("log:" + LOG_CLASS + "?showAll=true&multiline=true&level=ERROR")
+                .handled(true)
+                .end()
+
+                // Send Actual request to endpoint of Res Service (ETAdirect)
+                .setHeader(Exchange.HTTP_METHOD, constant(org.apache.camel.component.http4.HttpMethods.POST))
+                .setHeader("CamelHttpQuery", constant(null))
+                .log("Show ${in.header[activityId]}")
+                .toD("https4:api.etadirect.com/rest/ofscCore/v1/activities/${in.header[activityId]}/custom-actions/start?bridgeEndpoint=true&throwExceptionOnFailure=false&authenticationPreemptive=true&authUsername=${in.header[username]}&authPassword=${in.header[passwd]}")
+                .to("log:" + LOG_CLASS + "?level=DEBUG");
+
+        from ("direct://etadirectrest/activity/complete")
+                .to("log:" + LOG_CLASS + "?level=INFO")
+                .onException(Exception.class)
+                .to("log:" + LOG_CLASS + "?showAll=true&multiline=true&level=ERROR")
+                .handled(true)
+                .end()
+
+                // Send Actual request to endpoint of Res Service (ETAdirect)
+                .setHeader(Exchange.HTTP_METHOD, constant(org.apache.camel.component.http4.HttpMethods.POST))
+                .setHeader("CamelHttpQuery", constant(null))
+                .log("Show ${in.header[activityId]}")
+                .toD("https4:api.etadirect.com/rest/ofscCore/v1/activities/${in.header[activityId]}/custom-actions/complete?bridgeEndpoint=true&throwExceptionOnFailure=false&authenticationPreemptive=true&authUsername=${in.header[username]}&authPassword=${in.header[passwd]}")
+                .to("log:" + LOG_CLASS + "?level=DEBUG");
+
         from("direct://etadirectrest/activity/search/apptNumber")
                 .onException(Exception.class)
                     .to("log:" + LOG_CLASS + "?showAll=true&multiline=true&level=ERROR")
