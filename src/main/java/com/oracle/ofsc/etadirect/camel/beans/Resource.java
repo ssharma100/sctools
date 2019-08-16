@@ -114,7 +114,7 @@ public class Resource {
 
         LOGGER.info("Generate Body For Resource Update Resource ID: {} For {} Impact Hours",  resourceId, impactHours);
         HashMap<String, String> authInfo =
-                Security.extractURLInfo((String) exchange.getProperty("original_headers"));
+                Security.extractURLQueryParameters((String) exchange.getProperty("original_headers"));
         String username = authInfo.get("user") + "@" + authInfo.get("company");
         String passwd =   authInfo.get("passwd");
 
@@ -142,7 +142,7 @@ public class Resource {
         LOGGER.info("Processing Schedule For Weekend (Sunday) Continuity Resource ID {} Resetting Week Starting {}", resourceId, resetForWeekStarting);
 
         HashMap<String, String> authInfo =
-                Security.extractURLInfo((String) exchange.getProperty("original_headers"));
+                Security.extractURLQueryParameters((String) exchange.getProperty("original_headers"));
         String username = authInfo.get("user") + "@" + authInfo.get("company");
         String passwd =   authInfo.get("passwd");
 
@@ -170,7 +170,7 @@ public class Resource {
         LOGGER.info("Processing Schedule For Weekend (Saturday) Continuity Resource ID {} Resetting Week Starting {}", resourceId, resetForWeekStarting);
 
         HashMap<String, String> authInfo =
-                Security.extractURLInfo((String) exchange.getProperty("original_headers"));
+                Security.extractURLQueryParameters((String) exchange.getProperty("original_headers"));
         String username = authInfo.get("user") + "@" + authInfo.get("company");
         String passwd =   authInfo.get("passwd");
 
@@ -280,7 +280,7 @@ public class Resource {
         // Build The Message For Calendar Assignment
         LOGGER.info("Generate Body For Resource Schedule Reset Resource ID: {} On {}",  resourceId, resetForDay);
         HashMap<String, String> authInfo =
-                Security.extractURLInfo((String) exchange.getProperty("original_headers"));
+                Security.extractURLQueryParameters((String) exchange.getProperty("original_headers"));
         String username = authInfo.get("user") + "@" + authInfo.get("company");
         String passwd =   authInfo.get("passwd");
 
@@ -629,7 +629,7 @@ public class Resource {
         String bucketId = (String) exchange.getIn().getHeader("id");
         LOGGER.info("Generate Auth Only For ResourceId: {}", bucketId);
 
-        HashMap<String, String> authInfo = Security.extractURLInfo((String) exchange.getIn().getHeader("CamelHttpQuery"));
+        HashMap<String, String> authInfo = Security.extractURLQueryParameters((String) exchange.getIn().getHeader("CamelHttpQuery"));
 
         String username = authInfo.get("user") + "@" + authInfo.get("company");
         String passwd = authInfo.get("passwd");

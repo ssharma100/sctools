@@ -10,7 +10,6 @@ import org.joda.time.format.DateTimeFormatter;
 import org.joda.time.format.ISODateTimeFormat;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-;
 
 import java.nio.charset.StandardCharsets;
 import java.security.MessageDigest;
@@ -35,7 +34,7 @@ public class Security {
      */
     static User generateUserAuth(String camelHttpQuery, boolean useMD5) {
 
-        HashMap<String, String> authInfo = extractURLInfo(camelHttpQuery);
+        HashMap<String, String> authInfo = extractURLQueryParameters(camelHttpQuery);
         // Get current time in ISO 8601 Format:
         DateTime currentTime = new DateTime(DateTimeZone.UTC);
         DateTimeFormatter fmt = ISODateTimeFormat.dateTimeNoMillis();
@@ -101,7 +100,14 @@ public class Security {
         return sb.toString();
     }
 
-    public static HashMap<String, String> extractURLInfo(String queryStr) {
+    /**
+     * Splitter for the Query part of a URL path.  Will also ensure that the query path
+     * contains the mandatory authentication components.
+     *
+     * @param queryStr
+     * @return
+     */
+    public static HashMap<String, String> extractURLQueryParameters(String queryStr) {
         Preconditions.checkNotNull(queryStr, "Query String Must Be Provided For Auth");
         List<String> params = Lists.newArrayList(Splitter.on('&').trimResults().omitEmptyStrings().split(queryStr));
         HashMap<String, String> map = new HashMap<>(4);

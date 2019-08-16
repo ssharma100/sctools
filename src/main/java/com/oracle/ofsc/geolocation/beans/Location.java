@@ -166,7 +166,7 @@ public class Location {
         ResourceLocationData rld = exchange.getIn().getBody(ResourceLocationData.class);
         // Set Values For HTTP Call And Authentication To ETAdirect
         HashMap<String, String> authInfo =
-                Security.extractURLInfo((String) exchange.getIn().getHeader("CamelHttpQuery"));
+                Security.extractURLQueryParameters((String) exchange.getIn().getHeader("CamelHttpQuery"));
         String username = authInfo.get("user") + "@" + authInfo.get("company");
         String passwd =   authInfo.get("passwd");
         exchange.getIn().setHeader("username", username);
@@ -253,7 +253,7 @@ public class Location {
 
         // Set Values For HTTP Call And Authentication To ETAdirect
         HashMap<String, String> authInfo =
-                Security.extractURLInfo((String) exchange.getIn().getHeader("CamelHttpQuery"));
+                Security.extractURLQueryParameters((String) exchange.getIn().getHeader("CamelHttpQuery"));
         String username = authInfo.get("user") + "@" + authInfo.get("company");
         String passwd =   authInfo.get("passwd");
         exchange.getIn().setHeader("id", location.getExternalId());
