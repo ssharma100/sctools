@@ -16,7 +16,6 @@ import java.io.InputStream;
 import java.io.UnsupportedEncodingException;
 import java.net.URLDecoder;
 import java.nio.charset.Charset;
-import java.text.DecimalFormat;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.HashMap;
@@ -166,7 +165,7 @@ public class Statistics {
         activity.setDuration(Integer.parseInt((String )headers.get("duration")));
         activity.setgCustomerType((String )headers.get("customerType"));
         activity.setgServices((String )headers.get("services"));
-        if (StringUtils.isNotBlank((String )headers.get("tv"))) {
+        if (null != headers.get("tv")) {
             activity.setgTvCount(Integer.parseInt((String) headers.get("tv")));
         }
         activity.setgRepairType((String )headers.get("repairType"));
