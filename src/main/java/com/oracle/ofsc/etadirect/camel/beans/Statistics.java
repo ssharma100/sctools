@@ -166,7 +166,9 @@ public class Statistics {
         activity.setDuration(Integer.parseInt((String )headers.get("duration")));
         activity.setgCustomerType((String )headers.get("customerType"));
         activity.setgServices((String )headers.get("services"));
-        activity.setgTvCount(Integer.parseInt((String )headers.get("tv")));
+        if (StringUtils.isNotBlank((String )headers.get("tv"))) {
+            activity.setgTvCount(Integer.parseInt((String) headers.get("tv")));
+        }
         activity.setgRepairType((String )headers.get("repairType"));
         activity.setgPhoneCount((String )headers.get("phoneCount"));
         activity.setTimeSlot("1630");
