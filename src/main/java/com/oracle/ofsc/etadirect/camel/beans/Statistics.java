@@ -168,7 +168,7 @@ public class Statistics {
         if (null != headers.get("tv")) {
             activity.setgTvCount(Integer.parseInt((String) headers.get("tv")));
         }
-        activity.setgRepairType((String )headers.get("repairType"));
+        activity.setgRepairType(URLDecoder.decode((String )headers.get("repairType"),Charset.defaultCharset().name());
         activity.setgPhoneCount((String )headers.get("phoneCount"));
         activity.setTimeSlot("1630");
         activity.setCustomerName("Stats Bulkload");
