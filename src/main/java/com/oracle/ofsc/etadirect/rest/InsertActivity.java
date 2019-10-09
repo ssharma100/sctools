@@ -56,6 +56,7 @@ public class InsertActivity {
     private String gPhoneCount;
     private String gRepairType;
     private String gCustomerType;
+    private String customerCell;
 
     public String getActivityId() {
         return activityId;
@@ -335,5 +336,13 @@ public class InsertActivity {
 
     public void setgTvCount(int gTvCount) {
         this.gTvCount = gTvCount;
+    }
+
+    public String getCustomerCell() {
+        return customerCell;
+    }
+
+    public void setCustomerCell(String customerCell) {
+        this.customerCell = customerCell;
     }
 }
