@@ -9,6 +9,7 @@ import com.oracle.ofsc.etadirect.rest.ResourceAssignmentItems;
 import com.oracle.ofsc.etadirect.soap.GetActivity;
 import com.oracle.ofsc.etadirect.soap.Property;
 import com.oracle.ofsc.etadirect.soap.User;
+import com.oracle.ofsc.transforms.FiberActivityData;
 import com.oracle.ofsc.transforms.GenericActivityData;
 import com.oracle.ofsc.transforms.ResourceAssignment;
 import com.oracle.ofsc.transforms.TransportationActivityData;
@@ -30,7 +31,7 @@ import java.util.ArrayList;
 import java.util.HashMap;
 
 /**
- * Conversion Bean - Given an input of the specific type, will convert the bindy object
+ * Conversion Bean - Given an input of the specific type, will convert the Bindy object
  * into the required object for a SOAP or RESTful call to ETAdirect.
  */
 public class Activity {
@@ -272,6 +273,10 @@ public class Activity {
             LOGGER.info("Generating Activity Request From Generic Activity");
             activityIns = this.generateGenericActivity(exchange.getIn().getBody(), bucketId, isSLA);
             break;
+        case "fiber":
+            LOGGER.info("Generating Activity Request From Fiber Activity");
+            activityIns = this.generateFiberActivity(exchange.getIn().getBody());
+            break;
         default:
             LOGGER.error("Unrecognized Requesting Endpoint {} - No Activity Generator Found", category);
         }
@@ -341,6 +346,37 @@ public class Activity {
         return activityIns;
     }
 
+    /**
+     * Mapping Between Parsed CSV Object model and the outbound RESTful object.
+     *
+     * @param inObject
+     * @return
+     */
+    private com.oracle.ofsc.etadirect.rest.InsertActivity generateFiberActivity(Object inObject) {
+        FiberActivityData activityData = (FiberActivityData )inObject;
+        com.oracle.ofsc.etadirect.rest.InsertActivity activityIns = new com.oracle.ofsc.etadirect.rest.InsertActivity();
+
+        // Map Fields For Outbound RESTful Activity Call:
+        activityIns.setResourceId(activityData.getResourceId());
+        activityIns.setDate(activityData.getStartDate());
+        activityIns.setApptNumber(activityData.getActivityKey());
+        activityIns.setActivityType(activityData.getActivityType());
+        activityIns.setgCustomerType(activityData.getgCustomer());
+        activityIns.setCustomerNumber("Migration Process");
+        activityIns.setgRepairType(activityData.getRepairType());
+        activityIns.setgServices(StringUtils.replace(activityData.getgServices(),"|", ","));
+        activityIns.setgTvCount(activityData.getgTvCount());
+        activityIns.setTimeSlot(activityData.getTimeslot());
+        activityIns.setCustomerName(activityData.getAddressId());
+        activityIns.setStreetAddress(activityData.getStreet());
+        activityIns.setCity(activityData.getCity());
+        activityIns.setPostalCode(activityData.getPostalCode());
+        activityIns.setStateProvince(activityData.getState());
+        activityIns.setCustomerNumber(activityData.getAccountId());
+        activityIns.setCustomerCell(activityData.getPhoneNumber());
+
+        return activityIns;
+    }
     /**
      * Mapping between the inbound parsed Bindy object, for Generic activity types.
      * @param inObject

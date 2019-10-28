@@ -125,6 +125,13 @@ public class WebRoutes extends RouteBuilder {
                         .to("direct://generic/activity/insert")
                     .otherwise().to("direct://generic/activity/get");
 
+        // Post/Insert Activity (Fiber Specific)
+        from("restlet:http://localhost:8085/sctool/v1/fiber/activity?restletMethods=post")
+                .routeId("invokeFiberActivityCall")
+                .to("log:" + LOG_CLASS + "showAll=true&multiline=true&level=INFO")
+                .to("direct://fiber/activity/insert")
+                .end();
+
         // - Insert Status Activity - Will Load A Number Of Activities To Start And Stop Each One Such That It Creates
         // a working activity for stats collection.
         from("restlet:http://localhost:8085/sctool/v1/stats/activitybatch/{id}?restletMethods=post")

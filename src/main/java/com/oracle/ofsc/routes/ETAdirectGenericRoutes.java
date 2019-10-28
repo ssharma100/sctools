@@ -16,6 +16,7 @@ public class ETAdirectGenericRoutes extends RouteBuilder {
     private DataFormat resourceAndUserInsert = new BindyCsvDataFormat(com.oracle.ofsc.transforms.GenericResourceData.class);
     private DataFormat resource       = new BindyCsvDataFormat(com.oracle.ofsc.transforms.ResourceData.class);
     private DataFormat activityInsert = new BindyCsvDataFormat(com.oracle.ofsc.transforms.GenericActivityData.class);
+    private DataFormat fiberActivityInsert = new BindyCsvDataFormat(com.oracle.ofsc.transforms.FiberActivityData.class);
 
     @Override
     public void configure() {
@@ -84,6 +85,16 @@ public class ETAdirectGenericRoutes extends RouteBuilder {
                 .split(body())
                 .to("log:" + LOG_CLASS + "?level=DEBUG")
                 .setHeader("activity_category", constant("generic"))
+                .bean(Activity.class, "mapToInsertRestRequest")
+                .to("direct://etadirectrest/activity")
+                .bean(ResponseHandler.class, "restResponse");
+
+        from("direct://fiber/activity/insert")
+                .routeId("etaFiberActivityInsert")
+                .unmarshal(fiberActivityInsert)
+                .split(body())
+                .to("log:" + LOG_CLASS + "?level=DEBUG")
+                .setHeader("activity_category", constant("fiber"))
                 .bean(Activity.class, "mapToInsertRestRequest")
                 .to("direct://etadirectrest/activity")
                 .bean(ResponseHandler.class, "restResponse");
