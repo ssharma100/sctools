@@ -30,7 +30,7 @@
     <url>http://www.oracle.com/cloudservice</url>
     <properties>
         <camel-version>2.16.3</camel-version>
-        <fasterjackson-version>2.5.4</fasterjackson-version>
+        <fasterjackson-version>2.10.1</fasterjackson-version>
     </properties>
 
 
