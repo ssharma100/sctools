@@ -1,9 +1,6 @@
 package com.oracle.ofsc.routes;
 
-import com.oracle.ofsc.etadirect.camel.beans.Activity;
-import com.oracle.ofsc.etadirect.camel.beans.Resource;
-import com.oracle.ofsc.etadirect.camel.beans.ResponseHandler;
-import com.oracle.ofsc.etadirect.camel.beans.Statistics;
+import com.oracle.ofsc.etadirect.camel.beans.*;
 import org.apache.camel.builder.RouteBuilder;
 import org.apache.camel.dataformat.bindy.csv.BindyCsvDataFormat;
 import org.apache.camel.spi.DataFormat;
@@ -92,9 +89,10 @@ public class ETAdirectGenericRoutes extends RouteBuilder {
         from("direct://fiber/activity/insert")
                 .routeId("etaFiberActivityInsert")
                 .unmarshal(fiberActivityInsert)
-                .split(body())
+                .split(body(), new ActivityInsertAggregator())
                 .to("log:" + LOG_CLASS + "?level=DEBUG")
                 .setHeader("activity_category", constant("fiber"))
+                .setHeader("origin_activity", simple("${body}"))    // Store For Summary Use
                 .bean(Activity.class, "mapToInsertRestRequest")
                 .to("direct://etadirectrest/activity")
                 .bean(ResponseHandler.class, "restResponse");

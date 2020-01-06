@@ -16,6 +16,7 @@
  */
 package com.oracle.ofsc.routes;
 
+import com.oracle.ofsc.etadirect.camel.beans.ResponseHandler;
 import org.apache.camel.Predicate;
 import org.apache.camel.builder.RouteBuilder;
 import org.apache.camel.dataformat.bindy.csv.BindyCsvDataFormat;
@@ -31,6 +32,7 @@ import org.restlet.data.Method;
 public class WebRoutes extends RouteBuilder {
     private static final String LOG_CLASS = "com.oracle.ofsc.routes.WebRoutes";
     private Predicate isPost = header("CamelHttpMethod").isEqualTo("POST");
+    private DataFormat fiberActivityInsertResponse = new  BindyCsvDataFormat(com.oracle.ofsc.transforms.ActivityInsertedItem.class);
 
     /**
      * Let's configure the Camel routing rules using Java code...
@@ -130,6 +132,7 @@ public class WebRoutes extends RouteBuilder {
                 .routeId("invokeFiberActivityCall")
                 .to("log:" + LOG_CLASS + "showAll=true&multiline=true&level=INFO")
                 .to("direct://fiber/activity/insert")
+                .marshal(fiberActivityInsertResponse)                        // Convert To Insert Response
                 .end();
 
         // - Insert Status Activity - Will Load A Number Of Activities To Start And Stop Each One Such That It Creates
