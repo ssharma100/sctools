@@ -362,7 +362,7 @@ public class Activity {
         activityIns.setApptNumber(activityData.getActivityKey());
         activityIns.setActivityType(activityData.getActivityType());
         activityIns.setgCustomerType(activityData.getgCustomer());
-        activityIns.setCustomerNumber("Migration Process");
+        activityIns.setCustomerEmail("Migration_Process@gfio.com");
         activityIns.setgRepairType(activityData.getRepairType());
         activityIns.setgServices(StringUtils.replace(activityData.getgServices(),"|", ","));
         activityIns.setgTvCount(activityData.getgTvCount());
