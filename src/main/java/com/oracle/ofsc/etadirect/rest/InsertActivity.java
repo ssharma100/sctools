@@ -19,6 +19,7 @@ public class InsertActivity {
     private String apptNumber;
     private String customerName;
     private String customerNumber;
+    private String customerEmail;
     private String language = "en";
     private String timeZone;
     private String timeSlot;
@@ -80,6 +81,14 @@ public class InsertActivity {
 
     public void setDate(String date) {
         this.date = date;
+    }
+
+    public String getCustomerEmail() {
+        return customerEmail;
+    }
+
+    public void setCustomerEmail(String customerEmail) {
+        this.customerEmail = customerEmail;
     }
 
     public String getActivityType() {
