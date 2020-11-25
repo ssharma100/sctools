@@ -30,7 +30,7 @@
     <url>http://www.oracle.com/cloudservice</url>
     <properties>
         <camel-version>2.16.3</camel-version>
-        <fasterjackson-version>2.5.4</fasterjackson-version>
+        <fasterjackson-version>2.3.1</fasterjackson-version>
     </properties>
 
 
@@ -148,18 +148,14 @@
         </dependency>
 
         <dependency>
-            <groupId>com.fasterxml.jackson.core</groupId>
-            <artifactId>jackson-annotations</artifactId>
+            <groupId>javax.xml.bind</groupId>
+            <artifactId>jaxb-api</artifactId>
             <version>${fasterjackson-version}</version>
         </dependency>
+
         <dependency>
-            <groupId>com.fasterxml.jackson.core</groupId>
-            <artifactId>jackson-core</artifactId>
-            <version>${fasterjackson-version}</version>
-        </dependency>
-        <dependency>
-            <groupId>com.fasterxml.jackson.core</groupId>
-            <artifactId>jackson-databind</artifactId>
+            <groupId>org.glassfish.jaxb</groupId>
+            <artifactId>jaxb-runtime</artifactId>
             <version>${fasterjackson-version}</version>
         </dependency>
 

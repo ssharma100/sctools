@@ -1,6 +1,7 @@
 package com.oracle.ofsc.routes;
 
 import com.oracle.ofsc.etadirect.camel.beans.*;
+import org.apache.camel.LoggingLevel;
 import org.apache.camel.builder.RouteBuilder;
 import org.apache.camel.dataformat.bindy.csv.BindyCsvDataFormat;
 import org.apache.camel.spi.DataFormat;
@@ -14,6 +15,8 @@ public class ETAdirectGenericRoutes extends RouteBuilder {
     private DataFormat resource       = new BindyCsvDataFormat(com.oracle.ofsc.transforms.ResourceData.class);
     private DataFormat activityInsert = new BindyCsvDataFormat(com.oracle.ofsc.transforms.GenericActivityData.class);
     private DataFormat fiberActivityInsert = new BindyCsvDataFormat(com.oracle.ofsc.transforms.FiberActivityData.class);
+
+    private DataFormat userReport = new BindyCsvDataFormat(com.oracle.ofsc.transforms.UserReport.class);
 
     @Override
     public void configure() {
@@ -55,6 +58,16 @@ public class ETAdirectGenericRoutes extends RouteBuilder {
                 .setHeader("resource_category", constant("generic"))
                 .bean(Resource.class, "mapToInsertUser")
                 .to("direct://etadirectsoap/resource");
+
+        // Performs a Generic query on the users that are present in the OFSC platform
+        from("direct://generic/user/report")
+                .routeId("etaDirectGenUserReport")
+                .to("log:" + LOG_CLASS + "?level=INFO")
+                .bean(Resource.class, "authOnly")
+                .log(LoggingLevel.INFO, "Making Call To OFSC For All Visible Users")
+                .to("direct://etadirectrest/user/get")
+                .bean(UserProcessor.class, "mapOFSCUsers")
+                .end();
 
         // Performs a Activity Insertion & Start/Stop Cycle For Each Activity On A Given Resource
         from("direct://generic/activity/statsbatch")

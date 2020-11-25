@@ -366,7 +366,7 @@ public class Resource {
     }
 
     /**
-     * Perfoms a User Insert using REST
+     * Performs a User Insert using REST
      * @param exchange
      */
     public void mapToInsertUser(Exchange exchange) {
