@@ -1,11 +1,14 @@
 package com.oracle.ofsc.etadirect.rest;
 
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+
 import java.util.List;
 
 /**
  * Over arching response object for the OFSC user query
  *
  */
+@JsonIgnoreProperties(ignoreUnknown = true)
 public class UserResponse {
 
     private int totalResults;

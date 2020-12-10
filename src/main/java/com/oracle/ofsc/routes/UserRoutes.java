@@ -14,6 +14,6 @@ public class UserRoutes extends RouteBuilder {
                 .setHeader("CamelHttpQuery", constant(null))
                 .toD("https4:api.etadirect.com/rest/ofscCore/v1/users"
                         + "?bridgeEndpoint=true&throwExceptionOnFailure=false&authenticationPreemptive=true"
-                        + "&authUsername=${in.header[username]}&authPassword=${in.header[passwd]}");
+                        + "&offset=${in.header[offset]}&authUsername=${in.header[username]}&authPassword=${in.header[passwd]}");
     }
 }

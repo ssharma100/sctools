@@ -19,7 +19,8 @@ public class User {
     private String lastUpdatedTime;
     private String userType;
     private String name;
-    private List<String> resources;
+
+//    private List<String> resources;
 
     public String getLogin() {
         return login;
@@ -93,11 +94,11 @@ public class User {
         this.name = name;
     }
 
-    public List<String> getResources() {
-        return resources;
-    }
-
-    public void setResources(List<String> resources) {
-        this.resources = resources;
-    }
+//    public List<String> getResources() {
+//        return resources;
+//    }
+//
+//    public void setResources(List<String> resources) {
+//        this.resources = resources;
+//    }
 }

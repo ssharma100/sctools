@@ -16,13 +16,10 @@
  */
 package com.oracle.ofsc.routes;
 
-import com.oracle.ofsc.etadirect.camel.beans.ResponseHandler;
 import org.apache.camel.Predicate;
 import org.apache.camel.builder.RouteBuilder;
 import org.apache.camel.dataformat.bindy.csv.BindyCsvDataFormat;
 import org.apache.camel.spi.DataFormat;
-import org.apache.camel.spring.Main;
-import org.restlet.data.Method;
 
 /**
  * A Camel Router For Web Integration End-Points.  All the inbound Web End Points are defined here
