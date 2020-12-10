@@ -107,6 +107,23 @@ public class UserProcessor {
             uld.setTimezone(user.getTimeZone());
             uld.setLastUpdatedTime(user.getLastUpdatedTime());
             uld.setLanguage(user.getLanguage());
+            // Generate a String For The Given Array Of Resources
+            if (null == user.getResources()) {
+                uld.setVendor("Unknown");
+            }
+            String resourceArrayToStrng = String.format("%s", user.getResources());
+            if (StringUtils.containsIgnoreCase(resourceArrayToStrng,"prn")) {
+                uld.setVendor("PRINCE");
+            }
+            else if (StringUtils.containsIgnoreCase(resourceArrayToStrng,"itc")) {
+                uld.setVendor("ITC");
+            }
+            else if (StringUtils.containsIgnoreCase(resourceArrayToStrng,"onp")) {
+                uld.setVendor("OnePath");
+            }
+            else {
+                uld.setVendor("Unknown");
+            }
             bindyList.add(uld);
         }
 

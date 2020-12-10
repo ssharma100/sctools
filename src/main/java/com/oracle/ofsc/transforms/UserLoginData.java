@@ -28,6 +28,9 @@ public class UserLoginData {
     private String language;
     @DataField(pos=9)
     private String timezone;
+    @DataField(pos=10)
+    private String vendor;
+
 
     public String getLogin() {
         return login;
@@ -99,5 +102,13 @@ public class UserLoginData {
 
     public void setTimezone(String timezone) {
         this.timezone = timezone;
+    }
+
+    public String getVendor() {
+        return vendor;
+    }
+
+    public void setVendor(String vendor) {
+        this.vendor = vendor;
     }
 }
