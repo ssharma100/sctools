@@ -1,4 +1,4 @@
-package com.oracle.ofsc.etadirect.bindy;
+package com.oracle.ofsc.transforms;
 
 import org.apache.camel.dataformat.bindy.annotation.CsvRecord;
 import org.apache.camel.dataformat.bindy.annotation.DataField;

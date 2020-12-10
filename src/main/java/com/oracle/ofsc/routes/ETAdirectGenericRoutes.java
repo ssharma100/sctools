@@ -2,7 +2,7 @@ package com.oracle.ofsc.routes;
 
 import com.oracle.ofsc.etadirect.camel.beans.*;
 import com.oracle.ofsc.etadirect.rest.UserResponse;
-import com.oracle.ofsc.etadirect.bindy.UserLoginData;
+import com.oracle.ofsc.transforms.UserLoginData;
 import org.apache.camel.LoggingLevel;
 import org.apache.camel.builder.RouteBuilder;
 import org.apache.camel.dataformat.bindy.csv.BindyCsvDataFormat;

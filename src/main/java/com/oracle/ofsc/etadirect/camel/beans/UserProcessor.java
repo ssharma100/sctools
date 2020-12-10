@@ -4,12 +4,14 @@ import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.oracle.ofsc.etadirect.rest.User;
 import com.oracle.ofsc.etadirect.rest.UserResponse;
+import com.oracle.ofsc.transforms.UserLoginData;
 import org.apache.camel.Exchange;
 import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
@@ -93,12 +95,22 @@ public class UserProcessor {
                 .filter(user -> StringUtils.equals(user.getStatus(), "active"))
                 .collect(Collectors.toList());
 
-        List<Map<String, Object>> bindyListOfMap = new ArrayList<>(600);
+        List<UserLoginData> bindyList = new ArrayList<>(600);
         for (User user: activeUsers) {
-            bindyListOfMap.add(mapper.convertValue(user, new TypeReference<Map<String, Object>>() {}));
+            UserLoginData uld = new UserLoginData();
+            uld.setName(user.getName());
+            uld.setLogin(user.getLogin());
+            uld.setStatus(user.getStatus());
+            uld.setLastLoginTime(user.getLastLoginTime());
+            uld.setCreatedTime(user.getCreatedTime());
+            uld.setUserType(user.getUserType());
+            uld.setTimezone(user.getTimeZone());
+            uld.setLastUpdatedTime(user.getLastUpdatedTime());
+            uld.setLanguage(user.getLanguage());
+            bindyList.add(uld);
         }
 
         LOGGER.info("Setting Body: Filtered Active Users ({}) From Total Users ({})", activeUsers.size(), userList.size());
-        exchange.getIn().setBody(bindyListOfMap);
+        exchange.getIn().setBody(bindyList);
     }
 }
