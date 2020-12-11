@@ -107,10 +107,13 @@ public class UserProcessor {
             uld.setTimezone(user.getTimeZone());
             uld.setLastUpdatedTime(user.getLastUpdatedTime());
             uld.setLanguage(user.getLanguage());
+
             // Generate a String For The Given Array Of Resources
             if (null == user.getResources()) {
+                LOGGER.info("{} User Has No Resources: {}", user.getLogin(), user.getResources());
                 uld.setVendor("Unknown");
             }
+
             String resourceArrayToStrng = String.format("%s", user.getResources());
             if (StringUtils.containsIgnoreCase(resourceArrayToStrng,"prn")) {
                 uld.setVendor("PRINCE");
@@ -121,8 +124,15 @@ public class UserProcessor {
             else if (StringUtils.containsIgnoreCase(resourceArrayToStrng,"onp")) {
                 uld.setVendor("OnePath");
             }
+            else if (StringUtils.containsIgnoreCase(resourceArrayToStrng,"etadirect")) {
+                uld.setVendor("GoogleFiber");
+            }
+            else if (StringUtils.containsIgnoreCase(resourceArrayToStrng,"external")) {
+                uld.setVendor("FiberTeam");
+            }
             else {
-                uld.setVendor("Unknown");
+                LOGGER.warn("{} User Has Unmapped Resources: {}", user.getLogin(), user.getResources());
+                uld.setVendor("Unmapped");
             }
             bindyList.add(uld);
         }
