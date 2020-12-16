@@ -109,26 +109,19 @@ public class UserProcessor {
             uld.setLanguage(user.getLanguage());
 
             // Generate a String For The Given Array Of Resources
-            if (null == user.getResources()) {
-                LOGGER.info("{} User Has No Resources: {}", user.getLogin(), user.getResources());
-                uld.setVendor("Unknown");
-            }
+            uld.setVendor("Unknown");
 
-            String resourceArrayToStrng = String.format("%s", user.getResources());
-            if (StringUtils.containsIgnoreCase(resourceArrayToStrng,"prn")) {
+            if (StringUtils.containsIgnoreCase(user.getName(),"prn")) {
                 uld.setVendor("PRINCE");
             }
-            else if (StringUtils.containsIgnoreCase(resourceArrayToStrng,"itc")) {
+            else if (StringUtils.containsIgnoreCase(user.getName(),"itc")) {
                 uld.setVendor("ITC");
             }
-            else if (StringUtils.containsIgnoreCase(resourceArrayToStrng,"onp")) {
+            else if (StringUtils.containsIgnoreCase(user.getName(),"onp")) {
                 uld.setVendor("OnePath");
             }
-            else if (StringUtils.containsIgnoreCase(resourceArrayToStrng,"etadirect")) {
+            else if (StringUtils.containsIgnoreCase(user.getName(),"Google")) {
                 uld.setVendor("GoogleFiber");
-            }
-            else if (StringUtils.containsIgnoreCase(resourceArrayToStrng,"external")) {
-                uld.setVendor("FiberTeam");
             }
             else {
                 LOGGER.warn("{} User Has Unmapped Resources: {}", user.getLogin(), user.getResources());

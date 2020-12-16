@@ -2,6 +2,9 @@ package com.oracle.ofsc.transforms;
 
 import org.apache.camel.dataformat.bindy.annotation.CsvRecord;
 import org.apache.camel.dataformat.bindy.annotation.DataField;
+import org.joda.time.DateTime;
+import org.joda.time.format.DateTimeFormat;
+import org.joda.time.format.DateTimeFormatter;
 
 /**
  * Bindy class that formats the output required for User Files/Information
@@ -9,6 +12,8 @@ import org.apache.camel.dataformat.bindy.annotation.DataField;
  */
 @CsvRecord(separator = ",", skipFirstLine = false, generateHeaderColumns=true)
 public class UserLoginData {
+
+    private static DateTimeFormatter fmt = DateTimeFormat.forPattern("yyyy-MM-dd");
 
     @DataField(pos=1)
     private String login;
@@ -30,6 +35,8 @@ public class UserLoginData {
     private String timezone;
     @DataField(pos=10)
     private String vendor;
+    @DataField(pos=11)
+    private String reportedOn = fmt.print(new DateTime());
 
 
     public String getLogin() {
@@ -110,5 +117,13 @@ public class UserLoginData {
 
     public void setVendor(String vendor) {
         this.vendor = vendor;
+    }
+
+    public String getReportedOn() {
+        return reportedOn;
+    }
+
+    public void setReportedOn(String reportedOn) {
+        this.reportedOn = reportedOn;
     }
 }
