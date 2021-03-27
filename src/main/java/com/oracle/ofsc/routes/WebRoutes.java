@@ -16,13 +16,10 @@
  */
 package com.oracle.ofsc.routes;
 
-import com.oracle.ofsc.etadirect.camel.beans.ResponseHandler;
 import org.apache.camel.Predicate;
 import org.apache.camel.builder.RouteBuilder;
 import org.apache.camel.dataformat.bindy.csv.BindyCsvDataFormat;
 import org.apache.camel.spi.DataFormat;
-import org.apache.camel.spring.Main;
-import org.restlet.data.Method;
 
 /**
  * A Camel Router For Web Integration End-Points.  All the inbound Web End Points are defined here
@@ -43,7 +40,7 @@ public class WebRoutes extends RouteBuilder {
         // - Insert Resource
         from("restlet:http://localhost:8085/sctool/v1/transportation/resource/{id}?restletMethods=post,get")
                 .routeId("invokeTransportResourceCall")
-                .to("log:" + LOG_CLASS + "?showAll=true&multiline=true&level=INFO")
+                .to("log:" + LOG_CLASS + "?showAll=true&level=INFO")
                 .choice()
                     .when(isPost)
                         .to("direct://transportation/resource/insert")
@@ -53,7 +50,7 @@ public class WebRoutes extends RouteBuilder {
         // RESTful End Point For Generic Resource Management (Updated To Use REST and Client/Secret)
         from("restlet:http://localhost:8085/sctool/v1/generic/resource/{id}?restletMethods=post,get")
                 .routeId("invokeGenericResourceCall")
-                .to("log:" + LOG_CLASS + "?showAll=true&multiline=true&level=INFO")
+                .to("log:" + LOG_CLASS + "?showAll=true&level=INFO")
                 .choice()
                     .when(isPost)
                         .to("direct://generic/resource/insert")
@@ -63,7 +60,7 @@ public class WebRoutes extends RouteBuilder {
         // RESTful End Point For Generic Resource Management (Updated To Use REST and Client/Secret)
         from("restlet:http://localhost:8085/sctool/v1/generic/resourcesunder/{id}?restletMethods=get")
                 .routeId("invokeGenericResourcesGetCall")
-                .to("log:" + LOG_CLASS + "?showAll=true&multiline=true&level=INFO")
+                .to("log:" + LOG_CLASS + "?showAll=true&level=INFO")
                 .to("direct://generic/resources/get");
 
         // EndPoint For Resource To EtaDirect Assignment To Activity based on
@@ -81,14 +78,20 @@ public class WebRoutes extends RouteBuilder {
         // RESTful End Point For Generic User Creation/Insert
         from("restlet:http://localhost:8085/sctool/v1/generic/user?restletMethods=post")
                 .routeId("invokeGenUserPostCall")
-                .to("log:" + LOG_CLASS + "?showAll=true&multiline=true&level=INFO")
+                .log("Performing User List Fetch From OFSC")
                 .to("direct://generic/user/insert");
+
+        // RESTful End Point For A List Of All Users In The System
+        from("restlet:http://localhost:8085/sctool/v1/generic/userReport?restletMethods=get")
+                .routeId("invokeGenUserGetCall")
+                .to("log:" + LOG_CLASS + "?showAll=true&level=INFO")
+                .to("direct://generic/user/report");
 
         // Location Management Functions
         // Supports the ability to create a location within the OFSC
         from("restlet:http://localhost:8085/sctool/v1/location/{id}?restletMethods=post,get")
                 .routeId("locationUpload")
-                .to("log:" + LOG_CLASS + "?showAll=true&multiline=true&level=INFO")
+                .to("log:" + LOG_CLASS + "?showAll=true&level=INFO")
                 .choice()
                     .when(isPost)
                     .to("direct://common/set/locations")
@@ -97,12 +100,12 @@ public class WebRoutes extends RouteBuilder {
 
         from("restlet:http://localhost:8085/sctool/v1/fetchAssignLocation?restletMethod=post")
                 .routeId("assignmentFetch")
-                .to("log:" + LOG_CLASS + "?showAll=true&multiline=true&level=INFO")
+                .to("log:" + LOG_CLASS + "?showAll=true&level=INFO")
                 .to("direct://common/get/assignedLocations");
 
         from("restlet:http://localhost:8085/sctool/v1/applyAssignLocation?restletMethod=post")
                 .routeId("assignmentApply")
-                .to("log:" + LOG_CLASS + "?showAll=true&multiline=true&level=INFO")
+                .to("log:" + LOG_CLASS + "?showAll=true&level=INFO")
                 .to("direct://common/get/assignLocations");
 
         // RESTful End Point For Activity (ABT Specific - Transportation)
@@ -110,7 +113,7 @@ public class WebRoutes extends RouteBuilder {
         // - Insert Activity (Transportation)
         from("restlet:http://localhost:8085/sctool/v1/transportation/activity/{id}?restletMethods=post,get")
                 .routeId("invokeTransActivityCall")
-                .to("log:" + LOG_CLASS + "?showAll=true&multiline=true&level=INFO")
+                .to("log:" + LOG_CLASS + "?showAll=true&level=INFO")
                 .choice()
                     .when(isPost)
                         .to("direct://transportation/activity/insert")
@@ -121,7 +124,7 @@ public class WebRoutes extends RouteBuilder {
         // - Insert Activity (Generic)
         from("restlet:http://localhost:8085/sctool/v1/generic/activity/{id}?restletMethods=post,get")
                 .routeId("invokeGenericActivityCall")
-                .to("log:" + LOG_CLASS + "?showAll=true&multiline=true&level=INFO")
+                .to("log:" + LOG_CLASS + "?showAll=true&level=INFO")
                 .choice()
                     .when(isPost)
                         .to("direct://generic/activity/insert")
@@ -130,7 +133,7 @@ public class WebRoutes extends RouteBuilder {
         // Post/Insert Activity (Fiber Specific)
         from("restlet:http://localhost:8085/sctool/v1/fiber/activity?restletMethods=post")
                 .routeId("invokeFiberActivityCall")
-                .to("log:" + LOG_CLASS + "showAll=true&multiline=true&level=INFO")
+                .to("log:" + LOG_CLASS + "showAll=true&level=INFO")
                 .to("direct://fiber/activity/insert")
                 .marshal(fiberActivityInsertResponse)                        // Convert To Insert Response
                 .end();
@@ -139,7 +142,7 @@ public class WebRoutes extends RouteBuilder {
         // a working activity for stats collection.
         from("restlet:http://localhost:8085/sctool/v1/stats/activitybatch/{id}?restletMethods=post")
                 .routeId("invokeBatchActivityStatsLoad")
-                .to("log:" + LOG_CLASS + "?showAll=true&multiline=true&level=INFO")
+                .to("log:" + LOG_CLASS + "?showAll=true&level=INFO")
                 .to("direct://generic/activity/statsbatch")
                 .end();
 
@@ -152,13 +155,13 @@ public class WebRoutes extends RouteBuilder {
         // Search (PassThroughQuery)
         from("restlet:http://localhost:8085/sctool/v1/generic/activity/search/{apptNumber}?restletMethods=get")
                 .routeId("invokeSearchGenericActivity")
-                .to("log:" + LOG_CLASS + "?showAll=true&multiline=true&level=INFO");
+                .to("log:" + LOG_CLASS + "?showAll=true&level=INFO");
 
         // Obtains the route list (ordered) for the given resource "id"
         // Output will be formatted in a CSV
         from("restlet:http://localhost:8085/sctool/v1/route/{id}/{routeDay}?restletMethod=get")
                 .routeId("invokeWebQueryCall")
-                .to("log:" + LOG_CLASS + "?showAll=true&multiline=true&level=INFO")
+                .to("log:" + LOG_CLASS + "?showAll=true&level=INFO")
                 .to("direct://common/get/route");
 
         from("restlet:http://localhost:8085/sctool/v1/generic/{root}/resources?restletMethod=get")
@@ -170,16 +173,16 @@ public class WebRoutes extends RouteBuilder {
         // - Used for routed appointment extraction and reporting.
         from("restlet:http://localhost:8085/sctool/v1/bulkroute/{station}/{routeDay}?restletMethod=get")
                 .routeId("invokeBulkRouteQueryCall")
-                .to("log:" + LOG_CLASS + "?showAll=true&multiline=true&level=INFO")
+                .to("log:" + LOG_CLASS + "?showAll=true&level=INFO")
                 .to("direct://common/get/route/bulk")
-                .to("log:" + LOG_CLASS + "?showAll=true&multiline=true&level=DEBUG");
+                .to("log:" + LOG_CLASS + "?showAll=true&level=DEBUG");
 
         // Call To Geolocation Information (Enhancement)
         // Uses Googles Distance/Map API To Run Through A Roster Of Appointments To Enhance Each Appointment
         // With Drive Times, Distance, And the Origin Destination Addresses
         from("restlet:http://localhost:8085/sctool/v1/route/enhance/distance/{googleKey}?restletMethod=post")
                 .routeId("routingEnhanceDistance")
-                .to("log:" + LOG_CLASS + "?showAll=true&multiline=true&level=INFO")
+                .to("log:" + LOG_CLASS + "?showAll=true&level=INFO")
                 .to("direct://common/get/route/enhance/distance");
     }
 }
