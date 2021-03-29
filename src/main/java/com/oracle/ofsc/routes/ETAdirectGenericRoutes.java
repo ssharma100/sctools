@@ -82,6 +82,12 @@ public class ETAdirectGenericRoutes extends RouteBuilder {
                 .log("Completed Processing Of User Report")
                 .end();
 
+        // Performs Stats Update - If "Cascade" flag is set, will perform update of stats for all resources
+        // that exist under the main resource.
+        from("direct://generic/stats/override")
+                .routeId("etaSirectGenStatsOverride")
+                .log("log:" + LOG_CLASS + "?level=INFO")
+                .end();
 
         // Performs a Activity Insertion & Start/Stop Cycle For Each Activity On A Given Resource
         from("direct://generic/activity/statsbatch")
