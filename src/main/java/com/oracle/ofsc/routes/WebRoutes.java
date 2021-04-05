@@ -87,6 +87,15 @@ public class WebRoutes extends RouteBuilder {
                 .to("log:" + LOG_CLASS + "?showAll=true&level=INFO")
                 .to("direct://generic/user/report");
 
+        // Call to the endpoint should provide the query parameters:
+        // resourceId - the starting resource that should have override set
+        // cascade - boolean flag to indicate if the stats for all child resources should be updated.
+        // Must  also send the usual authentication information
+        from("restlet:http://localhost:8085/sctool/v1/generic/statsoverride?restletMethods=post")
+                .routeId("invokeGenStatusOverride")
+                .to("log:" + LOG_CLASS + "?showAll=true&level=INFO")
+                .to("direct://generic/stats/override");
+
         // Location Management Functions
         // Supports the ability to create a location within the OFSC
         from("restlet:http://localhost:8085/sctool/v1/location/{id}?restletMethods=post,get")

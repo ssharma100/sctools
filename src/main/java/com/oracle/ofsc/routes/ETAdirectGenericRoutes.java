@@ -4,6 +4,7 @@ import com.oracle.ofsc.etadirect.camel.beans.*;
 import com.oracle.ofsc.etadirect.rest.UserResponse;
 import com.oracle.ofsc.transforms.UserLoginData;
 import org.apache.camel.LoggingLevel;
+import org.apache.camel.Predicate;
 import org.apache.camel.builder.RouteBuilder;
 import org.apache.camel.dataformat.bindy.csv.BindyCsvDataFormat;
 import org.apache.camel.model.dataformat.JsonLibrary;
@@ -20,6 +21,9 @@ public class ETAdirectGenericRoutes extends RouteBuilder {
     private DataFormat activityInsert = new BindyCsvDataFormat(com.oracle.ofsc.transforms.GenericActivityData.class);
     private DataFormat fiberActivityInsert = new BindyCsvDataFormat(com.oracle.ofsc.transforms.FiberActivityData.class);
     private DataFormat loginReport = new BindyCsvDataFormat(UserLoginData.class);
+
+    private Predicate singleLevelOnly =  header("cascade").isEqualTo("true");
+
     @Override
     public void configure() {
 
@@ -82,11 +86,26 @@ public class ETAdirectGenericRoutes extends RouteBuilder {
                 .log("Completed Processing Of User Report")
                 .end();
 
+        // Performs Stats Update - If "Cascade" flag is set, will perform update of stats for all resources
+        // that exist under the main resource.
+        from("direct://generic/stats/override")
+                .routeId("etaDirectGenStatsOverride")
+                .log("log:" + LOG_CLASS + "?level=INFO")
+                .bean(Statistics.class, "extractStatsParams")
+                .choice()
+                    .when(singleLevelOnly)
+                        .bean(Statistics.class, "buildStatsModel")
+                        .to("direct://etadirectrest/stats/work/override")
+                .otherwise()
+                    // Multiple Case - Get All Resources
+                    // Split On List Of Resources And Process Each One
+                .end();
+
 
         // Performs a Activity Insertion & Start/Stop Cycle For Each Activity On A Given Resource
         from("direct://generic/activity/statsbatch")
                 .routeId("statsBatchLoad")
-                .bean(Statistics.class, "extractActivityLoadParams")
+                .bean(Statistics.class, "extractStatsParams")
                 .split().method(Statistics.class, "splitToMessageList").stopOnException()
                     .log("Performing Iterative Processing Of Activity:  ${exchangeProperty[CamelSplitIndex]}")
                     // Generate A Start + Stop Time
