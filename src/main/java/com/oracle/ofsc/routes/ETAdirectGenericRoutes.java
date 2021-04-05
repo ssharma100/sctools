@@ -85,14 +85,17 @@ public class ETAdirectGenericRoutes extends RouteBuilder {
         // Performs Stats Update - If "Cascade" flag is set, will perform update of stats for all resources
         // that exist under the main resource.
         from("direct://generic/stats/override")
-                .routeId("etaSirectGenStatsOverride")
+                .routeId("etaDirectGenStatsOverride")
                 .log("log:" + LOG_CLASS + "?level=INFO")
+                .bean(Statistics.class, "extractStatsParams")
+                .bean(Statistics.class, "buildStatsModel")
+                .to("direct://etadirectrest/stats/work/override")
                 .end();
 
         // Performs a Activity Insertion & Start/Stop Cycle For Each Activity On A Given Resource
         from("direct://generic/activity/statsbatch")
                 .routeId("statsBatchLoad")
-                .bean(Statistics.class, "extractActivityLoadParams")
+                .bean(Statistics.class, "extractStatsParams")
                 .split().method(Statistics.class, "splitToMessageList").stopOnException()
                     .log("Performing Iterative Processing Of Activity:  ${exchangeProperty[CamelSplitIndex]}")
                     // Generate A Start + Stop Time

@@ -89,9 +89,8 @@ public class WebRoutes extends RouteBuilder {
 
         // Call to the endpoint should provide the query parameters:
         // resourceId - the starting resource that should have override set
-        // key - activity key to update
-        // duration - positive integer value of the duration override.
         // cascade - boolean flag to indicate if the stats for all child resources should be updated.
+        // Must  also send the usual authentication information
         from("restlet:http://localhost:8085/sctool/v1/generic/statsoverride?restletMethods=post")
                 .routeId("invokeGenStatusOverride")
                 .to("log:" + LOG_CLASS + "?showAll=true&level=INFO")

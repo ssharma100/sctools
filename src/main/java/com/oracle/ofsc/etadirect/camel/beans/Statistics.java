@@ -3,8 +3,10 @@ package com.oracle.ofsc.etadirect.camel.beans;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.oracle.ofsc.etadirect.rest.InsertActivity;
+import com.oracle.ofsc.etadirect.rest.WorkStatsDefinition;
 import org.apache.camel.Exchange;
 import org.apache.camel.Message;
+import org.apache.camel.converter.stream.InputStreamCache;
 import org.apache.camel.impl.DefaultMessage;
 import org.apache.commons.lang3.StringUtils;
 import org.joda.time.DateTime;
@@ -51,13 +53,14 @@ public class Statistics {
      * zip:
      * @param exchange
      */
-    public void extractActivityLoadParams(Exchange exchange) {
+    public void extractStatsParams(Exchange exchange) {
 
         LOGGER.info("Generate Stats Loading Headers");
         HashMap<String, String> params = Security.extractURLQueryParameters((String) exchange.getIn().getHeader("CamelHttpQuery"));
 
         String username = params.get("user") + "@" + params.get("company");
         String passwd = params.get("passwd");
+
         // Set Values For HTTP4:
         exchange.getIn().setHeader("username", username);
         exchange.getIn().setHeader("passwd", passwd);
@@ -154,6 +157,31 @@ public class Statistics {
         message.setHeaders(exchange.getIn().getHeaders());
         message.setBody(startBody);
         exchange.setOut(message);
+    }
+
+    /**
+     * Given the Exchange object of a Json Stats array, the given resourceId will be used
+     * to update the given id, and generate the override Json body.
+     *
+     * @param exchange
+     */
+    public void buildStatsModel(Exchange exchange) throws IOException {
+        String overrideResourceId = (String )exchange.getIn().getHeader("resourceId");
+        InputStreamCache overrideBody = (InputStreamCache )exchange.getIn().getBody();
+        if (null == overrideBody) {
+            exchange.getIn().setBody("No JSon Override Body Provided");
+            return;
+        }
+        WorkStatsDefinition wsd = activityMapper.readValue(overrideBody, WorkStatsDefinition.class);
+
+        LOGGER.info("Overriding Resources To: {}", overrideResourceId);
+        // Perform Override Of The Resources Mentioned:
+        wsd.getItems().stream()
+                .forEach(item -> item.setResourceId(overrideResourceId));
+
+        // Convert Back To String
+        exchange.getIn().setBody(activityMapper.writeValueAsString(wsd));
+        LOGGER.debug("Overrides Body: {}", exchange.getIn().getBody());
     }
 
     private InsertActivity bootStrapDefaults(Map<String, Object> headers) throws UnsupportedEncodingException {
