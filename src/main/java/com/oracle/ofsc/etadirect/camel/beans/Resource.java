@@ -17,6 +17,7 @@ import com.oracle.ofsc.transforms.ResourceData;
 import com.oracle.ofsc.transforms.RouteReportData;
 import com.oracle.ofsc.transforms.TransportResourceData;
 import org.apache.camel.Exchange;
+import org.apache.camel.converter.stream.InputStreamCache;
 import org.apache.commons.lang3.StringUtils;
 import org.joda.time.DateTime;
 import org.joda.time.DateTimeConstants;
@@ -39,6 +40,7 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.stream.Collectors;
 
 /**
  * Provides mapping of the current request to the required XML that should be
@@ -457,8 +459,38 @@ public class Resource {
 
         exchange.getIn().setHeader("id", resourceCSV.getResourceId());
         exchange.getIn().setBody(resourceMapper.writeValueAsString(resourceJson));
-
     }
+
+    /**
+     * When a Get Child Resources is done from OFSC, this call makes it possible to look
+     * for the resources that are active and pull the resource and create a map load of the
+     * resource identification. For now a simple map of the Json object is stored.
+     *
+     * Exchange body is set as the list so that it can be split and each element used
+     * by route processing.
+     *
+     * @param exchange
+     */
+    public void extractResourcesToList(Exchange exchange) throws IOException {
+
+        InputStream etaResourceIS = (InputStream )exchange.getIn().getBody();
+        ResourceList etaResources = resourceMapper.readValue(etaResourceIS, ResourceList.class);
+
+        // Load the current resources fetched (for main route to control flow and iterations)
+        exchange.getIn().setHeader("resourcesObtained", etaResources.getTotalResults());
+        exchange.getIn().setHeader("offset",
+                exchange.getIn().getHeader("offset", Integer.class)
+                + etaResources.getTotalResults());
+
+        // Filter Out Non-Active Users
+        List<EtaJsonResource> activeResources = etaResources.getItems().stream()
+                .filter(item -> item.getStatus().equals("active"))
+                .collect(Collectors.toList());
+
+        exchange.getIn().setBody(activeResources);
+        LOGGER.info("Filtered Active Resources Down To {}", activeResources.size());
+    }
+
     /**
      * (Legacy) Generates the request body and complete REST request for a resource creation
      */

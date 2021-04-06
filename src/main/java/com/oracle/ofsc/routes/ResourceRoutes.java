@@ -114,10 +114,9 @@ public class ResourceRoutes extends RouteBuilder {
 
                 // Send actual request to endpoint of Web Service.
                 .setHeader(Exchange.HTTP_METHOD, constant(org.apache.camel.component.http4.HttpMethods.GET))
-//                .setHeader("CamelHttpQuery", constant(null))
                 .setHeader(Exchange.HTTP_URI, simple("api.etadirect.com"))
                 .setHeader(Exchange.HTTP_PATH, simple("rest/ofscCore/v1/resources/${in.header[root]}/children"))
-                .setHeader(Exchange.HTTP_QUERY, constant("offset=0&limit=100"))
+                .setHeader(Exchange.HTTP_QUERY, simple("offset=${in.header[offset]}&limit=100"))
 
                 .toD("https4:api.etadirect.com/rest/ofscCore/v1/resources/${in.header[root]}/children"
                         + "?bridgeEndpoint=true&throwExceptionOnFailure=false&authenticationPreemptive=true"

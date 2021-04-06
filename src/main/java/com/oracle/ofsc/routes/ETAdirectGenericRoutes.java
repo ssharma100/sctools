@@ -23,6 +23,7 @@ public class ETAdirectGenericRoutes extends RouteBuilder {
     private DataFormat loginReport = new BindyCsvDataFormat(UserLoginData.class);
 
     private Predicate cascade =  header("cascade").isEqualTo("true");
+    private Predicate moreResourcesToFetch =  header("resourcesObtained").isEqualTo(100);
 
     @Override
     public void configure() {
@@ -99,11 +100,24 @@ public class ETAdirectGenericRoutes extends RouteBuilder {
                 .when(cascade)
                     .log("Performing Cascade")
                     .setHeader("root", simple("in.headers.resourceId"))
-                    .to("direct://etadirectrest/getResourceChildren")
+                    .setHeader("resourcesObtained", constant(100))
+                    .setHeader("offset", constant(0))
+                    .loopDoWhile(moreResourcesToFetch)
+                        .to("direct://etadirectrest/getResourceChildren")
+                        .bean(Resource.class, "extractResourcesToList")
+                        .log(LoggingLevel.INFO, "Processing ${header.resourcesObtained} Resources...")
+                        .split(body())
+                            .log("Processing Stats Override For '${body.resourceId}'")
+                            .setHeader("resourceId", simple("${body.resourceId}"))
+                            .bean(Statistics.class, "buildStatsModel")
+                            .to("direct://etadirectrest/stats/work/override")
+                    .end()
+                .endChoice()
+
                 // Multiple Case - Get All Resources
                 // Split On List Of Resources And Process Each One
                 .otherwise()
-                    .log("Skipping/Aborting - NO Implementation For Cascade")
+                    .log("NO Implementation For Cascade")
                 .end();
 
 
