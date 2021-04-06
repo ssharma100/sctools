@@ -105,7 +105,7 @@ public class ResourceRoutes extends RouteBuilder {
                 .to("log:" + LOG_CLASS + "?level=INFO");
 
         from("direct://etadirectrest/getResourceChildren")
-                .to("log:" + LOG_CLASS + "?level=INFO")
+                .log(LoggingLevel.INFO, "Making OFSC Request For Child Resources")
                 .onException(Exception.class)
                     .to("log:" + LOG_CLASS + "?showAll=true&multiline=true&level=ERROR")
                     .log(LoggingLevel.ERROR, LOG_CLASS, exceptionMessage().toString())
@@ -114,12 +114,16 @@ public class ResourceRoutes extends RouteBuilder {
 
                 // Send actual request to endpoint of Web Service.
                 .setHeader(Exchange.HTTP_METHOD, constant(org.apache.camel.component.http4.HttpMethods.GET))
-                .setHeader("CamelHttpQuery", constant(null))
+//                .setHeader("CamelHttpQuery", constant(null))
+                .setHeader(Exchange.HTTP_URI, simple("api.etadirect.com"))
+                .setHeader(Exchange.HTTP_PATH, simple("rest/ofscCore/v1/resources/${in.header[root]}/children"))
+                .setHeader(Exchange.HTTP_QUERY, constant("offset=0&limit=100"))
 
-                .toD("https4:api.etadirect.com/rest/ofscCore/v1/resources/${in.header[root]}/children/?offset=0&limit=800?"
+                .toD("https4:api.etadirect.com/rest/ofscCore/v1/resources/${in.header[root]}/children"
                         + "?bridgeEndpoint=true&throwExceptionOnFailure=false&authenticationPreemptive=true"
                         + "&authUsername=${in.header[username]}&authPassword=${in.header[passwd]}")
-                .to("log:" + LOG_CLASS + "?level=INFO");
+                .to("log:" + LOG_CLASS + "?level=INFO")
+                .end();
 
     }
 }

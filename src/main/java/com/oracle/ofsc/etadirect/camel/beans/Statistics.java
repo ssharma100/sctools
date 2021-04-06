@@ -167,18 +167,27 @@ public class Statistics {
      */
     public void buildStatsModel(Exchange exchange) throws IOException {
         String overrideResourceId = (String )exchange.getIn().getHeader("resourceId");
-        InputStreamCache overrideBody = (InputStreamCache )exchange.getIn().getBody();
-        if (null == overrideBody) {
-            exchange.getIn().setBody("No JSon Override Body Provided");
-            return;
+        WorkStatsDefinition wsd;
+
+        if (null == exchange.getProperty("workStatsModel")) {
+            InputStreamCache overrideBody = (InputStreamCache) exchange.getIn().getBody();
+            if (null == overrideBody) {
+                exchange.getIn().setBody("No JSon Override Body Provided");
+                return;
+            }
+            wsd = activityMapper.readValue(overrideBody, WorkStatsDefinition.class);
         }
-        WorkStatsDefinition wsd = activityMapper.readValue(overrideBody, WorkStatsDefinition.class);
+        else {
+            wsd = (WorkStatsDefinition )exchange.getProperty("workStatsModel");
+        }
+
 
         LOGGER.info("Overriding Resources To: {}", overrideResourceId);
         // Perform Override Of The Resources Mentioned:
         wsd.getItems().stream()
                 .forEach(item -> item.setResourceId(overrideResourceId));
 
+        exchange.setProperty("workStatsModel", wsd);
         // Convert Back To String
         exchange.getIn().setBody(activityMapper.writeValueAsString(wsd));
         LOGGER.debug("Overrides Body: {}", exchange.getIn().getBody());
