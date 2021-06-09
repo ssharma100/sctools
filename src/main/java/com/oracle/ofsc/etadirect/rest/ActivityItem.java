@@ -16,6 +16,7 @@ public class ActivityItem {
     private Date date;
     private String status;
     private String workZone;
+    private String apptNumber;
 
     public Long getActivityId() {
         return activityId;
@@ -63,5 +64,13 @@ public class ActivityItem {
 
     public void setWorkZone(String workZone) {
         this.workZone = workZone;
+    }
+
+    public String getApptNumber() {
+        return apptNumber;
+    }
+
+    public void setApptNumber(String apptNumber) {
+        this.apptNumber = apptNumber;
     }
 }

@@ -185,7 +185,7 @@ public class Activity {
      */
     public void mapMoveToVendor(Exchange exchange) {
         ActivityItem activity = exchange.getIn().getBody(ActivityItem.class);
-        LOGGER.info("Checking {} For Work Zone {}", activity.getActivityId(), activity.getWorkZone());
+        LOGGER.info("Account: {} Checking {} For Work Zone {}", activity.getApptNumber(), activity.getActivityId(), activity.getWorkZone());
         String targetResource;
         switch (activity.getWorkZone()) {
             case "MCI-Prince":
@@ -205,8 +205,10 @@ public class Activity {
                 "        \"resourceId\": \"%s\"\n" +
                 "    }\n" +
                 "}", targetResource);
-        LOGGER.info("Moving Body:\n{}", moveBody);
+        LOGGER.debug("Moving Body:\n{}", moveBody);
         exchange.getIn().setHeader("ACTIVITYID", activity.getActivityId());
+        exchange.getIn().setHeader("TICKET", activity.getApptNumber());
+        exchange.getIn().setHeader("TARGETBUCKET", targetResource);
         exchange.getIn().setBody(moveBody);
     }
 
@@ -282,7 +284,7 @@ public class Activity {
         exchange.getIn().setHeader("dateFrom", authInfo.get("dateFrom"));
         exchange.getIn().setHeader("dateTo", authInfo.get("dateTo"));
 
-        LOGGER.info("SetUp Completed For User: " + exchange.getIn().getHeader("username"));
+        LOGGER.debug("SetUp Completed For User: " + exchange.getIn().getHeader("username"));
     }
 
     /**

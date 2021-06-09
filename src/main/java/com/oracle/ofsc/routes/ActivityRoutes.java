@@ -60,10 +60,10 @@ public class ActivityRoutes extends RouteBuilder {
 
         // Obtain ALL Pending Activities In A Bucket
         from ("direct://etadirectrest/activity/move")
-                .to("log:" + LOG_CLASS + "?level=INFO")
+                .log(LoggingLevel.INFO, "Requesting Move ActivityID: ${in.header[ACTIVITYID]} Ticket: ${in.header[TICKET]} To ${in.header[TARGETBUCKET]}")
                 .onException(Exception.class)
-                .to("log:" + LOG_CLASS + "?showAll=true&multiline=true&level=ERROR")
-                .handled(true)
+                    .log(LoggingLevel.ERROR, "FAILED To Move ActivityID: ${in.header[ACTIVITYID]} Ticket: ${in.header[TICKET]} To ${in.header[TARGETBUCKET]}")
+                    .handled(true)
                 .end()
 
                 // Send Actual request to endpoint of Res Service (ETAdirect)
@@ -71,7 +71,7 @@ public class ActivityRoutes extends RouteBuilder {
                 .setHeader("CamelHttpQuery", constant(null))
 
                 .toD("https4:api.etadirect.com//rest/ofscCore/v1/activities/${in.header[ACTIVITYID]}/custom-actions/move?bridgeEndpoint=true&throwExceptionOnFailure=false&authenticationPreemptive=true&authUsername=${in.header[username]}&authPassword=${in.header[passwd]}")
-                .to("log:" + LOG_CLASS + "?level=DEBUG");
+                .log(LoggingLevel.INFO, "Completed Move ActivityID: ${in.header[ACTIVITYID]} Ticket: ${in.header[TICKET]} To ${in.header[TARGETBUCKET]}");
 
         from ("direct://etadirectrest/activity/start")
                 .to("log:" + LOG_CLASS + "?level=INFO")

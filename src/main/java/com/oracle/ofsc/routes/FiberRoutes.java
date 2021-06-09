@@ -22,8 +22,8 @@ public class FiberRoutes extends RouteBuilder {
                 // Have A List Of Activities
                 .bean(Activity.class, "convertToJustActivities")
                 .split(body())
-                .bean(Activity.class, "mapMoveToVendor")
-                .to("direct://etadirectrest/activity/move")
+                    .bean(Activity.class, "mapMoveToVendor")
+                    .to("direct://etadirectrest/activity/move")
                 .end();
     }
 }
