@@ -16,6 +16,7 @@
  */
 package com.oracle.ofsc.routes;
 
+import org.apache.camel.LoggingLevel;
 import org.apache.camel.Predicate;
 import org.apache.camel.builder.RouteBuilder;
 import org.apache.camel.dataformat.bindy.csv.BindyCsvDataFormat;
@@ -193,5 +194,14 @@ public class WebRoutes extends RouteBuilder {
                 .routeId("routingEnhanceDistance")
                 .to("log:" + LOG_CLASS + "?showAll=true&level=INFO")
                 .to("direct://common/get/route/enhance/distance");
+
+        // MCI Bucket Clear Utility
+        // Will Map Between The Two Vendors To Clear The Top Level Bucket
+        from("restlet:http://localhost;8085/sctools/v1/route/bucket/clear/mci?restletMethod=get")
+                .routeId("bucketclear-mci")
+                .log(LoggingLevel.INFO, "Manually Invoked Bucket Clear")
+                .setProperty("BUCKET", constant("kansascity"))
+                .to("direct://fiber/bucket/clear/mci")
+                .end();
     }
 }

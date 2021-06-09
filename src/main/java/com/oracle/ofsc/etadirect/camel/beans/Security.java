@@ -120,7 +120,7 @@ public class Security {
         Preconditions.checkArgument(!map.isEmpty(), "No Credentials Values Found");
         Preconditions.checkNotNull(map.get("company"), "Must Provide 'company' For Auth Credentials");
         Preconditions.checkNotNull(map.get("user"), "Must Provide 'user' For Auth Credentials");
-        Preconditions.checkNotNull(map.get("passwd"), "Must Provide 'password' For Auth Credentials");
+        Preconditions.checkNotNull(map.get("passwd"), "Must Provide 'passwd' For Auth Credentials");
 
         return map;
     }
