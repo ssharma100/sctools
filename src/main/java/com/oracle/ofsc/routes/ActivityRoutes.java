@@ -53,9 +53,24 @@ public class ActivityRoutes extends RouteBuilder {
                 // Send Actual request to endpoint of Res Service (ETAdirect)
                 .setHeader(Exchange.HTTP_METHOD, constant(org.apache.camel.component.http4.HttpMethods.GET))
                 .setHeader("CamelHttpQuery", constant(null))
-                .setHeader(Exchange.HTTP_QUERY, simple("resources=${property[BUCKET]}&includeChildren=none&fields=activityId,status,apptNumber,resourceId,activityType,workZone&includeNonScheduled=false&dateFrom=2021-06-08&dateTo=2021-06-30&q=status+%3D%3D+%27pending%27"))
+                .setHeader(Exchange.HTTP_QUERY, simple("resources=${property[BUCKET]}&includeChildren=none&fields=activityId,status,apptNumber,resourceId,activityType,workZone&includeNonScheduled=false&dateFrom=${in.header[FROMDATE]}&dateTo=${in.header[TODATE]}&q=status+%3D%3D+%27pending%27"))
 
                 .toD("https4:api.etadirect.com/rest/ofscCore/v1/activities?bridgeEndpoint=true&throwExceptionOnFailure=false&authenticationPreemptive=true&authUsername=${in.header[username]}&authPassword=${in.header[passwd]}")
+                .to("log:" + LOG_CLASS + "?level=DEBUG");
+
+        // Obtain ALL Pending Activities In A Bucket
+        from ("direct://etadirectrest/activity/move")
+                .to("log:" + LOG_CLASS + "?level=INFO")
+                .onException(Exception.class)
+                .to("log:" + LOG_CLASS + "?showAll=true&multiline=true&level=ERROR")
+                .handled(true)
+                .end()
+
+                // Send Actual request to endpoint of Res Service (ETAdirect)
+                .setHeader(Exchange.HTTP_METHOD, constant(org.apache.camel.component.http4.HttpMethods.POST))
+                .setHeader("CamelHttpQuery", constant(null))
+
+                .toD("https4:api.etadirect.com//rest/ofscCore/v1/activities/${in.header[ACTIVITYID]}/custom-actions/move?bridgeEndpoint=true&throwExceptionOnFailure=false&authenticationPreemptive=true&authUsername=${in.header[username]}&authPassword=${in.header[passwd]}")
                 .to("log:" + LOG_CLASS + "?level=DEBUG");
 
         from ("direct://etadirectrest/activity/start")

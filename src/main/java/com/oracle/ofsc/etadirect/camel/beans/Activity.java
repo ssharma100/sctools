@@ -2,10 +2,8 @@ package com.oracle.ofsc.etadirect.camel.beans;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.oracle.ofsc.etadirect.rest.ActivityItem;
-import com.oracle.ofsc.etadirect.rest.ActivitySearchResponse;
-import com.oracle.ofsc.etadirect.rest.ResourceAssignmentItem;
-import com.oracle.ofsc.etadirect.rest.ResourceAssignmentItems;
+import com.google.common.collect.ImmutableList;
+import com.oracle.ofsc.etadirect.rest.*;
 import com.oracle.ofsc.etadirect.soap.GetActivity;
 import com.oracle.ofsc.etadirect.soap.Property;
 import com.oracle.ofsc.etadirect.soap.User;
@@ -29,6 +27,7 @@ import java.io.InputStream;
 import java.io.StringWriter;
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.List;
 
 /**
  * Conversion Bean - Given an input of the specific type, will convert the Bindy object
@@ -178,6 +177,48 @@ public class Activity {
         exchange.getIn().setBody(sb.toString());
     }
 
+    /**
+     * Camel Bean used to take the object and generate a 'move'
+     * output that can be processed through the OFSC API.
+     *
+     * @param exchange
+     */
+    public void mapMoveToVendor(Exchange exchange) {
+        ActivityItem activity = exchange.getIn().getBody(ActivityItem.class);
+        LOGGER.info("Checking {} For Work Zone {}", activity.getActivityId(), activity.getWorkZone());
+        String targetResource;
+        switch (activity.getWorkZone()) {
+            case "MCI-Prince":
+                targetResource = "technicians-prn-mci";
+                break;
+            case "MCI-ITC-E":
+            case "MCI-ITC-W":
+                targetResource = "technicians-itc-mci";
+                break;
+            default:
+                targetResource = "None";
+                LOGGER.error("Cannot Determine Target Bucket For {}", activity.getWorkZone());
+        }
+
+        String moveBody = String.format("{\n" +
+                "    \"setResource\": {\n" +
+                "        \"resourceId\": \"%s\"\n" +
+                "    }\n" +
+                "}", targetResource);
+        LOGGER.info("Moving Body:\n{}", moveBody);
+        exchange.getIn().setHeader("ACTIVITYID", activity.getActivityId());
+        exchange.getIn().setBody(moveBody);
+    }
+
+    public void convertToJustActivities(Exchange exchange) {
+        ActivityList activityList = exchange.getIn().getBody(ActivityList.class);
+        if (null == activityList.getItems()) {
+            LOGGER.warn("No Activity List Items Returned");
+            exchange.getIn().setBody(ImmutableList.of());
+        }
+        LOGGER.info("{} Activities Returned", activityList.getItems().size());
+        exchange.getIn().setBody(activityList.getItems());
+    }
     /**
      *
      * @param exchange

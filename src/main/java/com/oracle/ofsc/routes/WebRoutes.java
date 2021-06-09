@@ -16,9 +16,11 @@
  */
 package com.oracle.ofsc.routes;
 
+import com.oracle.ofsc.etadirect.rest.ActivityList;
 import org.apache.camel.LoggingLevel;
 import org.apache.camel.Predicate;
 import org.apache.camel.builder.RouteBuilder;
+import org.apache.camel.component.jackson.JacksonDataFormat;
 import org.apache.camel.dataformat.bindy.csv.BindyCsvDataFormat;
 import org.apache.camel.spi.DataFormat;
 

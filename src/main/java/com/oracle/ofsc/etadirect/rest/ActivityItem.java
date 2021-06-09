@@ -1,10 +1,13 @@
 package com.oracle.ofsc.etadirect.rest;
 
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+
 import java.util.Date;
 
 /**
  * Created by ssharma on 4/28/17.
  */
+@JsonIgnoreProperties(ignoreUnknown = true)
 public class ActivityItem {
 
     private Long activityId;
@@ -12,6 +15,7 @@ public class ActivityItem {
     private String resourceInternalId;
     private Date date;
     private String status;
+    private String workZone;
 
     public Long getActivityId() {
         return activityId;
@@ -51,5 +55,13 @@ public class ActivityItem {
 
     public void setStatus(String status) {
         this.status = status;
+    }
+
+    public String getWorkZone() {
+        return workZone;
+    }
+
+    public void setWorkZone(String workZone) {
+        this.workZone = workZone;
     }
 }
