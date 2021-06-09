@@ -44,7 +44,7 @@ public class ActivityRoutes extends RouteBuilder {
 
         // Obtain ALL Pending Activities In A Bucket
         from ("direct://etadirectrest/activity/bucket")
-                .to("log:" + LOG_CLASS + "?level=INFO")
+                .log(LoggingLevel.INFO, "Search For Activities In Bucket ${property[BUCKET]} Between ${in.header[FROMDATE]} and ${in.header[TODATE]} ")
                 .onException(Exception.class)
                 .to("log:" + LOG_CLASS + "?showAll=true&multiline=true&level=ERROR")
                 .handled(true)

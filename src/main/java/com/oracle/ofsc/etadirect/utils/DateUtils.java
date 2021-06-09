@@ -24,6 +24,6 @@ public class DateUtils {
         DateTimeFormatter dtfOut = DateTimeFormat.forPattern("MM/dd/yyyy");
         exchange.setProperty("FROMDATE", dtf.print(rightNow));
         exchange.setProperty("TODATE", dtf.print(rightNow.plusDays(30)));
-        LOGGER.info("Date From: {} To: {}", exchange.getProperty("FROMDATE"), exchange.getProperty("TODATE"));
+        LOGGER.debug("Date From: {} To: {}", exchange.getProperty("FROMDATE"), exchange.getProperty("TODATE"));
     }
 }
