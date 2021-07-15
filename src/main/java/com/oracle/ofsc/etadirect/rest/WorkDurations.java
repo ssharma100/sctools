@@ -1,9 +1,12 @@
 package com.oracle.ofsc.etadirect.rest;
 
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+
 /**
  * Json Pojo model for work durations
  *
  */
+@JsonIgnoreProperties(ignoreUnknown = true)
 public class WorkDurations {
     private String resourceId;
     private String akey;

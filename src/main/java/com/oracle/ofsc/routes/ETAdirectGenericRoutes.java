@@ -22,7 +22,8 @@ public class ETAdirectGenericRoutes extends RouteBuilder {
     private DataFormat fiberActivityInsert = new BindyCsvDataFormat(com.oracle.ofsc.transforms.FiberActivityData.class);
     private DataFormat loginReport = new BindyCsvDataFormat(UserLoginData.class);
 
-    private Predicate singleLevelOnly =  header("cascade").isEqualTo("true");
+    private Predicate cascade =  header("cascade").isEqualTo("true");
+    private Predicate moreResourcesToFetch =  header("resourcesObtained").isEqualTo(100);
 
     @Override
     public void configure() {
@@ -92,13 +93,31 @@ public class ETAdirectGenericRoutes extends RouteBuilder {
                 .routeId("etaDirectGenStatsOverride")
                 .log("log:" + LOG_CLASS + "?level=INFO")
                 .bean(Statistics.class, "extractStatsParams")
+                .log("Single Resource Override Being Applied")
+                .bean(Statistics.class, "buildStatsModel")
+                .to("direct://etadirectrest/stats/work/override")
                 .choice()
-                    .when(singleLevelOnly)
-                        .bean(Statistics.class, "buildStatsModel")
-                        .to("direct://etadirectrest/stats/work/override")
+                .when(cascade)
+                    .log("Performing Cascade")
+                    .setHeader("root", simple("in.headers.resourceId"))
+                    .setHeader("resourcesObtained", constant(100))
+                    .setHeader("offset", constant(0))
+                    .loopDoWhile(moreResourcesToFetch)
+                        .to("direct://etadirectrest/getResourceChildren")
+                        .bean(Resource.class, "extractResourcesToList")
+                        .log(LoggingLevel.INFO, "Processing ${header.resourcesObtained} Resources...")
+                        .split(body())
+                            .log("Processing Stats Override For '${body.resourceId}'")
+                            .setHeader("resourceId", simple("${body.resourceId}"))
+                            .bean(Statistics.class, "buildStatsModel")
+                            .to("direct://etadirectrest/stats/work/override")
+                    .end()
+                .endChoice()
+
+                // Multiple Case - Get All Resources
+                // Split On List Of Resources And Process Each One
                 .otherwise()
-                    // Multiple Case - Get All Resources
-                    // Split On List Of Resources And Process Each One
+                    .log("NO Implementation For Cascade")
                 .end();
 
 
