@@ -1,8 +1,5 @@
 package com.oracle.ofsc.etadirect.soap;
 
-import org.apache.camel.Exchange;
-
-import javax.jws.WebParam;
 import javax.xml.bind.annotation.XmlElement;
 import javax.xml.bind.annotation.XmlRootElement;
 import javax.xml.bind.annotation.XmlSeeAlso;

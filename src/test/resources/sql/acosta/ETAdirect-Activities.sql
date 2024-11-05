@@ -1,4 +1,4 @@
-create table eta_activities (
+  create table eta_activities (
 `folder` varchar(128) COMMENT 'Activity resides within this folder',
 `a_id` integer NOT null COMMENT 'ETAdirect assigned activity id',
 `activity_key` varchar(128) NOT null COMMENT 'Activity ID Assigned By Tool And Acosta',
